@@ -1,0 +1,18 @@
+{
+  "ExtendedData": {
+    "inputs": [
+      "http://isapi.mekashron.com/SmartWinners/casino365.dll/wsdl/IPlayerclub365"
+    ],
+    "collectionTypes": [
+      "System.Array",
+      "System.Collections.Generic.Dictionary`2"
+    ],
+    "internalTypeAccess": true,
+    "messageContract": true,
+    "namespaceMappings": [
+      "*, GoldCasino.ApiModule.Integrations.PlayerClub365"
+    ],
+    "targetFramework": "net8.0",
+    "typeReuseMode": "None"
+  }
+}

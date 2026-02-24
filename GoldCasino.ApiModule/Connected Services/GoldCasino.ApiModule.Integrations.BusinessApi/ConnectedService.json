@@ -1,0 +1,18 @@
+{
+  "ExtendedData": {
+    "inputs": [
+      "http://lease4.mekashron.com:33330/wsdl/IBusinessAPI"
+    ],
+    "collectionTypes": [
+      "System.Array",
+      "System.Collections.Generic.Dictionary`2"
+    ],
+    "internalTypeAccess": true,
+    "messageContract": true,
+    "namespaceMappings": [
+      "*, GoldCasino.ApiModule.Integrations.BusinessApi"
+    ],
+    "targetFramework": "net8.0",
+    "typeReuseMode": "None"
+  }
+}
