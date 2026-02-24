@@ -1,0 +1,318 @@
+﻿@using SmartWinners.Models
+@using SmartWinners.Services
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@inject LotteryService lotteryService
+@{
+	var lottery = await lotteryService.GetBiggestLotteryAsync();
+	var uid = Guid.NewGuid().ToString("N");
+	var drawDate = lottery?.Next_Draw_Date;
+}
+
+<div class="gold-ring relative rounded-3xl overflow-hidden
+            w-full
+            md:w-[clamp(320px,90vw,424px)] h-[clamp(190px,90vw,493px)]" style="
+        background:
+          radial-gradient(circle at 50% 18%, rgba(228,194,106,0.22), rgba(1,30,29,0) 52%),
+          linear-gradient(to bottom, #033435, #011E1D);
+     ">
+
+	<!-- subtle glow + rays (no images) -->
+	<div class="pointer-events-none absolute inset-0">
+		<div class="absolute inset-0 opacity-25" style="background: conic-gradient(from 270deg at 50% 22%,
+                 rgba(228,194,106,0.22),
+                 rgba(255,255,255,0.03),
+                 rgba(228,194,106,0.18),
+                 rgba(255,255,255,0.02),
+                 rgba(228,194,106,0.22)); filter: blur(0.2px);">
+		</div>
+		<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-[520px] h-[520px] rounded-full"
+			style="background: radial-gradient(circle, rgba(228,194,106,0.18), rgba(1,30,29,0) 62%);">
+		</div>
+	</div>
+
+	<div class="relative flex flex-col items-center justify-between h-full text-center px-6 py-6 gap-4">
+		<div></div>
+		<div class="relative flex flex-col items-center mb-18 text-center gap-4">
+
+			<div class="text-[#e4c26a] text-[clamp(22px,3vw,28px)] font-medium">
+				@_helper.GetDictionaryOrDefault("Exciting Feature", "Exciting Feature")
+			</div>
+
+			<div class="text-[#e4c26a] font-semibold leading-none tracking-tight
+                text-[clamp(42px,6vw,64px)]">
+				@_helper.GetDictionaryOrDefault("Coming Soon", "Coming Soon")
+			</div>
+
+			<div class="h-px w-[clamp(190px,55%,300px)] bg-white/20"></div>
+
+			<div class="text-white/80 text-[clamp(14px,2vw,18px)]">
+				@_helper.GetDictionaryOrDefault("We're working on something amazing!", "We're working on something amazing!")
+			</div>
+		</div>
+		<button type="button" data-email-notify-btn data-signup-url="@Url.Content("~/sign-in?r=/")" class="gold-button rounded-md font-semibold text-black transition-colors
+									 px-[clamp(18px,3vw,28px)] py-[clamp(10px,1.6vw,14px)] text-[clamp(14px,2vw,16px)] hidden cursor-pointer uppercase">
+			@_helper.GetDictionaryOrDefault("Notify Me", "Notify Me")
+		</button>
+	</div>
+</div>
+
+<script>
+	(() => {
+		const btn = document.querySelector('[data-email-notify-btn]');
+		if (!btn) return;
+
+		const signupUrl = btn.dataset.signupUrl || '/sign-in?r=/';
+		const show = () => btn.classList.remove('hidden');
+		const hide = () => btn.classList.add('hidden');
+
+		const normalizeUser = (payload) => {
+			const api = payload?.api || payload;
+			return {
+				email: api?.email || api?.Email || api?.mail || api?.Mail || null,
+				emailVerified: !!(api?.emailVerified ?? api?.EmailVerified ?? api?.isEmailVerified ?? api?.IsEmailVerified)
+			};
+		};
+
+		async function fetchUser() {
+			try {
+				const res = await fetch('/api/user', { credentials: 'include' });
+				if (!res.ok) return null;
+				const json = await res.json();
+				return normalizeUser(json);
+			} catch {
+				return null;
+			}
+		}
+
+		(async () => {
+			const user = await fetchUser();
+
+			// Unauthenticated or failed lookup: show button and redirect to sign-up flow with home return url
+			if (!user) {
+				show();
+				btn.addEventListener('click', () => window.location.assign(signupUrl), { once: true });
+				return;
+			}
+
+			// Email missing or not verified: show button to open the email verification popup (allow multiple opens)
+			if (!user.email || !user.emailVerified) {
+				show();
+				let bound = false;
+				btn.addEventListener('click', (e) => {
+					e.preventDefault();
+					if (bound) return;
+					bound = true;
+					window.EmailVerifyPopup?.show(user.email || null);
+					// allow reopening after close
+					setTimeout(() => { bound = false; }, 50);
+				});
+				return;
+			}
+
+			// Email already verified: keep button hidden
+			hide();
+		})();
+	})();
+</script>
+@* 
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			const timerEl = document.querySelector("#lottery-timer-@uid span");
+			const drawDateStr = document.getElementById("lottery-timer-@uid").dataset.drawDate;
+			if (!drawDateStr) return;
+
+			const targetDate = new Date(drawDateStr);
+
+			function updateTimer() {
+					const now = new Date();
+					let diff = targetDate - now;
+
+					if (diff <= 0) {
+							timerEl.textContent = "Drawing now!";
+							clearInterval(interval);
+							return;
+					}
+
+					const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+					diff -= days * 1000 * 60 * 60 * 24;
+
+					const hours = Math.floor(diff / (1000 * 60 * 60));
+					diff -= hours * 1000 * 60 * 60;
+
+					const minutes = Math.floor(diff / (1000 * 60));
+					diff -= minutes * 1000 * 60;
+
+					const seconds = Math.floor(diff / 1000);
+
+					timerEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+			}
+
+			updateTimer();
+			const interval = setInterval(updateTimer, 1000);
+	});
+</script> *@
+
+@* @using SmartWinners.Models
+@using SmartWinners.Services
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@inject LotteryService lotteryService
+@{
+	var lottery = await lotteryService.GetBiggestLotteryAsync();
+	var uid = Guid.NewGuid().ToString("N");
+	var drawDate = lottery?.Next_Draw_Date;
+}
+
+<div class="gold-ring relative rounded-3xl overflow-hidden
+            w-full
+            md:w-[clamp(320px,90vw,424px)] h-[clamp(190px,90vw,493px)]"
+		 style="background: linear-gradient(to bottom, #033435, #011E1D);">
+
+	<img src="/images/casino/lottery-banner.png" alt="Slot machine"
+			 class="absolute  top-0 left-1/2 -translate-x-1/2
+              w-full  h-auto z-0 pointer-events-none mix-blend-lighten" />
+
+	<div class="relative flex flex-col items-center justify-end h-full gap-2 pb-6 text-center">
+		<div class="flex flex-col justify-center w-full">
+			<p class="text-[clamp(16px,2vw,20px)]">Biggest jackpot in the world</p>
+			<p id="jackpot-counter" class="gold-gradient-text text-[clamp(32px,4vw,36px)] pb-5">@Html.Raw(lottery?.Symbol + lottery?.Next_Jackpot.ToString("N0"))</p>
+			<div class="w-full rounded-xl px-4 space-y-3">
+				<!-- Lottery name -->
+				<div class="flex w-full items-center justify-between rounded-lg bg-[#12423d] px-3">
+					<span class="text-gray-300 text-sm">@lottery?.LotteryName</span>
+					<img src="https://www.smart-winners.com/assets/shared/images/flags/@(lottery?.CountryName.Replace(' ', '-')).svg" />
+					<img class ="w-auto h-9 rounded-lg" src="https://www.smart-winners.com/images/lotteries/@Html.Raw($"{lottery?.CountryName.Replace(' ', '_')}_{lottery?.LotteryName.Replace(' ', '_')}")/120_70.png" />
+				</div>
+
+				<p class="text-[clamp(14px,2vw,14px)] p-2 text-white">Next draw in:</p>
+				<!-- Draw date -->
+				<div id="lottery-timer-@uid"
+						 class="flex w-full items-center justify-center rounded-lg bg-[#12423d] px-3 h-9"
+						 data-draw-date="@drawDate?.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")">
+					<span class="text-[#e4c26a] text-2xl font-semibold">Loading...</span>
+				</div>
+			</div>
+
+		</div>
+		<a href="https://www.smart-winners.com/lottery-number-lines/@lottery?.LotteryId/@Html.Raw($"{lottery?.CountryName.ToLower().Replace(' ', '-')}-{lottery?.LotteryName.ToLower()}")"
+			 class="gold-button mt-4 md:mt-8 lg:mt-8 rounded-md font-semibold text-black transition-colors
+                   px-[clamp(16px,3vw,24px)] py-[clamp(8px,1.5vw,12px)] text-[clamp(14px,2vw,16px)]">
+			PLAY NOW
+		</a>
+	</div>
+</div>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			const timerEl = document.querySelector("#lottery-timer-@uid span");
+			const drawDateStr = document.getElementById("lottery-timer-@uid").dataset.drawDate;
+			if (!drawDateStr) return;
+
+			const targetDate = new Date(drawDateStr);
+
+			function updateTimer() {
+					const now = new Date();
+					let diff = targetDate - now;
+
+					if (diff <= 0) {
+							timerEl.textContent = "Drawing now!";
+							clearInterval(interval);
+							return;
+					}
+
+					const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+					diff -= days * 1000 * 60 * 60 * 24;
+
+					const hours = Math.floor(diff / (1000 * 60 * 60));
+					diff -= hours * 1000 * 60 * 60;
+
+					const minutes = Math.floor(diff / (1000 * 60));
+					diff -= minutes * 1000 * 60;
+
+					const seconds = Math.floor(diff / 1000);
+
+					timerEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+			}
+
+			updateTimer();
+			const interval = setInterval(updateTimer, 1000);
+	});
+</script> *@
+@* <script>
+	document.addEventListener("DOMContentLoaded", function () {
+
+		//	let megaJackpotElem = document.querySelector("#jackpot-counter");
+			// let minorJackpot = document.querySelector("#minor-jackpot");
+			// setInterval(function (){
+			// 		megaJackpotElem.textContent = IndexAmount(megaJackpotElem.textContent, ",", ".", "$");
+			// }, 50);
+			// setInterval(function (){
+			// 		minorJackpot.textContent = IndexAmount(minorJackpot.textContent, ",", ".", "$");
+			// }, 200);
+
+			function IndexAmount(amount, dollarDelimiter, centDelimiter, currencySymbol) {
+
+					let dollarParts = amount.replace(currencySymbol, "").split(dollarDelimiter);
+					let centParts = dollarParts.pop().split(centDelimiter);
+
+					if (centParts.length === 1){
+							centParts.push("0");
+					}
+
+					let cent = parseInt(centParts[1]) + 1;
+
+					dollarParts.push(centParts[0]);
+
+					if (cent >= 100) {
+							cent = "00";
+
+							dollarParts = IndexDollarParts(dollarParts, dollarParts.length - 1);
+					}else{
+							cent = `${cent}`.length === 1 ? `0${cent}` : `${cent}`;
+					}
+
+
+					return `${currencySymbol}${dollarParts.join(dollarDelimiter)}${centDelimiter}${cent}`
+
+			}
+
+			function IndexDollarParts(parts, currentIndex) {
+
+					let part = parseInt(parts[currentIndex]);
+
+					part++;
+
+					part = `${part}`;
+
+					if (part >= 1000) {
+
+
+							part = "000";
+							parts[currentIndex] = part;
+
+							if (currentIndex - 1 < 0){
+
+									parts.unshift("1")
+
+									return parts;
+							}else{
+									return IndexDollarParts(parts, --currentIndex);
+							}
+
+					} else {
+
+							if (currentIndex !== 0){
+									if (part.length === 1){
+											part = `00${part}`;
+									}else if (part.length === 2){
+											part = `0${part}`;
+									}
+							}
+
+
+							parts[currentIndex] = part;
+							return parts;
+					}
+			}
+	})
+</script> *@

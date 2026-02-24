@@ -1,0 +1,98 @@
+@using SmartWinners.Models
+@using System.Globalization
+@using Umbraco.Cms.Web.Common
+@model (SmartWinners.Models.TopWinnersModel Winner, TopWinnersFilterType Filter)
+@inject UmbracoHelper _helper
+
+@{
+	string FormatScore(decimal? value) => string.Concat((value ?? 0m).ToString("N0", CultureInfo.InvariantCulture), " Coins");
+}
+
+@if (Model.Winner != null)
+{
+	@if (Model.Filter == TopWinnersFilterType.Latest)
+	{
+		<div class="winner-carousel-item-wrap justify-between!">
+			<div class="w-[30%]">
+				<a class="flex h-full w-full items-center z-2 gap-2" href="@Html.Raw(Model.Winner.GameUrl.Replace(' ', '-'))">
+					<img class="h-8 w-8 rounded-md" src="@Html.Raw(Model.Winner.GameImage)" />
+					<div class="overflow-ellipsis overflow-hidden">
+						@Html.Raw(Model.Winner.GameName)
+					</div>
+				</a>
+			</div>
+			<div class="max-sm:hidden! flex items-center gap-2 w-[17%]">
+				<span class="flag fi-@Html.Raw(Model.Winner.CountryISO?.ToLower()) h-4.5 w-6"></span>
+				@Html.Raw(Model.Winner.UserName)
+			</div>
+			<div class="max-sm:hidden! w-[25%]">
+				@* @Html.Raw(Model.Winner.TimeString) *@
+				@_helper.GetDictionaryValueOrDefault("a few seconds ago", "a few seconds ago")
+			</div>
+			<div class="max-sm:hidden! w-[12%]">
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.BetUsd))
+			</div>
+			<div class="filter-field ml-auto">
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.ProfitUsd))
+			</div>
+		</div>
+	}
+	else if (Model.Filter == TopWinnersFilterType.BigWins)
+	{
+		<div class="winner-carousel-item-wrap justify-between!">
+			<div class="w-[30%]">
+				<a class="flex h-full w-full items-center z-2 gap-2" href="@Html.Raw(Model.Winner.GameUrl.Replace(' ', '-'))">
+					<img class="h-8 w-8 rounded-md" src="@Html.Raw(Model.Winner.GameImage)" />
+					<div class="overflow-ellipsis overflow-hidden">
+						@Html.Raw(Model.Winner.GameName)
+					</div>
+				</a>
+			</div>
+			<div class="max-sm:hidden! flex items-center gap-2 w-[17%]">
+				<span class="flag fi-@Html.Raw(Model.Winner.CountryISO?.ToLower()) h-4.5 w-6"></span>
+				@Html.Raw(Model.Winner.UserName)
+			</div>
+			<div class="max-sm:hidden! w-[25%]">
+				@Html.Raw(Model.Winner.TimeString)
+			</div>
+			<div class="max-sm:hidden! w-[12%]">
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.BetUsd))
+			</div>
+			<div class="filter-field ml-auto">
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.ProfitUsd))
+			</div>
+		</div>
+	}
+	else if (Model.Filter == TopWinnersFilterType.TopMultiplayers)
+	{
+		<div class="winner-carousel-item-wrap justify-between!">
+			<div>
+				<img class="h-8 w-8 rounded-md" src="@Html.Raw(Model.Winner.GameImage)" />
+				<div>
+					@Html.Raw(Model.Winner.GameName)
+				</div>
+			</div>
+			<div class="max-sm:hidden!">
+				@Html.Raw(Model.Winner.TimeString)
+			</div>
+			<div class="max-sm:hidden!">
+				@Html.Raw(Model.Winner.UserName)
+			</div>
+			<div class="max-sm:hidden!">
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.BetUsd))
+			</div>
+			<div class="filter-field max-sm:hidden!">
+				@Html.Raw(Model.Winner.Multiplayer)x
+			</div>
+			<div>
+				<img class="h-4" src="/images/p1.png"> &nbsp;
+				@Html.Raw(FormatScore(Model.Winner.ProfitUsd))
+			</div>
+		</div>
+	}
+}

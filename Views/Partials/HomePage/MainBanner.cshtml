@@ -1,0 +1,138 @@
+@using System.Threading
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Models
+@using SmartWinners.Models
+@using SmartWinners.Services
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@inject GameCategoriesService categoriesService;
+@inject IBusinessApiService businessApiService
+
+@{
+	var lang = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" :
+$"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+	var groupedCategories = await categoriesService.GetGroupedCategoriesAsync(lang);
+	var IsAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	Dictionary<int, GameCategory> categoriesById = groupedCategories
+		.SelectMany(c => c)
+		.ToDictionary(c => c.CategoryID, c => c);
+	var featuredCategoryIds = new[] { 13, 15, 12, 16, 17 };
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var user = isAuthorized ? Context.User.ToUserApiAccess() : null;
+
+	var hasWelcomeOffer = false;
+	if (isAuthorized && user != null)
+	{
+		var welcomeOfferResult = await businessApiService.EntityBonusesGetAsync(new EntityBonusesGet
+		{
+			Filter = new Dictionary<string, string>
+			{
+				["isDeleted"] = "=0",
+				["ParentRecordID"] = $"={user.EntityId}",
+				["CustomField201"] = $"={(int)BonusType.WellocomeOffer}",
+			},
+			LimitFrom = 0,
+			LimitCount = 1
+		}, null);
+		hasWelcomeOffer = welcomeOfferResult.Value?.Data?.Any(b => (b.IsDeleted ?? 0) == 0) ?? false;
+	}
+}
+
+
+<div class="main-banner-wrap compact">
+
+	@if (!hasWelcomeOffer)
+	{
+		<div class="main-banner relative overflow-hidden rounded-[10px] md:rounded-[20px]
+			w-full h-[clamp(250px,50vw,600px)]
+			bg-center bg-cover "
+				 style="background-image: url('/images/casino/main-banner.webp'); container-type: inline-size;">
+
+			<!-- Mobile bg -->
+			<style>
+						@@media (max-width: 767px) {
+							.main-banner {
+								background-image: url('/images/casino/main-banner-mobile.png');
+							}
+						}
+			</style>
+
+			<!-- Top gold line -->
+			<div class="absolute left-0 w-full h-0.5 bg-yellow-500" style="top: clamp(10px, 2.5vw, 14px)"></div>
+
+			<div class="absolute left-0 mt-2 md:mt-4 ml-2 md:ml-4  hidden no-scrollbar
+				overflow-y-auto sm:grid grid-cols-6 gap-2" style="top: clamp(10px, 2.5vw, 14px)">
+				<img src="/images/casino/best-crypto.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+				<img src="/images/casino/best-casino-2022.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+				<img src="/images/casino/best-casino-2023.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+				<img src="/images/casino/best-casino-of-2022.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+				<img src="/images/casino/best-supporter-2022.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+				<img src="/images/casino/best-casino-2021.svg" class="h-[clamp(20px,3.2cqw,42px)] w-auto" />
+			</div>
+
+			<!-- Bottom gold line -->
+			<div class="absolute left-0 w-full h-0.5 bg-yellow-500" style="bottom: clamp(10px, 2.5vw, 14px)"></div>
+
+			<!-- TEXT BLOCK -->
+			<div class="relative flex flex-col items-center justify-center
+				w-fit h-full w-full md:w-fit gap-2 text-center
+				md:ml-[clamp(20px,8cqw,120px)] px-4">
+
+				<div class="text-white text-[clamp(20px,3.5cqw,45px)]">
+					@_helper.GetDictionaryOrDefault("WELCOME OFFER")
+				</div>
+
+				<div class="gold-gradient-text font-bold text-[clamp(25px,6cqw,80px)]">
+					@_helper.GetDictionaryOrDefault("GET 150% EXTRA COINS")
+				</div>
+
+				<div class="text-white text-[clamp(20px,3.5cqw,45px)]">
+					@_helper.GetDictionaryOrDefault("ON YOUR FIRST PURCHASE")
+				</div>
+
+				<a href="@Html.Raw($"{langIso}/sign-in?r={langIso}/purchase-coins?bonus=welcome")" class="playerclub-button-yellow mt-6 rounded-md font-semibold text-black transition-colors
+					px-[clamp(20px,5cqw,28px)]! py-[clamp(12px,2cqw,14px)]! text-[clamp(18px,4cqw,28px)] uppercase">
+					@if (!IsAuthenticated)
+					{
+						@Html.Raw(_helper.GetDictionaryOrDefault("Header - Menu - Sign Up"))
+					}
+					else
+					{
+						@_helper.GetDictionaryOrDefault("GET BONUS")
+					}
+				</a>
+			</div>
+		</div>
+
+
+		@* 	<img src="/images/casino/dep-bonus.png" alt="@_helper.GetDictionaryValue("Deposit bonus")" /> *@
+		<div class="flex mt-5 mb-1 gap-2 no-scrollbar overflow-y-auto justify-between sm:hidden">
+			<img src="/images/casino/best-crypto.svg" />
+			<img src="/images/casino/best-casino-2022.svg" />
+			<img src="/images/casino/best-casino-2023.svg" />
+			<img src="/images/casino/best-casino-of-2022.svg" />
+			<img src="/images/casino/best-supporter-2022.svg" />
+			<img src="/images/casino/best-casino-2021.svg" />
+		</div>
+		@* 	<a class="gold-button main-banner-button" href="@Html.Raw($"{langIso}/sign-in?r={langIso}/account")">
+		@Html.Raw(_helper.GetDictionaryValue("Header - Menu - Sign Up"))
+		</a> *@
+	}
+	<div class="main-banner-bottom">
+		@foreach (var categoryId in featuredCategoryIds)
+		{
+			categoriesById.TryGetValue(categoryId, out var category);
+			if (category == null) continue;
+			var displayName = !string.IsNullOrWhiteSpace(category?.CategoryName) ? category.CategoryName : "Unknown";
+			var slugSource = !string.IsNullOrWhiteSpace(category?.CategoryName) ? category.CategoryName : "Category";
+			var slug = slugSource.Replace(' ', '-');
+
+			<a href="@Html.Raw($"{langIso}/games/{categoryId}/{slug}")"
+				 class="playerclub-button main-banner-bottom-option teal-ring">
+				@displayName
+			</a>
+		}
+	</div>
+</div>

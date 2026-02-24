@@ -1,0 +1,350 @@
+﻿@using Newtonsoft.Json
+@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+<link rel="stylesheet" href="/assets/shared/css/styles.css">
+<link rel="stylesheet" href="/assets/homepage/css/app-fonts.css">
+<link rel="stylesheet" href="/assets/homepage/css/app.css">
+<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.8/bundle/libphonenumber-js.min.js"></script>
+
+@{
+  var currentLanguage = System.Threading.Thread.CurrentThread.CurrentCulture.ToString();
+  var classMain = currentLanguage == "he" ? "rtl-main" : "";
+
+  var isMin = Context.Request.Query["min"] == "true";
+  var attrValidationMessage = new
+  {
+    @@class = "text-danger"
+  };
+  var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+  // var twoLetterIso = ViewBag.Iso as string;
+  // var phone = ViewBag.Mobile as string;
+  // phone = string.IsNullOrEmpty(phone) ? "" : phone;
+
+  var serverDetectedIso = ViewBag.Iso as string;
+  var initialCountryIso = string.IsNullOrWhiteSpace(serverDetectedIso)
+    ? ""
+    : serverDetectedIso.ToLowerInvariant();
+
+
+  var strPhoneOrEmail = Umbraco.GetDictionaryValue("SIP - Page0 - Phone");
+
+  var strButtonContinue = Umbraco.GetDictionaryValue("SIP - Continue Button");
+  var strAgree = Umbraco.GetDictionaryValue("SIP - Agree");
+}
+
+@if (!isMin)
+{
+  <div class="page-wrap @(isMin ? "" : "mt-10 sm:mt-20")">
+    <div class="flex flex-col items-center justify-center h-full">
+      <span class="block text-4xl/12 text-center w-full hidden sm:flex">
+        @Umbraco.GetDictionaryValue("Sign In to Your PlayerClub365 Account")
+      </span>
+      <div class="flex justify-between items-center w-full flex sm:hidden">
+        <p class="str-email w-fit! mb-0! text-3xl">
+          @Umbraco.GetDictionaryValue($"Sign In")
+        </p>
+        <a target="_blank" href="@Umbraco.GetDictionaryValue("SIP - Page1 Need Help Url")"
+          class=" @(isMin ? "blue-link" : "green-link")" id="help_link_page1">
+          @Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+      </div>
+      <div
+        class="flex justify-center flex-col items-center @(isMin ? "mt-5 sm:mt-15" : "my-5 sm:my-15")   w-full max-w-[670px] gap-6">
+        <a class="self-end @(isMin ? "blue-link" : "green-link")  hidden sm:flex"
+          href="@Umbraco.GetDictionaryValue("SIP - Page0 Need Help Url")">
+          @Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+
+        <div class="h-16 md:h-20 w-full">
+          <phone-number-input tabindex="0" class="block w-full h-full rounded-lg font-medium" id="phoneInput"></phone-number-input>
+        </div>
+        <p class="@(isMin ? "[&>a]:text-(--link-blue)!" : "")">@Html.Raw(strAgree)</p>
+        <div style="display: flex; width: 100%">
+
+          <p id="form-valid" class="validation_message text-center!"
+            style="flex-basis: 100%; display: block; text-align: left"></p>
+        </div>
+        <input type="hidden" id="Country" />
+        <input type="hidden" id="PhonePrefix" />
+        <p class="form_text validation_param_error mt-top " tabindex="0" id="form-valid"
+          style="display: none; margin-top: -5px;"></p>
+
+        <button form="signup" type="submit" style="border: 0" id="submit_login_1"
+          class="playerclub-button-yellow w-full! max-sm:max-w-none! py-2 px-12! mt-0! cursor-pointer justify-center text-black!">
+          @strButtonContinue
+        </button>
+      </div>
+    </div>
+  </div>
+}
+else
+{
+  <div class="flex flex-col items-center justify-center h-full max-w-[818px] p-2 md:p-10 bg-white text-black ">
+    <span class="block text-4xl/12 text-center w-full hidden sm:block">
+      @Umbraco.GetDictionaryValue("Sign In to Your PlayerClub365 Account")
+    </span>
+    <p class="str-email w-fit! mb-0! text-3xl flex sm:hidden">
+      @Umbraco.GetDictionaryValue($"Sign In")
+    </p>
+    <div class="flex justify-end sm:justify-between items-center w-full flex sm:hidden">
+      <p class="str-email w-fit! mb-0! text-3xl hidden sm:flex">
+        @Umbraco.GetDictionaryValue($"Sign In")
+      </p>
+      <a target="_blank" href="@Umbraco.GetDictionaryValue("SIP - Page1 Need Help Url")"
+        class=" @(isMin ? "blue-link" : "green-link")" id="help_link_page1">
+        @Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+    </div>
+    <div
+      class="flex justify-center flex-col items-center @(isMin ? "mt-5 sm:mt-15" : "my-5 sm:my-15")   w-full max-w-[670px] gap-6">
+      <a class="self-end @(isMin ? "blue-link" : "green-link")  hidden sm:flex"
+        href="@Umbraco.GetDictionaryValue("SIP - Page0 Need Help Url")" _target="_blank">
+        @Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+      <div class="h-16 md:h-20 w-full">
+        <phone-number-input tabindex="0" class="block w-full h-full border border-black/20 rounded-lg font-medium"
+          id="phoneInput"></phone-number-input>
+      </div>
+      <p class="mt-3! [&>a]:text-(--link-blue)! tracking-wider select-none">
+        @Html.Raw(strAgree)</p>
+      <div style="display: flex; width: 100%">
+
+        <p id="form-valid" class="validation_message text-center!"
+          style="flex-basis: 100%; display: block; text-align: left"></p>
+      </div>
+      <input type="hidden" id="Country" />
+      <input type="hidden" id="PhonePrefix" />
+      <p class="form_text validation_param_error mt-top " tabindex="0" id="form-valid"
+        style="display: none; margin-top: -5px;"></p>
+
+      <button form="signup" type="submit" style="border: 0" id="submit_login_1"
+        class="playerclub-button-yellow w-full! max-sm:max-w-none! py-2 px-12! mt-0! cursor-pointer justify-center text-black!">
+        @strButtonContinue
+      </button>
+    </div>
+  </div>
+}
+
+<script type="text/javascript" src="~/assets/js/FormScript.js?v=2"></script>
+
+<script>
+  const phoneInput = document.getElementById("phoneInput");
+  const serverIso = @Html.Raw(JsonConvert.SerializeObject(initialCountryIso));
+
+  let phoneNumber = "";
+  let isPhoneComplete = false;
+  let country = null; // ожидаем объект { name, iso2, dialCode } | null
+  let iso = serverIso;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const localIso = localStorage.getItem("Iso") ?? "";
+    if (!iso || iso === "empty") {
+      iso = localIso && localIso !== "empty" ? localIso : "us";
+    }
+
+    iso = (iso || "").toLowerCase();
+
+    if (phoneInput && iso)
+      phoneInput.country = iso;
+
+    // Hide phone input label on small viewports (Tailwind sm breakpoint)
+    const smQuery = window.matchMedia("(max-width: 639px)");
+    const applyPhoneLabelVisibility = (evt) => {
+      const isSmall = evt?.matches ?? smQuery.matches;
+      if (!phoneInput) return;
+      phoneInput.showLabel = !isSmall;
+    };
+    applyPhoneLabelVisibility();
+    if (smQuery.addEventListener) smQuery.addEventListener("change", applyPhoneLabelVisibility);
+    else if (smQuery.addListener) smQuery.addListener(applyPhoneLabelVisibility);
+
+    // Focus logic (handles shadow DOM inner input if present)
+    function focusPhoneElement() {
+      if (!phoneInput) return;
+      // Direct focus on custom element
+      phoneInput.focus();
+      // Try focusing internal input inside shadow root (if component uses one)
+      const innerInput = phoneInput.shadowRoot?.querySelector('input, input[type="tel"]');
+      if (innerInput) innerInput.focus();
+    }
+
+    // Immediate attempt
+    focusPhoneElement();
+    // Retry shortly in case custom element upgrades later
+    setTimeout(focusPhoneElement, 150);
+    setTimeout(focusPhoneElement, 500);
+  });
+
+  // --- helpers ---------------------------------------------------
+  const getDetail = (e) => Array.isArray(e.detail) ? e.detail[0] : e.detail;
+  const digitsOnly = (s) => (s || "").replace(/\D+/g, "");
+  const hasLib = !!(window.libphonenumber && window.libphonenumber.parsePhoneNumber);
+
+  const getIso2 = (c) => (c && typeof c === "object" ? c.iso2 : (typeof c === "string" ? c : ""));
+  const getDial = (c) => (c && typeof c === "object" ? c.dialCode : "");
+
+  // построить username-версию: <countryCode><NSN без ведущего 0>
+  function buildUsernameFromE164(e164, dialCode) {
+    const d0 = digitsOnly(e164);
+    if (!d0) return "";
+    const d = d0.startsWith("00") ? d0.slice(2) : d0; // 00380... -> 380...
+    const cc = (dialCode || "");
+    let rest = d.startsWith(cc) ? d.slice(cc.length) : d;
+    if (rest.startsWith("0")) rest = rest.slice(1);  // срезаем один ведущий "национальный ноль"
+    return cc + rest;
+  }
+
+  // привести ввод к E.164: если без "+", приклеим код страны
+  function toE164(raw, ctry) {
+    const cleaned = raw.trim();
+    if (!cleaned) return "";
+    if (cleaned.startsWith("+")) {
+      return "+" + digitsOnly(cleaned);
+    }
+    const cc = getDial(ctry);
+    const local = digitsOnly(cleaned);
+    return cc ? `+${cc}${local}` : "";
+  }
+
+  // основная нормализация и валидация
+  function normalizePhoneSafe(raw, ctry) {
+    const candidate = toE164(raw, ctry); // может быть пустым, если нет кода страны
+    if (!candidate) return { valid: false, reason: "NO_COUNTRY_CODE" };
+
+    if (hasLib) {
+      try {
+        const p = window.libphonenumber.parsePhoneNumber(candidate);
+        if (!p || !p.isValid()) {
+          return { valid: false, reason: "INVALID_LIB" };
+        }
+        return {
+          valid: true,
+          e164: p.format("E.164"),
+          username: `${p.countryCallingCode}${p.nationalNumber}`,
+          region: p.country || getIso2(ctry)?.toUpperCase() || ""
+        };
+      } catch {
+        return { valid: false, reason: "PARSE_ERROR" };
+      }
+    }
+
+    // fallback без библиотеки (не можем на 100% гарантировать валидность)
+    const cc = getDial(ctry);
+    if (!cc) return { valid: false, reason: "NO_COUNTRY_CODE" };
+    const e164 = candidate;
+    const username = buildUsernameFromE164(e164, cc);
+    return { valid: true, e164, username, region: getIso2(ctry)?.toUpperCase() || "" };
+  }
+
+  // --- CE events -------------------------------------------------
+  phoneInput.addEventListener("update:modelValue", (e) => {
+    const val = (getDetail(e) || "").toString().replace(/\s+/g, "");
+    phoneNumber = val;
+    phoneInput.setAttribute("model-value", phoneNumber);
+  });
+
+  phoneInput.addEventListener("update:country", (e) => {
+    country = getDetail(e) || null; // { name, iso2, dialCode } | null
+  });
+
+  document.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      document.querySelector("#submit_login_1").click();
+    }
+  });
+
+  // --- Submit ----------------------------------------------------
+  document.querySelector("#submit_login_1").addEventListener("click", async function () {
+    const btn = this;
+    const formErrorElem = document.querySelector("#form-valid");
+
+    // базовые проверки до лоадера (чтобы не дёргать UI лишний раз)
+    if (!phoneNumber && !country) {
+      formErrorElem.style.display = "block";
+      formErrorElem.textContent = "@Html.Raw(Umbraco.GetDictionaryValue("Please specify the phone number and country code"))";
+      return;
+    }
+    if (!country) {
+      formErrorElem.style.display = "block";
+      formErrorElem.textContent = "@Html.Raw(Umbraco.GetDictionaryValue("Please specify the country code"))";
+      return;
+    }
+
+    // нормализация + строгая проверка валидности
+    const normalized = normalizePhoneSafe(phoneNumber, country);
+    if (!normalized.valid) {
+      formErrorElem.style.display = "block";
+      // показываем «100% invalid» только когда библиотека точно сказала "invalid":
+      const msg =
+        (normalized.reason === "INVALID_LIB" || normalized.reason === "PARSE_ERROR")
+          ? "Invalid phone number"
+          : "@Html.Raw(Umbraco.GetDictionaryValue("Please specify the phone number"))";
+      formErrorElem.textContent = msg;
+      return; // стоп, не отправляем
+    }
+
+    // (опционально) можно также требовать isPhoneComplete, если хочешь UX-жёсткость:
+    // if (!isPhoneComplete) { ... return; }
+
+    formErrorElem.textContent = "";
+    formErrorElem.style.display = "none";
+
+    btn.style.pointerEvents = "none";
+    DisplayLoadingScreen();
+
+    const aId = parseInt("@Html.Raw(WebStorageUtility.GetAffiliateId(Context))");
+
+    // Сохраняем обе версии
+    localStorage.setItem("PhoneE164", normalized.e164 || "");       // "+380636422844"
+    localStorage.setItem("PhoneUsername", normalized.username || ""); // "380636422844"
+    localStorage.setItem("PhonePrefix", getDial(country) || "");      // "380"
+    localStorage.setItem("Mobile", normalized.username || "");        // совместимость
+    localStorage.setItem("Iso", (getIso2(country) || normalized.region || "").toLowerCase());
+    localStorage.setItem("AffiliateId", Number.isFinite(aId) ? aId : -1);
+
+    const body = {
+      phone: normalized.e164,                               // E.164
+      affiliateEntityId: Number.isFinite(aId) ? aId : -1,
+      iso: getIso2(country) || normalized.region || "",
+      prefix: getDial(country) || ""
+    };
+
+    try {
+      const resp = await fetch(`/api/Auth/phone?r=@Html.Raw(Uri.EscapeDataString(UmbracoUtility.GetReturnUrl(Context)))`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Fetch-Indicator": "true",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        let redirectUrl;
+        if (data.verify === true) {
+          redirectUrl = data.redirectUrl;
+        } else {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set("page", "1");
+          currentUrl.searchParams.set("min", "false");
+          redirectUrl = currentUrl.toString();
+        }
+        window.top.location.href = redirectUrl;
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        formErrorElem.style.display = "block";
+        if (data.code === "INVALID_PHONE_NUMBER") {
+          formErrorElem.textContent = data.detail || "Invalid phone number";
+        } else {
+          formErrorElem.textContent = data.detail || "Unknown error";
+        }
+      }
+    } catch (err) {
+      formErrorElem.style.display = "block";
+      formErrorElem.textContent = "Network error";
+    } finally {
+      btn.style.pointerEvents = "initial";
+      CloseLoader(btn);
+      CloseLoadingScreen();
+    }
+  });
+</script>

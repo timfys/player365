@@ -1,0 +1,131 @@
+﻿@using GoldCasino.ApiModule.Dtos.User
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Enums
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading
+@using SmartWinners.Models.Payment
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject IBusinessApiService businessApiService
+@{
+	Layout = "MasterPage.cshtml";
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/withdraw");
+		return;
+	}
+
+	var identityUser = Context.User.ToUserApiAccess();
+
+	var result = await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserDto, UserBalanceDto, UserVerificationStateDto>.Fields,
+		Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+	}, identityUser);
+
+	var entity = result.Value?.Entities.FirstOrDefault();
+	var (user, bal, passport) = EntityMapper.MapTo<UserDto, LegacyUserBalancesDto, UserVerificationStateDto>(entity);
+
+	var userPassportState = passport.VerificationState;
+
+	var currencies = await CurrencyHelper.GetCurrencies();
+
+	var method = PaymentHelper.GetUserWithdrawMethod((int)ViewBag.Id);
+	var withdrawForms = WithdrawForm.Init();
+	var form = withdrawForms.First(x => x.CurrencyIso.ToLower().Equals(method.CurrencyIso.ToLower()));
+	var withdrawCurrencyDetails = currencies.First(x => x.CurrencyIso.ToLower().Equals(method.CurrencyIso.ToLower()));
+
+	var cards = await IdentityHelper.GetUserCardsToVerify(identityUser);
+
+	var cardsVerified = (cards.TrueForAll(x => x.CardVerificationState == CardVerificationState.Verified) || cards.Count == 0);
+	var idVerified = userPassportState == IdDocVerificationState.Approved;
+}
+
+@if (isAuthenticated && method is not null && cardsVerified && idVerified)
+{
+	var resp = await PaymentHelper.GetUserBalance(identityUser, false);
+	var winnings = bal.TotalWithdrawAmountUsd;
+
+	var maxWithdraw = $"{(int)Math.Floor((winnings < 0 ? 0 : winnings) * withdrawCurrencyDetails.ExchangeRate):0.00}";
+
+	<div class="page-wrap">
+		<div class="withdraw-balance-wrap">
+			<h1 class="personal_information_title">@Umbraco.GetDictionaryValue("Withdraw")</h1>
+			<a class="button_back" href="@langIso/withdraw" style="display: block; font-weight: 400"> @Umbraco.GetDictionaryValue("Back")</a>
+			<a href="@Umbraco.GetDictionaryValue("Need help URL Withdraw Balance Page")" class="personal_help_link">@Umbraco.GetDictionaryValue("Need help?")</a>
+			<div class="withdraw_balance">
+				<span class="form_text">@Umbraco.GetDictionaryValue("Your Account Balance")</span>
+				<span class="balance">
+					<b>@withdrawCurrencyDetails.Symbol @($"{(int)Math.Floor((winnings < 0 ? 0 : winnings) * withdrawCurrencyDetails.ExchangeRate):0.00}")</b>
+				</span>
+				<p class="withdraw_title">@Umbraco.GetDictionaryValue("ENTER THE AMOUNT YOU WISH TO WITHDRAW")</p>
+				<div class="amount">
+					<p class="currency_symbol_withdraw">@withdrawCurrencyDetails.Symbol</p>
+					<input onchange="MinMaxInput(this, @Html.Raw($"{10 * withdrawCurrencyDetails.ExchangeRate:0.00}"), @Html.Raw(maxWithdraw))" id="amount_input" minAmount="@(Math.Round(10 * withdrawCurrencyDetails.ExchangeRate, 2))" type="number">
+				</div>
+				<label id="amount_label" for="amount_input">@Umbraco.GetDictionaryValue("Minimum withdrawal amount") @withdrawCurrencyDetails.Symbol @Math.Round(10 * withdrawCurrencyDetails.ExchangeRate, 2)</label>
+				<p class="validation_param_error" style="font-size: 18px;" id="withdraw_validation"></p>
+				<div class="balance_details">
+					<b class="withdraw_funds">@Umbraco.GetDictionaryValue("The funds will be transferred to the following payout method")</b>
+					<ul class="balance_list">
+						@if (int.Parse(method.PaymentId) == 3)
+						{
+							<span class="bank_country">
+								<img class="flag" src="/images/flags/Israel.png" alt="">Israel (ILS) @Umbraco.GetDictionaryValue("By cheque")
+							</span>
+						}
+						else
+						{
+							<span class="bank_country" style="margin-bottom: 10px">
+								<img class="flag" src="/assets@(form.CountryFlagUrl)" alt="">@form.CountryName (@form.CurrencyIso) @Html.Raw(method.PaymentId.Equals("9") ? "" : @Umbraco.GetDictionaryValue("By Cheque"))
+							</span>
+
+							@foreach (var field in typeof(WithdrawApiModel).GetProperties())
+							{
+								var value = field.GetValue(method) as string;
+
+								if ((field.Name.Contains("PayerNumber") || field.Name.Contains("Parm"))
+								&& field.PropertyType == typeof(System.String) && !string.IsNullOrEmpty(value as string))
+								{
+									var fields = new List<WithdrawFormField>();
+									fields.AddRange(form.MainFormFields);
+
+									if (form.SecondaryFormFields is not null)
+										fields.AddRange(form.SecondaryFormFields);
+
+									var fieldName = fields.FirstOrDefault(x => x.WsName.ToLower().Equals(field.Name.ToLower()));
+
+									if (fieldName is null)
+										continue;
+
+									<li class="balance_text">
+										@Umbraco.GetDictionaryValue(fieldName.Title): <b>@value</b>
+									</li>
+								}
+							}
+						}
+
+
+
+					</ul>
+					@Html.Raw(Umbraco.GetDictionaryValue("If you select wrong"))
+				</div>
+				<p class="commission">
+					@Umbraco.GetDictionaryValue("Withdraw commission")<b>4.5%</b>
+				</p>
+				<button id="balance_withdraw" withdraw_id="@method.purchase_paymentId" currencyIso="@method.CurrencyIso" class="button">@Umbraco.GetDictionaryValue("Withdraw")</button>
+			</div>
+		</div>
+	</div>
+	<script src="/assets/js/FormScript.js"></script>
+}
+else
+{
+	Context.Response.Redirect("/withdraw");
+}

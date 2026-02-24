@@ -1,0 +1,18 @@
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+
+<div class="flex flex-col justify-center items-center w-full max-w-[1330px] h-[clamp(226px,50vw,348px)]
+bg-no-repeat bg-center bg-cover rounded-[14px] mt-15 md:mt-10 
+bg-[radial-gradient(50%_50%_at_50%_50%,rgba(22,50,55,0.7)_0%,rgba(8,37,41,0.7)_100%),url('/images/casino/lets-get-started-bg.png')]">
+    <span class="text-3xl md:text-5xl/16 font-semibold">
+        @Html.Raw(_helper.GetDictionaryValue("Let's get started"))
+    </span>
+  <a href="/account"
+     class="playerclub-button-yellow px-7 py-3 mt-5 flex flex-col text-[#202020]! [&>b]:text-base! [&>span]:text-sm! md:[&>b]:text-lg! md:[&>span]:text-base!">
+    @Html.Raw(_helper.GetDictionaryValue("Sign-Up-Now-1-min"))
+  </a>
+</div>
+
+@*     <div class="playerclub-button-yellow">
+        @Html.Raw(_helper.GetDictionaryValue("Sign-Up-Now-1-min"))
+    </div> *@

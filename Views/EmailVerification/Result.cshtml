@@ -1,0 +1,103 @@
+@using SmartWinners.Controllers
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Dtos.User
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<EmailVerificationResultViewModel>
+
+@inject IBusinessApiService businessApiService
+@inject GoldCasino.ApiModule.Services.PlayerClub365Api.IPlayerClub365ApiService playerClub365ApiService
+
+@{
+    Layout = "/Views/MasterPage.cshtml";
+    
+    decimal totalBalance = 0;
+    
+    // Fetch and cache updated balance after successful verification
+    if (Model.Success && Context.User.Identity?.IsAuthenticated == true)
+    {
+        var identityUser = Context.User.ToUserApiAccess();
+        
+        // Fetch fresh balance from API
+        var result = await businessApiService.EntityFindAsync(new()
+        {
+            Fields = FieldHelper<UserBalanceDto>.Fields,
+            Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+        }, identityUser);
+        
+        var entity = result.Value?.Entities.FirstOrDefault();
+        var balance = EntityMapper.MapTo<UserBalanceDto>(entity);
+        
+        // Fetch bonus balance
+        decimal bonusBalance = 0;
+        var bonusResult = await playerClub365ApiService.EntityBonusesGetAsync(identityUser);
+        if (bonusResult.IsSuccess)
+        {
+            bonusBalance = bonusResult.Value.BonusBalance;
+            PaymentHelper.CacheUserBonusBalance(Context, bonusBalance);
+        }
+        
+        // Cache the updated balance
+        PaymentHelper.CacheUserBalance(Context, new() { BalanceUSD = balance?.BalanceUSD ?? 0 });
+        
+        totalBalance = (balance?.BalanceUSD ?? 0) + bonusBalance;
+    }
+}
+
+<style>
+    .title {
+        font-size: 1.25rem;
+        margin: 0 0 .5rem;
+        font-weight: 600;
+    }
+
+    .ok {
+        color: #22c55e;
+    }
+
+    .bad {
+        color: #f87171;
+    }
+
+    .muted {
+        color: #9ca3af;
+        font-size: .95rem;
+        margin-top: .5rem;
+    }
+</style>
+<div class="@(Model.Success ? "ok" : "bad")">
+    @if (Model.Success)
+    {
+        <div class="title">You're All Set! 🚀</div>
+        <p class="mt-4">Your email has been successfully verified. We've added a little something to your vault to get the reels spinning.</p>
+        <p class="mt-4"><strong>Your Reward:</strong> 5 FREE COINS have been credited to your balance.</p>
+        <p class="mt-2 muted">Use them on any of our featured slots or table games. Good luck, and may the odds be in your favor!</p>
+        <a href="/games" class="mt-6 inline-block px-6 py-3 bg-yellow-500 text-black font-semibold rounded-lg hover:bg-yellow-400 transition">EXPLORE GAMES NOW</a>
+        
+        <script>
+            // Update header balance immediately
+            document.addEventListener('DOMContentLoaded', function() {
+                var balanceEl = document.getElementById('balance-usd');
+                if (balanceEl) {
+                    balanceEl.textContent = '@totalBalance.ToString("0.00")';
+                }
+            });
+        </script>
+    }
+    else
+    {
+        <div class="title">Verification Failed</div>
+        <p>Please try again later.</p>
+    }
+</div>
+
+@if (Model.Success && Model.AffiliateId is > 0)
+{
+    var affiliateResult = await businessApiService.EntityFindAsync(new()
+    {
+        Fields = ["customfield46"],
+        Filter = new() { { "entityId", $"{Model.AffiliateId}" } }
+    });
+    var script = affiliateResult.Value?.Entities.FirstOrDefault()?.EmailVerifyAffiliateScript;
+    @Html.Raw(script)
+}

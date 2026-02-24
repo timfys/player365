@@ -1,0 +1,22 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+	Layout = "MasterPage.cshtml";
+	var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	var pageIndex = (int)ViewBag.PageIndex;
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/identity");
+		return;
+	}
+}
+
+@if (isAuthenticated)
+{
+	<partial name="/Views/Partials/IdentityVerification/_Step@(pageIndex).cshtml" />
+}

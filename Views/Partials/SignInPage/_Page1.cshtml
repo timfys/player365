@@ -1,0 +1,261 @@
+﻿@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+<link rel="stylesheet" href="/assets/shared/css/styles.css">
+<link rel="stylesheet" href="/assets/homepage/css/app-fonts.css">
+<link rel="stylesheet" href="/assets/homepage/css/app.css">
+@{
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	var strButtonContinue = Umbraco.GetDictionaryValue("SIP - Continue Button");
+	var strAgree = Umbraco.GetDictionaryValue("SIP - Agree");
+
+	var strChange = Umbraco.GetDictionaryValue("SIP - Page1 - Change");
+	var strForgotPassword = Umbraco.GetDictionaryValue("SIP - Page1 - Forgot Password");
+	var strPassword = Umbraco.GetDictionaryValue("SIP - Page1 - Password");
+	var strPhone = Umbraco.GetDictionaryValue("SIP - Page1 - Phone");
+
+	var isMin = Context.Request.Query["min"] == "true" || ViewBag.Min is bool;
+
+	if (!WebStorageUtility.TryGetString("ReturnUrl", out var returnUrl))
+	{
+		IdentityHelper.SetReturnUrl(Context);
+	}
+}
+
+<div class="mt-12 ">
+	<div class="flex flex-col items-center justify-center h-full w-full max-w-[740px]">
+
+		<div class="flex flex-col justify-between items-center w-full gap-4 mb-8!">
+			<div class="flex max-md:flex-col-reverse justify-between items-center w-full">
+				<p class="str-email w-fit! mb-0! text-2xl md:text-3xl">@strPhone</p>
+				<a target="_blank" href="@Umbraco.GetDictionaryValue("SIP - Page1 Need Help Url")" class="green-link max-md:self-end"
+					id="help_link_page1">@Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+			</div>
+			<div class="flex flex-col-reverse md:flex-row justify-between md:justify-start  gap-6 items-center w-full">
+				<button name="_BtnBackToPage0" id="back_to_prev_page">
+					<p class="details_link change_link green-link hover:underline">@strChange</p>
+				</button>
+
+				<div id="phone_for_forgot" class="text-3xl phone_for_forgot">
+				</div>
+			</div>
+		</div>
+		<p class="mb-2! text-2xl text-left w-full">@strPassword</p>
+
+		<div class="flex items-center border rounded-md overflow-hidden w-full bg-white" id="input-line">
+			<!-- Input -->
+			<input required type="password" id="sigin_password"
+				class="flex-1 h-12 px-3 py-2 outline-none text-gray-900 placeholder-gray-700" placeholder="" />
+
+			<!-- Toggle button -->
+			<button type="button" id="btnShowPassword" onclick="showHidePassword()"
+				class="flex items-center justify-center px-3 text-gray-500 hover:text-gray-700">
+				<!-- Shown icon -->
+				<svg class="w-6 h-6 hidden" viewBox="0 0 24 24" id="imgPasswordShown">
+					<path fill="currentColor"
+						d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z" />
+				</svg>
+
+				<!-- Hidden icon -->
+				<svg class="w-6 h-6" viewBox="0 0 24 24" id="imgPasswordHidden">
+					<path fill="currentColor"
+						d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.08L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.74,7.13 11.35,7 12,7Z" />
+				</svg>
+			</button>
+		</div>
+		<div class="flex w-full flex-col justify-end">
+			<p id="form-valid" class="validation_message" style="flex-basis: 100%; display: none"></p>
+			<p class="green-link text-right mt-2!" id="forgot-pass">@strForgotPassword</p>
+		</div>
+	</div>
+	<button id="but-cont" type="submit" form="welcome"
+		class="playerclub-button-yellow py-2 text-black! font-semibold justify-center mt-14! cursor-pointer">
+		@strButtonContinue
+	</button>
+	<div class="flex flex-col gap-4 mt-8 mb-12">
+		<a target="_blank" class="flex justify-center items-center gap-2 green-link hover:underline"
+			href="https://t.me/Club_Verification_bot?start=playerclub365">
+			<img src="/images/contacts/Telegram.svg" class="h-6" alt="telegram_icon" />
+			@Umbraco.GetDictionaryValue("Restore password via Telegram")
+		</a>
+		<div class="flex justify-center items-center gap-2 green-link hover:underline cursor-pointer" id="whatsapp_forgot_password">
+			<img src="/images/contacts/whatsapp.svg" class="h-6" alt="whatsapp_icon" />
+			@Umbraco.GetDictionaryValue("Restore password via WhatsApp")
+		</div>
+	</div>
+	<p class="agree_text">
+		@Html.Raw(strAgree)
+	</p>
+</div>
+
+<script>
+	document.addEventListener("keypress", function (e) {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			document.querySelector("#but-cont").click();
+		}
+	})
+	document.addEventListener("DOMContentLoaded", function () {
+		document.querySelector("#sigin_password").focus();
+	})
+
+	function showHidePassword() {
+		var imgPasswordShown = $("#imgPasswordShown");
+		var imgPasswordHidden = $("#imgPasswordHidden");
+		var inputPassword = $("#sigin_password");
+
+		var isHidden = inputPassword.attr("type") == "password";
+		if (isHidden) {
+			inputPassword.attr("type", "text");
+			imgPasswordShown.show();
+			imgPasswordHidden.hide();
+		} else {
+			inputPassword.attr("type", "password");
+			imgPasswordShown.hide();
+			imgPasswordHidden.show();
+		}
+	}
+
+	document.querySelector("#but-cont").addEventListener("click", async function (e) {
+
+
+		this.style.pointerEvents = "none";
+
+		let passWordElem = document.querySelector("#sigin_password");
+
+		if (passWordElem.value.length == 0) {
+			passWordElem.classList.add("error_b");
+			this.style.pointerEvents = "initial";
+			return;
+		} else {
+			passWordElem.classList.remove("error_b");
+		}
+
+		DisplayLoadingScreen();
+
+		let phonePrefix = localStorage.getItem("PhonePrefix") || "";
+		let phoneOrEmail = localStorage.getItem("Mobile") || "";
+		let iso = localStorage.getItem("Iso") || "";
+		let aid = localStorage.getItem("AffiliateId") || -1;
+
+		let mobileValue = phonePrefix + phoneOrEmail;
+
+		let body = {
+			Username: phoneOrEmail.replace('+', ''),
+			PhonePrefix: phonePrefix,
+			Aid: aid,
+			Language: iso,
+			password: passWordElem.value,
+			PageIndex: 1
+		};
+
+		let resp = await fetch(`/api/auth/login?r=@Html.Raw(Uri.EscapeDataString(UmbracoUtility.GetReturnUrl(Context)))`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				'X-Fetch-Indicator': 'true'
+			},
+			body: JSON.stringify(body)
+		})
+
+		var json = await resp.json();
+		this.style.pointerEvents = "initial";
+		CloseLoadingScreen();
+		if (resp.ok) {
+			document.querySelector(".validation_message").style.display = "none";
+			let redirectUrl = resp.headers.get("Redirect");
+
+			window.top.location.href = decodeURIComponent(redirectUrl);
+		} else {
+			document.querySelector(".validation_message").style.color = "red";
+			document.querySelector(".validation_message").style.display = "block";
+			if(json.code == "INVALID_CREDENTIALS"){
+				document.querySelector(".validation_message").textContent = "Invalid username or password";
+				return;
+			}
+			document.querySelector(".validation_message").textContent = json.message;
+
+		}
+	})
+
+	document.addEventListener("DOMContentLoaded", () => {
+		let phonePrefix = localStorage.getItem("PhonePrefix") || "";
+		let phoneOrEmail = localStorage.getItem("Mobile") || "";
+
+		document.getElementById("phone_for_forgot").textContent = phoneOrEmail;
+		// `+${phonePrefix} ${phoneOrEmail}`;
+	});
+
+	document.querySelector("#back_to_prev_page").addEventListener("click", async function (e) {
+		await SetString("@Html.Raw(WebStorageUtility.SignInPageIndex)", "@Html.Raw(CryptoUtility.EncryptString("0"))");
+		// window.location.href = "@Html.Raw($"{langIso}/sign-in?r={Uri.EscapeDataString(UmbracoUtility.GetReturnUrl(Context))}{(isMin ? "&min=true" : "")}")"
+		window.location.href = "@Html.Raw($"{langIso}/sign-in?r={Uri.EscapeDataString(UmbracoUtility.GetReturnUrl(Context))}{(isMin ? "&min=false" : "")}")"
+	})
+	document.querySelector("#forgot-pass").addEventListener("click", async function (e) {
+
+		DisplayLoadingScreen();
+
+		e.stopImmediatePropagation();
+		this.style.pointerEvents = "none";
+
+		await ForgotPassword(1);
+
+		this.style.pointerEvents = "initial";
+		CloseLoadingScreen();
+	})
+
+	async function ForgotPassword(remindKind) {
+		let phonePrefix = localStorage.getItem("PhonePrefix") || "";
+		let phoneOrEmail = localStorage.getItem("Mobile") || "";
+		let iso = localStorage.getItem("Iso") || "";
+		let aid = localStorage.getItem("AffiliateId") || -1;
+
+		let mobileValue = phonePrefix + phoneOrEmail;
+
+		let resp = await fetch("/api/auth/forgot", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"X-Fetch-Indicator": "true"
+			},
+			body: JSON.stringify({
+				username: phoneOrEmail.replace("+", ""),
+				remindKind: remindKind,
+				countryIso: iso,
+				token: null,
+				newPassword: null,
+				language: iso
+			})
+		});
+		let validElem = document.querySelector("#form-valid");
+		let respBody = await resp.json().catch(() => ({}));
+		if (resp.ok) {
+			let code = respBody.code || respBody.Code;
+			validElem.style.color = "var(--link-green)";
+			validElem.textContent = "Request submitted successfully.";
+			validElem.style.display = "block";
+		} else {
+			let message = respBody.detail || respBody.message || "Unable to process request.";
+			validElem.style.color = "red";
+			validElem.textContent = `${message}`;
+			validElem.style.display = "block";
+		}
+
+	}
+
+	document.querySelector("#whatsapp_forgot_password").addEventListener("click", async function (e) {
+		DisplayLoadingScreen();
+
+		e.stopImmediatePropagation();
+		this.style.pointerEvents = "none";
+
+		await ForgotPassword(3);
+
+		this.style.pointerEvents = "initial";
+
+		CloseLoadingScreen();
+	})
+
+</script>

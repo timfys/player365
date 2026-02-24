@@ -1,0 +1,54 @@
+@model SmartWinners.Models.ViewModels.BonusTimerViewModel
+
+<div class="flex flex-col items-center justify-center gap-3 sm:gap-4 lg:gap-7 text-center text-[#e9f3f5] my-12 md:my-16 lg:my-24">
+  <div class="mb-1 text-[20px] sm:text-[24px] lg:text-[32px]">
+    Don’t miss it – promotion
+    <span class="text-red-500">closes</span>
+    when timer
+    <span class="text-red-500">expires</span>
+  </div>
+
+  <div
+    id="timer"
+    data-expiry="@(Model.ExpirationUtc?.ToString("O"))"
+    class="
+      font-['Digital_Numbers']!
+      text-[clamp(30px,3.85cqw,70px)]!
+      tracking-[0.3em]
+      text-white
+    "
+  >
+      @(string.IsNullOrWhiteSpace(Model?.DisplayText) ? "00:00:00" : Model.DisplayText)
+  </div>
+</div>
+
+@if (Model?.ExpirationUtc is not null)
+{
+  <script>
+    (() => {
+      const el = document.getElementById('timer');
+      if (!el) return;
+
+      const expiryIso = el.dataset.expiry;
+      if (!expiryIso) return;
+      
+      const expiry = Date.parse(expiryIso + 'Z');
+
+      const tick = () => {
+        const now = Date.now();
+        const diffMs = Math.max(0, expiry - now);
+        const totalSeconds = Math.floor(diffMs / 1000);
+        const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+        const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+        el.textContent = `${hours}:${minutes}:${seconds}`;
+        if (totalSeconds <= 0) {
+          clearInterval(handle);
+        }
+      };
+
+      tick();
+      const handle = setInterval(tick, 1000);
+    })();
+  </script>
+}

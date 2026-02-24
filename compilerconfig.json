@@ -1,0 +1,14 @@
+﻿[
+  {
+    "outputFile": "wwwroot/assets/css/style.css",
+    "inputFile": "wwwroot/assets/css/style.scss"
+  },
+  {
+    "outputFile": "wwwroot/assets/css/layout.css",
+    "inputFile": "wwwroot/assets/css/layout.scss"
+  },
+  {
+    "outputFile": "wwwroot/assets/css/playerclub.css",
+    "inputFile": "wwwroot/assets/css/playerclub.scss"
+  }
+]

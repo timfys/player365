@@ -1,0 +1,71 @@
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper helper
+@model (string cardClick, string cryptoClick, bool isMin)
+
+@{
+	var options = new[]
+	{
+		new { Id = "card-option", Img = "/images/card-option.svg", Text = helper.GetDictionaryValue("Pay with Credit or Debit Card"), OnClick = Model.cardClick },
+		new { Id = "crypto-option", Img = "/images/crypto-option.svg", Text = helper.GetDictionaryValue("Pay with Cryptocurrency"), OnClick = Model.cryptoClick }
+	};
+}
+
+@if (!Model.isMin)
+{
+	<div class="flex gap-3 md:gap-5 flex-col items-center w-full">
+		@foreach (var opt in options)
+		{
+			<div id="@opt.Id" data-click="@opt.OnClick"
+					 class="flex rounded-xl cursor-pointer bg-(--c-teal-strong) hover:bg-(--c-teal-strong-h) p-3 md:p-5 h-20 md:h-25 justify-between items-center w-full select-none">
+
+				<div class="flex h-full justify-start items-center gap-5">
+					<img class="h-8 w-12 md:h-10 md:w-15" src="@opt.Img" />
+					<span class="text-base xs:text-lg md:text-xl lg:text-2xl">@Html.Raw(opt.Text)</span>
+				</div>
+
+				<div>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+							 stroke-linecap="round" stroke-linejoin="round" class="h-8 md:h-10">
+						<polyline points="9 6 15 12 9 18" />
+					</svg>
+				</div>
+			</div>
+		}
+	</div>
+}
+else
+{
+	<div class="flex gap-3 md:gap-5 flex-col items-center w-full">
+		<h2 class="text-xs text-black/80 mb-2 md:mb-0 uppercase">@Html.Raw(helper.GetDictionaryValue("Choose the payment method"))</h2>
+
+		@foreach (var opt in options)
+		{
+			<div id="@opt.Id" data-click="@opt.OnClick"
+					 class="flex rounded-xl cursor-pointer bg-white hover:bg-gray-200 shadow-md border-black/10 border p-3 md:p-5 h-15 justify-between items-center w-full select-none">
+
+				<div class="flex h-full justify-start items-center gap-3">
+					<img class="h-6 w-10" src="@opt.Img" />
+					<span class="text-lg">@Html.Raw(opt.Text)</span>
+				</div>
+
+				<div>
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+							 stroke-linecap="round" stroke-linejoin="round" class="h-6">
+						<polyline points="9 6 15 12 9 18" />
+					</svg>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+		document.querySelectorAll("[data-click]").forEach(el => {
+			const handler = el.getAttribute("data-click");
+			if (handler) {
+				el.addEventListener("click", new Function(handler));
+			}
+		});
+	});
+</script>

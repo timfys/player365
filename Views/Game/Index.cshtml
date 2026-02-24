@@ -1,0 +1,223 @@
+﻿@using GoldCasino.ApiModule.Dtos.Games
+@using GoldCasino.ApiModule.Extensions
+@using SmartWinners.Models
+@using SmartWinners.Services
+@using System.Threading
+@using System.Text.Json
+@using System.Data.Common
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@inject GamesService gamesService;
+@inject GameCategoriesService gameCategoriesService;
+
+@model PlayGameModel
+@{
+	Layout = "/Views/MasterPage.cshtml";
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	var langPrefix = langIso == "en" ? "" : $"/{langIso}";
+
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var user = Context.User.ToUserApiAccess();
+	var topGames = new GamesListModel();
+	var studioGames = new GamesListModel();
+	GameCategoryWithSEO? category = default;
+
+	if (Model.Game is not null && isAuthorized)
+	{
+		var categories = await gameCategoriesService.GetCategoriesWithSEOAsync(langIso, Model.Game?.CategoryID ?? 4);
+		category = categories.FirstOrDefault();
+		var topGamesParams = new GamesListParameters
+		{
+			Lang = langIso,
+			Start = 0,
+			Max = 20,
+			CategoryId = category?.CategoryID ?? 4,
+			CategoryName = category?.CategoryName ?? "",
+			EntityId = user?.EntityId ?? 0,
+			Username = user?.Username ?? "",
+			Password = user?.Password ?? "",
+			Filters = isAuthorized ? [new("Hall_Balance",">0")] : []
+		};
+
+
+		topGames = await gamesService.GetList<GameSimpleWithCategoryDto>(topGamesParams);
+		topGames.Title = category?.H1Title ?? "";
+	}
+	else
+	{
+		var categories = await gameCategoriesService.GetCategoriesWithSEOAsync(langIso, Model.Game?.CategoryID ?? 4);
+		category = categories.FirstOrDefault();
+		var topGamesParams = new GamesListParameters
+		{
+			Lang = langIso,
+			Start = 0,
+			Max = 20,
+			CategoryId = category?.CategoryID ?? 4,
+			CategoryName = category?.CategoryName ?? "",
+			EntityId = user?.EntityId ?? 0,
+			Username = user?.Username ?? "",
+			Password = user?.Password ?? "",
+			Filters = isAuthorized ? [new("Hall_Balance",">0")] : []
+		};
+		topGames = await gamesService.GetList<GameSimpleWithCategoryDto>(topGamesParams);
+		topGames.Title = category?.H1Title ?? "";
+	}
+	if (Model.Studio is not null)
+	{
+		studioGames = await gamesService.GetByStudio(langIso, Model.Studio.Id, 0, 20);
+
+		studioGames.StudioGameList = true;
+		studioGames.Title = _helper.GetDictionaryValue("More Games By")?.Replace("{0}", Model.Studio.Name) ?? "";
+		studioGames.ViewLink = $"/games/s/{Model.Studio.Id}/{Model.Studio.Name?.ToLower().Replace(" ", "-")}";
+	}
+	var winners = TopWinnersListModel.GetTest(_helper);
+	winners.List = winners.List.OrderByDescending(x => x.WonDate).Take(10).ToList();
+	winners.Count = 10;
+	winners.FilterType = TopWinnersFilterType.Latest;
+
+	var game = Model.Game;
+	var gameSlug = game?.Name is null
+	? "" : string.Join("-",
+	game.Name
+	.ToLowerInvariant()
+	.Trim()
+	// normalize to spaces first so we can split on them
+	.Replace('+', ' ')
+	.Replace("&", " and ")
+	.Replace('/', ' ')
+	.Replace('\\', ' ')
+	.Replace('.', ' ')
+	.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+	// strip remaining characters that commonly break routes or look bad in slugs
+	.Replace("?", "")
+	.Replace("%", "")
+	.Replace("#", "")
+	.Replace("\"", "")
+	.Replace("'", "");
+
+	var previewImage = string.IsNullOrWhiteSpace(game?.OgImage)
+		? game?.ImageUrl
+		: game?.OgImage;
+
+	var seoViewModel = new SEOViewModel()
+	{
+		H1Title = game?.H1Title,
+		Title = game?.Title,
+		Description = game?.Description,
+		Keywords = game?.Keywords,
+		Slug = game?.Slug,
+		OgTitle = game?.OgTitle,
+		OgDescription = game?.OgDescription,
+		OgImage = previewImage,
+		TwitterTitle = game?.TwitterTitle,
+		TwitterDescription = game?.TwitterDescription,
+		TwitterImage = previewImage,
+		MetaRobots = ""
+	};
+
+	ViewData["Seo"] = seoViewModel;
+}
+
+@section Head {
+    <script type="application/ld+json">
+    @Html.Raw(JsonSerializer.Serialize(
+        new Dictionary<string, object> {
+            ["@context"] = "https://schema.org",
+            ["@type"] = "VideoGame",
+						["name"] = game?.Name ?? "",
+						["url"] = $"https://www.playerclub365.com{langPrefix}/game/{game?.Id}/{gameSlug}",
+            ["image"] = game?.ImageUrl ?? "",
+            ["description"] = game?.Description ?? "",
+            ["inLanguage"] = langIso,
+            ["genre"] = category?.CategoryName ?? "",
+            ["keywords"] = $"{game?.Name}, {Model.Studio?.Name}, online slots, PlayerClub365",
+            ["author"] = new Dictionary<string, object> {
+                ["@type"] = "Organization",
+                ["name"] = Model.Studio?.Name ?? ""
+            },
+            ["publisher"] = new Dictionary<string, object> {
+                ["@type"] = "Organization",
+                ["name"] = "PlayerClub365"
+            },
+            ["operatingSystem"] = "Web, iOS, Android",
+            ["applicationCategory"] = "OnlineGame",
+            ["gamePlatform"] = "Desktop, Mobile"
+        }
+    ))
+    </script>
+}
+
+<div class="page-wrap game-page-wrap compact">
+	@if (Model.Game is not null)
+	{
+		ViewBag.back=$"{langPrefix}{topGames.ViewLink.Replace(' ', '-')}";
+		<partial name="Game/_GameIntegration" model="Model.Game" />
+		<h3 class="self-start text-xs text-[#004347]">
+			@Html.Raw($"I:{Model.Game?.IntegratoreId ?? 0} P:{Model.Game?.StudioId ?? 0} GC:{Model.Game?.GameCode ?? ""}")
+		</h3>
+		<div class="flex flex-col gap-3 w-full py-3">
+			<h1 class="text-2xl/12 font-semibold">
+				@seoViewModel.H1Title
+			</h1>
+			<section class="text-base">
+				@Html.Raw(game?.GameDescription)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Rules Layout", "Rules Layout")</h3>
+				@Html.Raw(game?.RulesLayout)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("How to Play", "How to Play")</h3>
+				@Html.Raw(game?.HowToPlay)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Main Features", "Main Features")</h3>
+				@Html.Raw(game?.MainFeatures)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Tips for New Players", "Tips for New Players")</h3>
+				@Html.Raw(game?.TipsForNewPlayers)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Device Compatibility", "Device Compatibility")</h3>
+				@Html.Raw(game?.DeviceCompatibility)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Why Choose PlayerClub365", "Why Choose PlayerClub365")</h3>
+				@Html.Raw(game?.WhyChoosePlayerClub365)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Responsible Play", "Responsible Play")</h3>
+				@Html.Raw(game?.ResponsiblePlay)
+				<h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Closing Line", "Closing Line")</h3>
+				@Html.Raw(game?.ClosingLine)
+				@* <h3 class="font-semibold mt-2!">@_helper.GetDictionaryValueOrDefault("Game Description Footer", "Game Description Footer")</h3> *@
+			</section>
+		</div>
+	}
+	else
+	{
+		<h1 class="text-3xl my-20!"> Game Not Found</h1>
+	}
+
+	<partial name="Partials/HomePage/GamesList" model="topGames" />
+
+	@if (Model.Studio is not null)
+	{
+		<partial name="Partials/HomePage/GamesList" model="studioGames" />
+	}
+	<partial name="Partials/HomePage/TopWinners" model="winners" />
+</div>
+
+@section BalacnceScript {
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			const el = document.getElementById("balance-usd");
+			if (!el) return;
+
+			const poll = async () => {
+				try {
+					const res = await fetch("/api/User/balance/poll", {
+						method: "GET",
+						cache: "no-store",
+						headers: { "Accept": "application/json" }
+					});
+					if (!res.ok) return;
+					const data = await res.json();
+					if (typeof data.balanceUSD === "number") {
+						el.textContent = data.balanceUSD.toFixed(2);
+					}
+				} catch { /* noop */ }
+			};
+
+			poll();
+			setInterval(poll, 20000);
+		});
+	</script>
+}

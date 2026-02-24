@@ -1,0 +1,597 @@
+﻿@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Services
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Hosting
+@using Newtonsoft.Json
+@using System.Globalization
+@using Microsoft.Extensions.Hosting
+@using Microsoft.Extensions.Options
+@using Microsoft.Extensions.Primitives
+@using SmartWinners.Models
+@using SmartWinners.Helpers
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject UserService userService;
+@inject IWebHostEnvironment hostingEnvironment;
+
+@{
+	var isMin = Context.Request.Query["min"] == "true";
+
+	Layout = isMin ? "MasterPageMin.cshtml" : "MasterPage.cshtml";
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var identity = Context.User.ToUserApiAccess();
+
+	var lid = Context.User.FindFirst("Lid")?.Value ?? "";
+	var me = await userService.GetMeAsync(identity);
+	var (user, balance) = me.Value;
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	// Read bonus query param (e.g., ?bonus=welcome)
+	var bonusParam = Context.Request.Query["bonus"].ToString();
+	var hasBonusParam = !string.IsNullOrEmpty(bonusParam);
+
+	// Build encrypted bonus payload: entityId:;:username:;:password:;:businessId:;:lid:;:bonusType
+	var bonusPayload = "";
+	if (identity != null && hasBonusParam)
+	{
+		var payloadData = $"{identity.EntityId}:;:{identity.Username}:;:{identity.Password}:;:{identity.BusinessId}:;:{lid}:;:{bonusParam}";
+		bonusPayload = CryptoUtility.EncryptString(payloadData);
+	}
+
+	var paymentBaseUrl = hostingEnvironment?.IsDevelopment() == true
+		? "https://beta2.playerclub.app"
+		: "https://playerclub.app";
+
+	var seoViewModel = new SEOViewModel
+	{
+		Title = "Get Virtual Coins & Rewards | PlayerClub365 Social Store",
+		Description = "Top up your virtual coin balance at the PlayerClub365 Store. Choose your favorite credit bundle and enjoy premium social slots and games. Instant virtual delivery for entertainment purposes only.",
+		OgTitle = "PlayerClub365 Coin Store | Virtual Gaming Credits",
+		OgDescription = "Get your virtual coin bundles and unlock more fun at PlayerClub365. 100% social gaming experience.",
+		TwitterTitle = "Get Virtual Coins & Rewards | PlayerClub365 Social Store",
+		TwitterDescription = "Top up your virtual coin balance at the PlayerClub365 Store. Choose your favorite credit bundle and enjoy premium social slots and games. Instant virtual delivery for entertainment purposes only.",
+	};
+
+	ViewData["Seo"] = seoViewModel;
+	var transactionId = ViewBag.TransactionId as string;
+	var exception = ViewBag.Exception as string;
+
+	if (!isAuthorized)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/purchase-coins");
+	}
+	// else
+	// {
+	// 	if (!IdentityHelper.SignIn(identity.Username, identity.Password, user.CountryIso, IdentityHelper.GetUserIp(), out var userLog, out var resp1))
+	// 	{
+	// 		WebStorageUtility.SignOut(Context);
+	// 		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/purchase-coins");
+	// 	}
+	// }
+}
+
+<link rel="stylesheet" href="~/assets/css/payment_page_styles.min.css" asp-append-version="true" />
+<style>
+	.deposit-hint--active {
+		color: #f97316 !important;
+		font-weight: 600;
+	}
+
+	.input-error {
+		border: 2px solid #dc2626 !important;
+	}
+</style>
+
+@if (isAuthorized)
+{
+	var currencyDetails = WebStorageUtility.GetUserCurrencyDetails(Context);
+	var amount = ((decimal?)ViewBag.Amount).Value;
+	var domainType = (DomainType)ViewBag.DomainType;
+
+	<div class="flex flex-col items-center justify-center min-h-screen w-full overflow-hidden" style="max-width: 100vw; max-height: 90vh;">
+		@if (!isMin)
+		{
+			<div class="flex flex-col items-center justify-center h-full w-full max-w-[740px] mt-12">
+				@*<h1 style="color: #333" class="title_page wraper_title">welcome back mr @Model.FirstName,</h1>*@
+
+				<div class="flex flex-col justify-between items-center w-full gap-4 mb-8!">
+					<!-- Header -->
+					<div class="flex justify-between items-center w-full">
+						<div class="flex gap-5 items-center">
+							<a href="@langIso/account" class="flex items-center justify-center w-8 h-8 bg-[#07575b] rounded-md hover:bg-[#06484a]">
+								<svg xmlns="http://www.w3.org/2000/svg"
+								     class="w-8 h-8 text-white"
+								     fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7"/>
+								</svg>
+							</a>
+							<h1 class="str-email w-fit! mb-0! text-xl md:text-2xl uppercase">@Umbraco.GetDictionaryOrDefault("Purchase coins", "Purchase coins")</h1>
+						</div>
+					</div>
+
+					<h4 class="text-base text-white/80 select-none">@Umbraco.GetDictionaryOrDefault("How many coins would you like to purchase?", "How many coins would you like to purchase?")</h4>
+
+					<!-- Entering Sum-->
+					<div class="flex items-center rounded-lg overflow-hidden max-sm:w-full h-20 md:h-25 bg-white text-black">
+						<div name="currency"
+						     id="currency_select"
+						     class="flex items-center h-full appearance-none px-4 md:px-6 bg-transparent border-none focus:outline-none"
+						     style="direction: ltr !important;">
+							<img class="h-8 w-8 max-w-none" src="/images/p1.png"></img>
+							@* <div class="flex items-center justify-end h-full">
+
+								@* <option id="dollar_option" selected="selected"><img class="h-4" src="/images/p1.png"></img></option> *@
+							@* @if (!currencyDetails.CurrencyIso.Equals("USD", StringComparison.OrdinalIgnoreCase))
+								{
+										<option id="dollar_option" value="usd" selected="selected">$</option>
+										<option id="user_currency_option"
+														value="@currencyDetails.CurrencyIso.ToLower()">@currencyDetails.Symbol</option>
+								}
+								else
+								{
+									<option id="dollar_option" value="usd" selected="selected">$</option>
+								} *@
+							@* </div> *@
+
+							<!-- Arrow -->
+							@* <span class="absolute pointer-events-none flex items-center">
+								<svg xmlns="http://www.w3.org/2000/svg"
+										 class="w-6 h-6 text-gray-700"
+										 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								</svg>
+							</span> *@
+						</div>
+
+						<input type="number"
+						       id="currency_price"
+						       class="flex-1 h-full px-7 text-2xl md:text-3xl border-none focus:outline-none"
+						       placeholder="0.00"/>
+					</div>
+					<p id="total_price_display" class="w-full text-center text-white/90 text-base md:text-lg mt-2 select-none">Total Price: $0.00</p>
+					<h4 class="text-sm text-white/80 select-none max-md:hidden js-deposit-hint">Minimum Purchase of at least 10 coins. Please enter an amount of 10 or more</h4>
+					<h4 class="text-sm text-white/80 select-none md:hidden js-deposit-hint">Minimum Purchase of at least 10 coins.</h4>
+					<h3 class="validation_param_error" id="currency-error" tabIndex="-1"
+					    style="display: none; text-align:center; width: 100%; "></h3>
+
+
+					<p class="form_text validation_param_error" id="currency_price_error"
+					   style="display: none; text-align: center">@Umbraco.GetDictionaryOrDefault("Payment sum can't be less than 0")</p>
+					<p class="form_text validation_param_error" id="currency_price_error1"
+					   style="display: none; text-align: center">@Umbraco.GetDictionaryOrDefault("Payment sum can't be bigger than 10000")</p>
+					<h3 class='validation_param_error' id='main-error-crypto-startAJob' tabIndex='-1'
+					    style='display: none; text-align:center; margin-bottom: 20px;'></h3>
+					@if (!string.IsNullOrEmpty(exception))
+					{
+						<h3 class="validation_param_error" id="main-error" tabindex="-1"
+						    style="width: 100%; text-align: center; margin: 0; display: block">
+							@exception
+						</h3>
+					}
+					else
+					{
+						<h3 class="validation_param_error" id="main-error" tabindex="-1"
+						    style="width: 100%; text-align: center; margin: 0;">
+						</h3>
+					}
+					@Html.Partial("/Views/Shared/SwitchCreditCrypto.cshtml", ("document.querySelector(`#submit_payment`).click();", "document.querySelector(`#submit_crypto_startajob_deposit`).click();", false))
+				</div>
+			</div>
+		}
+		else
+		{
+			<div class="flex flex-col items-center justify-center h-full w-full max-w-[496px] bg-white text-black">
+				<div class="flex flex-col justify-between items-center w-full gap-4 mb-8! p-4 md:p-6">
+					<!-- Header -->
+					<div class="flex justify-center md:justify-between items-center w-full">
+						<h1 class="mb-0! text-center text-base md:text-lg md:font-semibold uppercase">How many coins would you like to purchase?</h1>
+					</div>
+
+					<!-- Entering Sum-->
+					<div class="flex items-center rounded-lg overflow-hidden w-[60%] h-12 md:h-15 bg-white text-black border-black/20 border">
+						<div class="relative flex items-center justify-end h-full">
+							<div name="currency"
+							     id="currency_select"
+							     class="flex items-center justify-center h-full min-w-14 appearance-none px-2 bg-transparent border-black/20 border-r focus:outline-none text-2xl md:text-3xl text-center"
+							     style="direction: ltr !important;">
+								<img class="h-8" src="/images/p1.png"></img>
+								@* @if (!currencyDetails.CurrencyIso.Equals("USD", StringComparison.OrdinalIgnoreCase))
+							{
+									<option id="dollar_option" value="usd" selected="selected">$</option>
+									<option id="user_currency_option"
+													value="@currencyDetails.CurrencyIso.ToLower()">@currencyDetails.Symbol</option>
+							}
+							else
+							{
+								<option id="dollar_option" value="usd" selected="selected">$</option>
+							} *@
+							</div>
+
+							<!-- Arrow -->
+							@* <span class="absolute pointer-events-none flex items-center">
+							<svg xmlns="http://www.w3.org/2000/svg"
+									 class="w-6 h-6 text-gray-700"
+									 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+						</span> *@
+						</div>
+
+						<input type="number"
+						       id="currency_price"
+						       class="h-full w-full text-2xl md:text-3xl text-center focus:outline-none"
+						       placeholder="0.00"/>
+					</div>
+
+					<p id="total_price_display" class="w-full text-center text-black/80 text-sm md:text-base mt-2 select-none">Total Price: $0.00</p>
+
+					<h4 class="text-sm text-black/80 select-none text-center max-md:hidden js-deposit-hint">
+						Minimum Purchase of at least 10 coins. Please enter an amount of 10 or more
+					</h4>
+					<h4 class="text-sm text-black/80 select-none md:hidden js-deposit-hint">Minimum Purchase of at least 10 coins</h4>
+
+					<!-- #region errors -->
+					<h3 class="validation_param_error" id="currency-error" tabIndex="-1"
+					    style="display: none; text-align:center; width: 100%; "></h3>
+					<p class="form_text validation_param_error" id="currency_price_error"
+					   style="display: none; text-align: center">@Umbraco.GetDictionaryOrDefault("Payment sum can't be less than 0")</p>
+					<p class="form_text validation_param_error" id="currency_price_error1"
+					   style="display: none; text-align: center">@Umbraco.GetDictionaryOrDefault("Payment sum can't be bigger than 10000")</p>
+					<h3 class='validation_param_error' id='main-error-crypto-startAJob' tabIndex='-1'
+					    style='display: none; text-align:center; margin-bottom: 20px;'></h3>
+					@if (!string.IsNullOrEmpty(exception))
+					{
+						<h3 class="validation_param_error" id="main-error" tabindex="-1"
+						    style="width: 100%; text-align: center; margin: 0; display: block">
+							@exception
+						</h3>
+					}
+					else
+					{
+						<h3 class="validation_param_error" id="main-error" tabindex="-1"
+						    style="width: 100%; text-align: center; margin: 0;">
+						</h3>
+					}
+					<!-- #endregion -->
+					@Html.Partial("/Views/Shared/SwitchCreditCrypto.cshtml", ("document.querySelector(`#submit_payment`).click();", "document.querySelector(`#submit_crypto_startajob_deposit`).click();", true))
+				</div>
+			</div>
+		}
+
+		<div class="payment_method deposit_method" style="display: none !important;">
+			<h2 class="paymethod_title paymethod_mobil_title">@Umbraco.GetDictionaryOrDefault("Choose the payment method"):</h2>
+			<div class="payment_method_inner payment_method_inner_new">
+				<div class="payment_method_item payment_method_choice">
+					<div class="payment_method_item payment_method_choice" onclick="DisplayStripe()">
+						<div class="method_choice" :class="{ active: selectedPaymentOption === 'new' }"
+						     @@click="selectPaymentOption('new')">
+							<img src="/images/contacts/four_card.svg" alt="credit-cards"
+							     class="method_img">
+							<p class="method_text">
+								@Umbraco.GetDictionaryOrDefault("Use a new Credit \\ Debit card")
+							</p>
+						</div>
+					</div>
+					<div class="method_choice" onclick="DisplayCrypto()">
+						<img src="/images/contacts/Bitcoin-dark.svg" alt="credit-carts"
+						     class="method_img">
+						<p class="method_text">
+							@Umbraco.GetDictionaryOrDefault("Cryptocurrency") (Bitcoin, Ethereum,
+							Litecoin)
+						</p>
+					</div>
+				</div>
+
+				<div class="payment_mathod_item payment_mathod_item_new" style="max-width: 760px;">
+					<div action="#" class="form cryptoMethod" style="display: none">
+						<div class="method_choice method-intro">
+							<img src="/images/contacts/Bitcoin-dark.svg" alt="credit-carts"
+							     class="method_img">
+							<p class="method_text method_text_crypto">
+								@Umbraco.GetDictionaryOrDefault("Cryptocurrency") (Bitcoin,
+								Ethereum, Litecoin)
+							</p>
+						</div>
+
+						<button class="button form_button" id="submit_crypto_startajob_deposit"
+						        style="margin: 0 auto">
+							<p>@Umbraco.GetDictionaryOrDefault("Submit payment")</p>
+						</button>
+					</div>
+					<div class="stripeMethod">
+						<div class="product-card-container">
+							<div class="method_choice method-intro">
+								<img src="/images/contacts/four_card.svg" alt="credit-carts"
+								     class="method_img">
+								<p class="method_text method_text_crypto">@Umbraco.GetDictionaryOrDefault("Use a new Credit \\ Debit card")</p>
+							</div>
+							<button class="button form_button button_deposit_player" id="submit_payment"
+							        onclick="RedirectToPayment()">
+								@Umbraco.GetDictionaryOrDefault("Pay")
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="w-full flex justify-center mt-8 md:mt-10">
+			<a target="_blank" href="@Umbraco.GetDictionaryOrDefault("SIP - Page1 Need Help Url")" class="green-link text-center"
+			   id="help_link_page1">@Umbraco.GetDictionaryOrDefault("SIP - Need Help")</a>
+		</div>
+	</div>
+
+	<script>
+		window.addEventListener('pageshow', function (event) {
+				if (event.persisted) {
+						CloseLoadingScreen();
+				}
+		});
+		document.addEventListener("DOMContentLoaded", function (e) {
+				try {
+						CloseLoadingScreen();
+						CloseLoader(document.querySelector("#submit-deposit1"));
+				} catch (e) {
+
+				}
+		})
+
+		// Pass bonus param to global scope for FormScript.js to use
+		window.depositBonusParam = "@Html.Raw(bonusParam)";
+	</script>
+
+	<script type="text/javascript" src="/assets/js/FormScript.js"></script>
+
+
+	<script>
+
+
+		function RemoveLastChar(str) {
+				let tempStr = "";
+
+				for (let i = 0; i < str.length - 1; i++) {
+						tempStr += str[i];
+				}
+				return tempStr;
+		}
+
+		let oldVal = "@Html.Raw(amount)";
+		let oldCurrency = "USD";
+		const USD_MIN_DEPOSIT = 10;
+		const userExchangeRate = 1;
+		const minDepositErrorTemplate = `@Html.Raw(Umbraco.GetDictionaryOrDefault("Minimum deposit amount can't be less then 20"))`;
+		const amountRequiredMessage = "@Html.Raw(Umbraco.GetDictionaryOrDefault("Enter the amount you wish to deposit"))";
+		const userCurrencySymbol = "@Html.Raw(currencyDetails.Symbol)";
+		const totalPriceElem = document.querySelector("#total_price_display");
+		let depositHintMessages = [];
+
+		function getMinDepositSum(currencyCode) {
+			return currencyCode === "USD" ? USD_MIN_DEPOSIT : USD_MIN_DEPOSIT * userExchangeRate;
+		}
+
+		function formatMinSum(value) {
+			return Number(value).toFixed(2).replace(/\.00$/, "");
+		}
+
+		function showValidationError(message, element) {
+			if (!element) {
+				return;
+			}
+			element.textContent = message;
+			element.style.display = "block";
+		}
+
+		function hideValidationError(element) {
+			if (!element) {
+				return;
+			}
+			element.textContent = "";
+			element.style.display = "none";
+		}
+
+		function toggleDepositHintHighlight(isActive) {
+			if (!depositHintMessages.length) {
+				depositHintMessages = Array.from(document.querySelectorAll(".js-deposit-hint"));
+			}
+			depositHintMessages.forEach(function (elem) {
+				if (!elem) {
+					return;
+				}
+				elem.classList.toggle("deposit-hint--active", !!isActive);
+			});
+		}
+
+		function updateTotalPriceDisplay() {
+			if (!totalPriceElem) {
+				return;
+			}
+
+			const priceInput = document.querySelector("#currency_price");
+			const currencySelect = document.querySelector("#currency_select");
+			const currencyCode = ((currencySelect && currencySelect.value) || "USD").toUpperCase();
+			const sym = currencyCode === "USD" ? "$" : userCurrencySymbol;
+			const rawVal = priceInput && priceInput.value ? priceInput.value.trim() : "0";
+			const numericVal = Number(rawVal);
+			const formatted = Number.isFinite(numericVal) ? numericVal.toFixed(2) : "0.00";
+			totalPriceElem.textContent = `Total Price: ${sym}${formatted}`;
+		}
+		document.addEventListener("DOMContentLoaded", function (e) {
+			const currencySelect = document.querySelector("#currency_select");
+			if (currencySelect) {
+				currencySelect.addEventListener("change", function () {
+					const priceInput = document.querySelector("#currency_price");
+					const hasValue = priceInput && priceInput.value.trim().length > 0;
+					CheckIfValidAmount({ showErrors: hasValue });
+					updateTotalPriceDisplay();
+				});
+			}
+
+			const currencyPrice = document.querySelector("#currency_price");
+			if (!currencyPrice) {
+				return;
+			}
+
+				// Set default amount to 50 on load
+				if (!currencyPrice.value || Number(currencyPrice.value) === 0) {
+					currencyPrice.value = "50";
+				}
+				updateTotalPriceDisplay();
+
+			currencyPrice.focus();
+			currencyPrice.oninput = function (e) {
+
+				if (e.data === ".") {
+					return;
+				}
+
+				let maxLength = 5;
+				const regex = /^\d+(\.\d{0,2})?$/;
+				let value = e.currentTarget.value;
+
+				if (!regex.test(value)) {
+					e.currentTarget.value = RemoveLastChar(value);
+				}
+
+				let splitedFloat = value.split(".");
+				splitedFloat[1] = splitedFloat[1] === undefined ? "" : `.${splitedFloat[1]}`;
+
+				value = splitedFloat[0];
+
+				if (value.length > maxLength) {
+
+					while (value.length > 5) {
+						value = RemoveLastChar(value);
+					}
+
+					e.currentTarget.value = `${value}${splitedFloat[1]}`;
+				} else if (parseFloat(value) < 20) {
+
+				} else {
+
+				}
+
+				CheckIfValidAmount({ showErrors: false });
+				updateTotalPriceDisplay();
+			};
+
+			currencyPrice.addEventListener("focusout", function () {
+				const hasValue = currencyPrice.value.trim().length > 0;
+				CheckIfValidAmount({ showErrors: hasValue });
+				updateTotalPriceDisplay();
+			});
+		});
+
+		function CheckIfValidAmount(options = {}) {
+			const { requireValue = false, showErrors = true } = options;
+			const currency = document.querySelector("#currency_select");
+			const currencyPrice = document.querySelector("#currency_price");
+			const errorElem = document.querySelector("#currency-error");
+
+			if (!currency || !currencyPrice || !errorElem) {
+				return false;
+			}
+
+			const shouldShowMessage = showErrors || requireValue;
+			toggleDepositHintHighlight(false);
+
+			const currencyCode = (currency.value || "USD").toUpperCase();
+			const minSum = getMinDepositSum(currencyCode);
+			const sym = currencyCode === "USD" ? "$" : userCurrencySymbol;
+			const amountRaw = currencyPrice.value.trim();
+
+			if (!amountRaw.length) {
+				if (requireValue) {
+					showValidationError(amountRequiredMessage, errorElem);
+					currencyPrice.classList.add("input-error");
+				} else {
+					hideValidationError(errorElem);
+				}
+				currencyPrice.classList.add("input-error");
+				return false;
+			}
+
+			const amount = Number(amountRaw);
+
+			if (Number.isNaN(amount)) {
+				if (shouldShowMessage) {
+					showValidationError(amountRequiredMessage, errorElem);
+				} else {
+					hideValidationError(errorElem);
+				}
+				currencyPrice.classList.add("input-error");
+				return false;
+			}
+
+			if (amount < minSum) {
+				const formattedMin = `${sym}${formatMinSum(minSum)}`;
+				if (shouldShowMessage) {
+					toggleDepositHintHighlight(true);
+				} else {
+					toggleDepositHintHighlight(false);
+				}
+				hideValidationError(errorElem);
+				currencyPrice.classList.add("input-error");
+				return false;
+			}
+
+			hideValidationError(errorElem);
+			toggleDepositHintHighlight(false);
+			currencyPrice.classList.remove("input-error");
+
+			if (oldVal !== currencyPrice.value || oldCurrency !== currencyCode) {
+				oldVal = currencyPrice.value;
+				oldCurrency = currencyCode;
+			}
+
+			return true;
+		}
+
+
+		function SetBonusOption(voucherId, amount) {
+				document.querySelector("#currency_select").value = "@Html.Raw(user.CountryIso.Equals("il", StringComparison.OrdinalIgnoreCase) ? "ils" : "usd")";
+				document.querySelector("#currency_select").setAttribute("voucherId", voucherId);
+				document.querySelector("#currency_price").value = `${amount}`.replaceAll(",", ".");
+				CheckIfValidAmount({ showErrors: true });
+		}
+
+		function DisplayStripe() {
+				document.querySelector(".cryptoMethod").style.display = "none";
+				document.querySelector(".stripeMethod").style.display = "initial";
+		}
+
+		function DisplayCrypto() {
+				document.querySelector(".stripeMethod").style.display = "none";
+				document.querySelector(".cryptoMethod").style.display = "flex";
+		}
+
+		function RedirectToPayment() {
+			if (!CheckIfValidAmount({ requireValue: true, showErrors: true })) {
+				const priceInput = document.querySelector("#currency_price");
+				if (priceInput) {
+					priceInput.focus();
+				}
+				return;
+			}
+
+			let currency = document.querySelector("#currency_select");
+			let currencyPrice = document.querySelector("#currency_price");
+
+			DisplayLoadingScreen();
+
+			// Build return URL with encrypted bonus payload (bp parameter)
+			// Payload contains: entityId:;:username:;:password:;:businessId:;:lid:;:bonusType (encrypted)
+			let bonusPayload = '@Html.Raw(bonusPayload)';
+			let returnPath = '@Html.Raw(langIso)/successfull';
+			if (bonusPayload) {
+				returnPath += `?bp=${encodeURIComponent(bonusPayload)}`;
+			}
+			let ouParam = `&ou=${encodeURIComponent(returnPath)}`;
+
+			window.top.location.href = `@paymentBaseUrl@(Html.Raw($"{langIso}/credit-card"))?a=${currencyPrice.value}&c=${"usd"}&dT=@Html.Raw(Convert.ToInt32(DomainsHelper.GetDomainNameType()))&lid=@Html.Raw(HttpUtility.UrlEncode(lid))${ouParam}`;
+		}
+
+	</script>
+}

@@ -1,0 +1,42 @@
+﻿@using System.Linq
+@using SmartWinners.Models
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@{
+	var random = new Random(Guid.NewGuid().GetHashCode());
+	var firstNames = new[] { "Alice", "Brian", "Carmen", "Diego", "Evelyn", "Felix", "Grace", "Hector", "Ines", "Jasper", "Kara", "Liam", "Mara", "Noel", "Olivia", "Paolo", "Quinn", "Riley", "Sofia", "Tomas", "Una", "Vera", "Wes", "Xavi", "Yara", "Zane" };
+	var lastNames = new[] { "Fletcher", "Romero", "Carter", "Silva", "Nguyen", "Patel", "Murphy", "Khan", "Bennett", "Lopez", "Stein", "Olsen", "Garcia", "Davis", "Brown", "Ivanov", "Kowalski", "Perez", "Hughes", "Young", "Zhou", "Martinez", "Costa", "Reyes", "Foster", "Kim" };
+	var baseAmounts = new[] { 15m, 20m, 25m, 50m, 75m, 100m, 250m, 410m, 550m, 980m, 1420m, 2150m, 3200m };
+
+	var bannerWinners = new BannerWinnersModel
+	{
+		List = Enumerable.Range(0, 10).Select(_ => new BannerWinners
+		{
+			Date = DateTime.UtcNow - TimeSpan.FromHours(random.Next(1, 48)),
+			Name = $"{firstNames[random.Next(firstNames.Length)][0]}*** {lastNames[random.Next(lastNames.Length)][0]}****",
+			UsdAmount = Math.Round(
+				baseAmounts[random.Next(baseAmounts.Length)] * (decimal)(0.8 + random.NextDouble() * 1.7) +
+				random.Next(0, 750) +
+				random.Next(0, 100) / 100m,
+				2)
+		}).ToList()
+	};
+}
+
+<div class="gold-corners-ring relative rounded-3xl overflow-hidden
+            w-full
+            md:w-[clamp(320px,90vw,424px)] h-[clamp(400px,70vw,493px)]"
+		 style="background: linear-gradient(to bottom, #033435, #011E1D);">
+
+	<img src="/images/casino/top-winners-banner.png" alt="Slot machine"
+			 class="absolute top-0 left-1/2 -translate-x-1/2
+              w-[50%] md:w-[clamp(120px,90%,280px)] h-auto z-0 pointer-events-none mix-blend-lighten" />
+
+ 	<div class="relative flex flex-col items-center justify-end h-full gap-2 pb-6 text-center">
+		<partial name="Partials/HomePage/_SecondBannerWinners" model="bannerWinners" />
+		<a href="/casino-bonus" class="gold-button mt-2 md:mt-2 rounded-md font-semibold text-black transition-colors
+                   px-[clamp(16px,3vw,24px)] py-[clamp(8px,1.5vw,12px)] text-[clamp(14px,2vw,16px)]">
+			@_helper.GetDictionaryOrDefault("BOOST WINNINGS NOW", "BOOST WINNINGS NOW") 
+		</a>
+	</div> 
+</div>

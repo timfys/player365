@@ -1,0 +1,346 @@
+@using SmartWinners.Models
+@model GameFullscreenViewModel
+@{
+    Layout = null;
+    var title = string.IsNullOrWhiteSpace(Model.GameTitle) ? "Play Game" : Model.GameTitle;
+    var bgStyle = string.IsNullOrWhiteSpace(Model.BackgroundImage)
+        ? string.Empty
+        : $"background-image: linear-gradient(180deg, rgba(0,0,0,.8), rgba(0,0,0,.8)), url('{Model.BackgroundImage}');";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title - PlayerClub365</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #000;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .game-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .game-error {
+            margin: auto;
+            max-width: 480px;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 1rem;
+            color: #f2f2f2;
+            text-align: center;
+        }
+
+        .game-error h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .game-error p {
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body style="@bgStyle">
+    <div class="game-shell">
+        @if (!string.IsNullOrWhiteSpace(Model.RedirectUrl))
+        {
+            <section class="game-error">
+                <h1>@title</h1>
+                <p>Redirecting to the game…</p>
+            </section>
+
+<script>
+    (function () {
+        var url = '@Html.Raw(Model.RedirectUrl)';
+        if (!url) return;
+        window.location.replace(url);
+    })();
+</script>
+        }
+        else
+        {
+            <section class="game-error">
+                <h1>@title</h1>
+                <p>@(Model.ErrorMessage ?? "Unable to load the requested game.")</p>
+            </section>
+        }
+    </div>
+</body>
+</html>
+
+
+
+@* @using SmartWinners.Models
+@model GameFullscreenViewModel
+@{
+	Layout = null;
+	var title = string.IsNullOrWhiteSpace(Model.GameTitle) ? "Play Game" : Model.GameTitle;
+	var bgStyle = string.IsNullOrWhiteSpace(Model.BackgroundImage)
+		? string.Empty
+		: $"background-image: linear-gradient(180deg, rgba(0,0,0,.8), rgba(0,0,0,.8)), url('{Model.BackgroundImage}');";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>@title - PlayerClub365</title>
+	<style>
+		:root {
+			color-scheme: dark;
+		}
+
+		body {
+			margin: 0;
+			min-height: 100vh;
+			font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+			background: #000;
+			background-size: cover;
+			background-position: center;
+		}
+
+		.game-shell {
+			min-height: 100vh;
+			display: flex;
+			align-items: stretch;
+			justify-content: center;
+			padding: 0;
+		}
+
+		.game-frame {
+			flex: 1;
+			border: none;
+			background: #000;
+			width: 100%;
+			height: 100vh;
+		}
+
+		.game-error {
+			margin: auto;
+			max-width: 480px;
+			padding: 2rem;
+			background: rgba(0, 0, 0, 0.7);
+			border-radius: 1rem;
+			color: #f2f2f2;
+			text-align: center;
+		}
+
+		.game-error h1 {
+			margin-bottom: 0.5rem;
+			font-size: 1.5rem;
+		}
+
+		.game-error p {
+			margin: 0;
+			line-height: 1.5;
+		}
+	</style>
+</head>
+<body style="@bgStyle">
+	<div class="game-shell">
+		@if (!string.IsNullOrWhiteSpace(Model.RedirectUrl))
+		{
+			<iframe class="game-frame" src="@Model.RedirectUrl" allow="fullscreen; autoplay; encrypted-media" allowfullscreen tabindex="-1"></iframe>
+		}
+		else
+		{
+			<section class="game-error">
+				<h1>@title</h1>
+				<p>@(Model.ErrorMessage ?? "Unable to load the requested game.")</p>
+			</section>
+		}
+	</div>
+<script>
+(() => {
+    const iframe = document.querySelector('.game-frame');
+    if (!iframe) return;
+
+    // Простой fullscreen-реквест из родителя (чтобы было чем дёргать)
+    const requestFs = () => {
+        if (!iframe.requestFullscreen) {
+            console.log('[MAIN] iframe.requestFullscreen not supported');
+            return;
+        }
+        console.log('[MAIN] calling iframe.requestFullscreen()');
+        iframe.requestFullscreen({ navigationUI: 'hide' })
+            .then(() => console.log('[MAIN] fullscreen OK (iframe)'))
+            .catch(err => console.log('[MAIN] fullscreen FAILED:', err));
+    };
+
+    // Глобалка на всякий случай (можно дёргать из Win-проги или из iframe)
+    window.dispatchGameFullscreenRequest = () => {
+        console.log('[MAIN] dispatchGameFullscreenRequest() called');
+        requestFs();
+    };
+
+    iframe.addEventListener('load', () => {
+        console.log('[MAIN] iframe load');
+
+        try {
+            const iw = iframe.contentWindow;
+            const doc = iw.document;
+
+            if (!doc || !doc.body) {
+                console.log('[IFRAME] no document/body');
+                return;
+            }
+
+            // --- overlay внутри iframe ---
+            const box = doc.createElement('div');
+            box.style.position = 'fixed';
+            box.style.top = '10px';
+            box.style.left = '10px';
+            box.style.zIndex = '999999';
+            box.style.padding = '6px 10px';
+            box.style.maxWidth = '260px';
+            box.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            box.style.fontSize = '12px';
+            box.style.lineHeight = '1.4';
+            box.style.color = '#eee';
+            box.style.background = 'rgba(0, 0, 0, 0.7)';
+            box.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+            box.style.borderRadius = '6px';
+            box.style.pointerEvents = 'none';
+            box.textContent = 'IFRAME debug: ready';
+            doc.body.appendChild(box);
+
+            const log = (msg) => {
+                const ts = new Date().toLocaleTimeString();
+                box.textContent = `[${ts}] ${msg}`;
+                console.log('[IFRAME]', msg);
+            };
+
+            // Лог нажатий клавиш ВНУТРИ iframe
+            doc.addEventListener('keydown', (e) => {
+                log(`keydown: key="${e.key}", code=${e.code}, repeat=${e.repeat}`);
+            }, true);
+
+            // Лог кликов ВНУТРИ iframe
+            doc.addEventListener('click', (e) => {
+                const target = e.target && e.target.tagName;
+                log(`click: button=${e.button}, target=${target}`);
+            }, true);
+
+            // Функция, которую код игры может вызвать для fullscreen
+            iw.dispatchGameFullscreenRequest = () => {
+                log('dispatchGameFullscreenRequest() from INSIDE iframe');
+                requestFs();
+            };
+
+            log('injection OK inside iframe');
+        } catch (err) {
+            console.warn('iframe injection failed (likely cross-origin)', err);
+            console.log('[MAIN] iframe injection FAILED (cross-origin?)');
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement === iframe) {
+            console.log('[MAIN] fullscreenchange: iframe is fullscreen');
+        } else if (!document.fullscreenElement) {
+            console.log('[MAIN] fullscreenchange: exited fullscreen');
+        } else {
+            console.log('[MAIN] fullscreenchange: other element in fullscreen');
+        }
+    });
+})();
+</script>
+
+	@* <script>
+		(() => {
+			const fullscreenEventName = 'game:request-fullscreen';
+			const ensureGlobalDispatcher = () => {
+				const dispatcher = () => {
+					window.dispatchEvent(new CustomEvent(fullscreenEventName));
+				};
+				window.dispatchGameFullscreenRequest = dispatcher;
+			};
+			if (typeof window.dispatchGameFullscreenRequest !== 'function') {
+				ensureGlobalDispatcher();
+			}
+
+			const iframe = document.querySelector('.game-frame');
+			if (!iframe) {
+				return;
+			}
+
+			const focusIframe = () => {
+				requestAnimationFrame(() => {
+					try {
+						iframe.focus({ preventScroll: true });
+						iframe.contentWindow?.focus();
+					} catch {
+						// Ignore cross-origin focus errors
+					}
+				});
+			};
+
+			const bridgeFullscreenHelperToIframe = () => {
+				try {
+					if (!iframe.contentWindow) {
+						return;
+					}
+					iframe.contentWindow.dispatchGameFullscreenRequest = () => {
+						window.dispatchGameFullscreenRequest();
+					};
+					iframe.contentWindow.addEventListener(fullscreenEventName, () => {
+						window.dispatchEvent(new CustomEvent(fullscreenEventName));
+					});
+				} catch (err) {
+					console.warn('Unable to bridge fullscreen helper into iframe', err);
+				}
+			};
+
+			const requestIframeFullscreen = async () => {
+				if (!iframe.requestFullscreen) {
+					return;
+				}
+				if (document.fullscreenElement === iframe) {
+					return;
+				}
+				try {
+					await iframe.requestFullscreen({ navigationUI: 'hide' });
+					focusIframe();
+				} catch (err) {
+					console.warn('Fullscreen request failed', err);
+				}
+			};
+
+			const handleKeydown = (event) => {
+				if (event.code !== 'KeyF' || event.repeat) {
+					return;
+				}
+				event.preventDefault();
+				requestIframeFullscreen();
+			};
+
+			const handleCustomFullscreenRequest = () => {
+				requestIframeFullscreen();
+			};
+
+			iframe.addEventListener('load', () => {
+				focusIframe();
+				bridgeFullscreenHelperToIframe();
+			});
+			window.addEventListener('keydown', handleKeydown);
+			window.addEventListener(fullscreenEventName, handleCustomFullscreenRequest);
+		})();
+	</script> 
+</body>
+</html> *@

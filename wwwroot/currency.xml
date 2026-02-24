@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+    <currency name="USD" icon="/images/flags/USA.svg" code="1" country="US" fullCountry="United States">
+        <field title="Routing Number" wsname="PayerNumber3" target="^[0-9]{9}$" maxlen="9">abartn</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{4,17}$" maxlen="17">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CHECKING,SAVINGS">accountType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="EUR" icon="/images/flags/European-Union.png" code="2" country="DE" fullCountry="">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[0-9]{2}[a-zA-Z0-9]{0,30}$" maxlen="34">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="GBP" icon="/images/flags/United-Kingdom.png" code="3" country="GB" fullCountry="United Kingdom">
+        <field title="Sort Code" wsname="PayerNumber3" target="^[0-9]{6,8}$" maxlen="8">sortCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{8}$" maxlen="8">accountNumber</field>
+        <field title="Receiver type" wsname="Parm1" target="select"  maxlen="PRIVATE,BUSINESS">receiverType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="UAH" icon="/images/flags/Ukraine.png" code="4" country="UA" fullCountry="Ukraine">
+        <field title="Phone" wsname="PayerNumber3" target="^[0-9]{9,20}$" maxlen="20">phoneNumber</field>
+        <field title="Last 4 digits of the bank card" wsname="PayerNumber" target="^[0-9]{4}$" maxlen="4">accountNumber</field>
+        <remark title="Your account must be">Your account MUST BE in Ukrainian Hryvnia. Transfer to none Ukrainian Hryvnia account will bounced back.</remark>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="KZT" icon="/images/flags/Kazakhstan.png" code="42" country="KZ" fullCountry="Kazakhstan">
+        <field title="Card Number" wsname="PayerNumber" target="^[0-9]{9,20}$" maxlen="20">cardNumber</field>
+        <field title="First Name" wsname="PayerName" target="^[0-9]{4}$" maxlen="50">firstName</field>
+        <field title="Last Name" wsname="PayerName" target="^[0-9]{4}$" maxlen="50">lastName</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="INR" icon="/images/flags/India.png" code="5" country="IN" fullCountry="India">
+        <field title="IFSC Code" wsname="PayerNumber3" target="^[a-zA-Z]{4}[0-9]{7}$" maxlen="11">ifscCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{5,20}$" maxlen="20">accountNumber</field>
+        <field title="Receiver type" wsname="Parm1" target="select"  maxlen="PRIVATE,BUSINESS">legalType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="AED" icon="/images/flags/United-Arab-Emirates.png" code="6" country="AE" fullCountry="U.A.E.">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,21}$" maxlen="23">IBAN</field>
+        <field title="Bank code (BIC/SWIFT)" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">BIC</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="AUD" icon="/images/flags/Australia.png" code="7" country="AU" fullCountry="Australia">
+        <field title="Bank State Branch code" wsname="PayerNumber" target="^[0-9]{6}$" maxlen="6">bsbCode</field>
+        <field title="Account number" wsname="PayerNumber3" target="^[0-9]{4,9}$" maxlen="9">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="BDT" icon="/images/flags/Bangladesh.png" code="8" country="BD" fullCountry="Bangladesh">
+        <field title="Bank code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9\-\.]{1,17}$" maxlen="17">accountNumber</field>
+        <field title="Branch name" wsname="Parm1" target="^[a-zA-Z0-9]{40}$"  maxlen="40">branchCode</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="BGN" icon="/images/flags/Bulgaria.png" code="9" country="BG" fullCountry="Bulgaria">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="BRL" icon="/images/flags/Brazil.png" code="10" country="BR" fullCountry="Brazil">
+        <field title="Phone number" wsname="PayerNumber2" target="^[0-9]{7,20}$" maxlen="20">phoneNumber</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CHECKING,SAVINGS">accountType</field>
+        <field title="Branch Code" wsname="PayerNumber4" target="^[0-9]{4,6}$" maxlen="6">branchCode</field>
+        <field title="Tax Registration Number" wsname="PayerNumber6" target="^[0-9.-]{14}$" maxlen="14">cpf</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{1,12}$" maxlen="12">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="CAD" icon="/images/flags/Canada.png" code="11" country="CA" fullCountry="Canada">
+        <field title="Institution Number" wsname="PayerNumber2" target="^[0-9]{3}$" maxlen="3">institutionNumber</field>
+        <field title="Transit Number" wsname="PayerNumber3" target="^[0-9]{5}$" maxlen="5">transitNumber</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{7,12}$" maxlen="12">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CHECKING,SAVINGS">accountType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="CHF" icon="/images/flags/Switzerland.png" code="12" country="CH" fullCountry="Switzerland">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <field title="Bank code (BIC/SWIFT)" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">BIC</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="CLP" icon="/images/flags/Chile.png" code="13" country="CL" fullCountry="Chile">
+        <field title="Phone number" wsname="PayerNumber2" target="^[0-9]{7,20}$" maxlen="20">phoneNumber</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Beneficiary's RUT number" wsname="PayerNumber4" target="^[0-9]{8,12}$" maxlen="12">rut</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{4,20}$" maxlen="20">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CHECKING,SAVINGS,CUENTA_VISTA">accountType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="COP" icon="/images/flags/Colombia.png" code="14" country="CO" fullCountry="Colombia">
+        <field title="Phone number" wsname="PayerNumber2" target="^[0-9]{7,20}$" maxlen="20">phoneNumber</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9a-zA-Z]{8}$" maxlen="2">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{4,20}$" maxlen="20">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CURRENT,SAVINGS">accountType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="CZK" icon="/images/flags/Czech-Republic.png" code="15" country="CZ" fullCountry="Czech Republic">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{4,10}$" maxlen="10">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{10,14}$" maxlen="14">accountNumber</field>
+        <field title="Prefix" wsname="PayerNumber2" target="^[0-9]{0,6}$" maxlen="6">prefix</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="DKK" icon="/images/flags/Denmark.png" code="16" country="DK" fullCountry="Denmark">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="GEL" icon="/images/flags/Georgia.png" code="17" country="GE" fullCountry="Georgia">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="HKD" icon="/images/flags/Hong-Kong.png" code="18" country="HK" fullCountry="Hong Kong S.A.R.">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9\-]{9,15}$" maxlen="15">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="HRK" icon="/images/flags/Croatia.png" code="19" country="HR" fullCountry="Croatia">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="HUF" icon="/images/flags/Hungary.png" code="20" country="HU" fullCountry="Hungary">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="IDR" icon="/images/flags/Indonesia.png" code="21" country="ID" fullCountry="Indonesia">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{6}$" maxlen="6">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{8,16}$" maxlen="16">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="ILS" icon="/images/flags/Israel.png" code="3" country="IL" fullCountry="Israel">
+        <!--If you would like to have a radio button than add two <form> tags to parent <currency> tag-->
+        <form>
+            <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{4}$" maxlen="4">bankCode</field>
+            <field title="Branch Number" wsname="PayerNumber2" target="^[a-zA-Z0-9]{1,40}$" maxlen="40">branchNumber</field>
+            <field title="Account Number" wsname="PayerNumber4" target="^[0-9]{7,11}$" maxlen="11">accountNumber</field>
+        </form>>
+        <form>
+            <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[0-9]{21,26}$" maxlen="28">IBAN</field>
+            <field title="Receiver type" wsname="Parm1" target="select"  maxlen="PRIVATE,BUSINESS">receiverType</field>
+        </form>>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="JPY" icon="/images/flags/Japan.png" code="22" country="JP" fullCountry="Japan">
+        <field title="Branch" wsname="PayerNumber2" target="^[a-zA-Z0-9]{1,40}$" maxlen="40">branchCode</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{4}$" maxlen="4">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{2,7}$" maxlen="7">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CURRENT,CHECKING,SAVINGS">accountType</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="KRW" icon="/images/flags/South-Korea.png" code="23" country="KR" fullCountry="Korea">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{10,16}$" maxlen="16">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="LKR" icon="/images/flags/Sri-Lanka.png" code="24" country="LK" fullCountry="Sri Lanka">
+        <field title="Branch" wsname="PayerNumber2" target="^[a-zA-Z0-9]{1,40}$" maxlen="40">branchCode</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{4}$" maxlen="4">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{6,15}$" maxlen="15">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="MAD" icon="/images/flags/Morocco.png" code="25" country="MA" fullCountry="Morocco">
+        <field title="SWIFT code" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{24}$" maxlen="24">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="MXN" icon="/images/flags/Mexico.png" code="26" country="MX" fullCountry="Mexico">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="CLABE" wsname="PayerNumber" target="^[0-9]{18}$" maxlen="18">clabe</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="MYR" icon="/images/flags/Malaysia.png" code="27" country="MY" fullCountry="Malaysia">
+        <field title="Bank code (BIC/SWIFT)" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">swiftCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{7,16}$" maxlen="16">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="NOK" icon="/images/flags/Norway.png" code="28" country="NO" fullCountry="Norway">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="NZD" icon="/images/flags/New-Zealand.png" code="29" country="NZ" fullCountry="New Zealand">
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{15,22}$" maxlen="22">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="PEN" icon="/images/flags/Peru.png" code="30" country="PE" fullCountry="Peru">
+        <field title="Phone number" wsname="PayerNumber2" target="^[0-9]{7,20}$" maxlen="20">phoneNumber</field>
+        <field title="Bank Code" wsname="PayerNumber3" target="^[a-zA-Z]{4}$" maxlen="4">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{4,22}$" maxlen="22">accountNumber</field>
+        <field title="Account Type" wsname="Parm1" target="select"  maxlen="CHECKING,SAVINGS">accountType</field>
+        <field title="Beneficiary's identification number" wsname="PayerNumber4" target="^[0-9]{8}$" maxlen="8">dni_ruc</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="PHP" icon="/images/flags/Philippines.png" code="31" country="PH" fullCountry="Philippines">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[a-zA-Z]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{7,20}$" maxlen="20">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="PKR" icon="/images/flags/Islamic-Republic-of-Pakistan.png" code="32" country="PK" fullCountry="Islamic Republic of Pakistan">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="PLN" icon="/images/flags/Poland.png" code="33" country="PL" fullCountry="Poland">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="RON" icon="/images/flags/Romania.png" code="34" country="RO" fullCountry="Romania">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="RUB" icon="/images/flags/Russia.png" code="35" country="RU" fullCountry="Russia">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{9}$" maxlen="9">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{20}$" maxlen="20">accountNumber</field>
+        <field title="Region" wsname="PayerNumber2" target="select" maxlen="ADYGEA,ALTAI KRAI,ALTAI REPUBLIC,AMUR OBLAST,ARKHANGELSK OBLAST,ASTRAKHAN OBLAST,BASHKORTOSTAN,BELGOROD OBLAST,BRYANSK OBLAST,BURYATIA,CHECHEN REPUBLIC,CHELYABINSK OBLAST,CHUKOTKA AUTONOMOUS OKRUG,CHUVASH REPUBLIC,CRIMEA,DAGESTAN,INGUSHETIA,IRKUTSK OBLAST,IVANOVO OBLAST,JEWISH AUTONOMOUS OBLAST,KABARDINO,KALININGRAD OBLAST,KALMYKIA,KALUGA OBLAST,KAMCHATKA KRAI,KARACHAY,KARELIA,KEMEROVO OBLAST,KHABAROVSK KRAI,KHAKASSIA,KHANTY,KIROV OBLAST,KOMI REPUBLIC,KOSTROMA OBLAST,KRASNODAR KRAI,KRASNOYARSK KRAI,KURGAN OBLAST,KURSK OBLAST,LENINGRAD OBLAST,LIPETSK OBLAST,MAGADAN OBLAST,MARI EL REPUBLIC,MORDOVIA,MOSCOW,MOSCOW OBLAST,MURMANSK OBLAST,NENETS AUTONOMOUS OKRUG,NIZHNY NOVGOROD OBLAST,NORTH OSSETIA,NOVGOROD OBLAST,NOVOSIBIRSK OBLAST,OMSK OBLAST,ORENBURG OBLAST,ORYOL OBLAST,PENZA OBLAST,PERM KRAI,PRIMORSKY KRAI,    PSKOV OBLAST,ROSTOV OBLAST,RYAZAN OBLAST,SAINT PETERSBURG,SAKHA,SAKHALIN OBLAST,SAMARA OBLAST,SARATOV OBLAST,SEVASTOPOL,SMOLENSK OBLAST,STAVROPOL KRAI,SVERDLOVSK OBLAST,TAMBOV OBLAST,TATARSTAN,TOMSK OBLAST,TULA OBLAST,TUVA REPUBLIC,TVER OBLAST,TYUMEN OBLAST,UDMURT REPUBLIC,ULYANOVSK OBLAST,VLADIMIR OBLAST,VOLGOGRAD OBLAST,VOLOGDA OBLAST,VORONEZH OBLAST,YAMALO,YAROSLAVL OBLAST,ZABAYKALSKY KRAI">russiaRegion</field>
+        <remark title="Please make sure">Please make sure your last name, first name and patronymic name (“отчество”) of the recipient – in that order.
+
+
+            Here are some things to check:
+            - Make sure the name is spelled in exactly the same way as it would be on the bank account. (For instance, “John Smith” might be registered as “Джон Смит”). - Most of the time the account holder name is registered in cyrillic, but if you’re sure it’s registered in latin, please let us know. - If the recipient is an expat, they probably don’t have a patronymic name.
+
+
+            We’re asking this because banks in Russia are strict when it comes to accepting money transfers. If a letter in the recipient name is off, or the wrong alphabet is used, money can be held for up to 7 business days before being returned to us.
+
+
+            If you need any help, please don’t hesitate to send us a copy of the Russian bank details you were given (whether it’s a photo, a pdf or a forwarded email). We can then make sure the transfer is paid out with the correct name.
+        </remark>
+        <AllowLocalLanguage>1</AllowLocalLanguage>
+    </currency>
+    <currency name="SEK" icon="/images/flags/Sweden.png" code="36" country="SE" fullCountry="Sweden">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="SGD" icon="/images/flags/Singapore.png" code="37" country="SG" fullCountry="Singapore">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{4}$" maxlen="4">bankCode</field>
+        <field title="Branch Code" wsname="PayerNumber2" target="^[0-9]{3}$" maxlen="3">branchCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{7,11}$" maxlen="11">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="THB" icon="/images/flags/Thailand.png" code="38" country="TH" fullCountry="Thailand">
+        <field title="Bank Code" wsname="PayerNumber3" target="^[0-9]{3}$" maxlen="3">bankCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{5,16}$" maxlen="16">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="TRY" icon="/images/flags/Turkey.png" code="39" country="TR" fullCountry="Turkey">
+        <field title="IBAN" wsname="PayerNumber" target="^[a-zA-Z]{2}[a-zA-Z0-9]{0,30}$" maxlen="32">IBAN</field>
+        <field title="Document Type" wsname="Parm1" target="select"  maxlen="PASSPORT,DRIVING_LICENSE,NATIONAL_ID_CARD">idType</field>
+        <field title="Document Number" wsname="PayerNumber2" target="^[a-zA-Z0-9]{1,40}$" maxlen="40">idNumber</field>
+        <field title="Issuer Country" wsname="PayerNumber4" target="^[a-zA-Z]{3}$" maxlen="3">idCountryIso3</field>
+        <field title="Issued On" wsname="PayerNumber6" target="date" maxlen="10">idValidFrom</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="VND" icon="/images/flags/Vietnam.png" code="40" country="VN" fullCountry="Vietnam">
+        <field title="Bank code (BIC/SWIFT)" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">swiftCode</field>
+        <field title="Branch" wsname="PayerNumber2" target="^[a-zA-Z0-9]{1,40}$" maxlen="40">branchCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{1,34}$" maxlen="34">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+    <currency name="ZAR" icon="/images/flags/South-Africa.png" code="41" country="ZA" fullCountry="South Africa">
+        <field title="Bank code (BIC/SWIFT)" wsname="PayerNumber3" target="^[a-zA-Z0-9]{8,11}$" maxlen="11">swiftCode</field>
+        <field title="Account Number" wsname="PayerNumber" target="^[0-9]{7,16}$" maxlen="16">accountNumber</field>
+        <AllowLocalLanguage>0</AllowLocalLanguage>
+    </currency>
+</document>

@@ -1,0 +1,96 @@
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+@model SmartWinners.Models.UserReviewModel
+
+@{
+    var items = Model.List.Take(8);
+}
+
+<div class="text-3xl text-left md:text-4xl mt-10 md:mt-20 md:w-full md:max-w-[1330px]">
+    <h2>@Html.Raw(_helper.GetDictionaryValue("What our players say"))</h2>
+</div>
+
+<div class="reviews-wrap carousel-container max-w-full">
+    <div class="reviews-track carousel-track less-compact">
+        <div class="user-reviews-track">
+
+            @foreach (var review in items)
+            {
+                <div class="user-review">
+                    <p>
+                        @Html.Raw(review.Text)
+                    </p>
+                    <div>
+                        <img src="@Html.Raw(review.FlagUrl)"/>
+                        <span>@Html.Raw(review.UserName)</span>
+                    </div>
+                </div>
+            }
+
+        </div>
+        <div aria-hidden="true" class="user-reviews-track">
+
+            @foreach (var review in items)
+            {
+                <div class="user-review">
+                    <p>
+                        @Html.Raw(review.Text)
+                    </p>
+                    <div>
+                        <img src="@Html.Raw(review.FlagUrl)"/>
+                        <span>@Html.Raw(review.UserName)</span>
+                    </div>
+                </div>
+            }
+
+        </div>
+        <div class="carousel-blur-left">
+
+        </div>
+        <div class="carousel-blur-right">
+
+        </div>
+    </div>
+    <div class="awards-track carousel-track less-compact">
+        <div class="awards-wrap">
+            <div>
+                <img src="/images/casino/winner-best-crypto-2024.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-casino-2023.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-casino-2022.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-support-2022.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-crypto-2023.svg"/>
+            </div>
+        </div>
+        <div class="awards-wrap">
+            <div>
+                <img src="/images/casino/winner-best-crypto-2024.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-casino-2023.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-casino-2022.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-support-2022.svg"/>
+            </div>
+            <div>
+                <img src="/images/casino/winner-best-crypto-2023.svg"/>
+            </div>
+        </div>
+        <div class="carousel-blur-left">
+
+        </div>
+        <div class="carousel-blur-right">
+
+        </div>
+    </div>
+</div>

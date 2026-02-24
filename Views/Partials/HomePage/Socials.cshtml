@@ -1,0 +1,60 @@
+@using System.Threading
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+
+@{
+    var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" : $"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+}
+
+<div class="socials-wrap compact">
+    <div class="best-social-experience">
+        <h3>
+            @Html.Raw(_helper.GetDictionaryValue("Best Social Casino Experience"))
+        </h3>
+        <div>
+            <p>
+                @Html.Raw(_helper.GetDictionaryValue("PlayerClub365 is your"))
+                <a href="@Html.Raw($"{langIso}/casino-experience")">
+                    @Html.Raw(_helper.GetDictionaryValue("Read More"))
+                </a>
+            </p>
+        </div>
+    </div>
+    <div class="social-icons-wrap">
+        <div class="social-icons">
+            <div class="social-icon-wrap">
+                <a href="https://t.me" target="_blank" class="social-icon tg-bg">
+
+                </a>
+            </div>
+            <div class="social-icon-wrap">
+                <a href="https://facebook.com" target="_blank" class="social-icon facebook-bg">
+
+                </a>
+            </div>
+            <div class="social-icon-wrap">
+                <a href="https://x.com" target="_blank" class="social-icon x-bg">
+
+                </a>
+            </div>
+            <div class="social-icon-wrap">
+                <a href="https://instagram.com" target="_blank" class="social-icon instagram-bg">
+
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="live-chat-telegram">
+        <a href="https://t.me" target="_blank" class="social-icon tg-bg">
+
+        </a>
+        <div>
+            <p>
+                @Html.Raw(_helper.GetDictionaryValue("Footer - Live Chat Telegram"))
+            </p>
+            <p>
+                @Html.Raw(_helper.GetDictionaryValue("Footer - Customer Service"))
+            </p>
+        </div>
+    </div>
+</div>

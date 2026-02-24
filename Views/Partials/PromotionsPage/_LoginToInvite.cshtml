@@ -1,0 +1,14 @@
+﻿@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+    langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+    var currency = WebStorageUtility.GetUserCurrencyDetails();
+}
+
+<div class="get_free_ticket">
+    <h4 class="join_question-title">@Umbraco.GetDictionaryValue("Give your friends a free ticket. Get a free ticket when they play.").Replace("{0}", $"{currency.Symbol}{currency.ExchangeRate * 10:0.##}")</h4>
+    <a class="playerclub-button" href='@Html.Raw($"{langIso}/sign-in?r=promotions")'>@Umbraco.GetDictionaryValue("Login to invite")</a>
+    @Html.Raw(Umbraco.GetDictionaryValue("Click here to know how affiliate"))
+</div>

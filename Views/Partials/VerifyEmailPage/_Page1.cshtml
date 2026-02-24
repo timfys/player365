@@ -1,0 +1,118 @@
+﻿@using Microsoft.AspNetCore.Http
+@using System.Threading;
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<IVerifyEmailPage>
+@inject IServiceProvider serviceProvider
+
+@{
+    IVerifyEmailPage model = Model;
+    var modelEmail = Model.Email;
+    var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+    langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+}
+
+<main class="page">
+    <div class="container">
+        <div class="wraper ">
+            <h1 class="title_page wraper_title">@Umbraco.GetDictionaryValue("VEP - Page1 - Title")</h1>
+            <a href="@Umbraco.GetDictionaryValue("VEP - Need Help Link")" target="_blank" class="details_link help_link help_link_email">@Umbraco.GetDictionaryValue("VEP - Need Help")</a>
+            <input id="langIso" type="hidden" value="@langIso" />
+            <form class="form" id="signup">
+                <p class="form_text signup_text">@Umbraco.GetDictionaryValue("VEP - Page1 - Enter new email")</p>
+                <input type="email" class="form_input" id="personal_email" required="required" placeholder="@Umbraco.GetDictionaryValue("Your email address")">
+                <p class="confirmation">@Umbraco.GetDictionaryValue("VEP - Page1 - Later Confirm")</p>
+            </form>
+            <strong class="personal_error" id="email_error" style="display: none"></strong>
+            <button type="button" class="personal_button" id="personal_change">
+                <input type="hidden" id="changed_button_text" value='@Umbraco.GetDictionaryValue("Changed")' />
+                <p style="font-size: 24px;" class="button_link">@Umbraco.GetDictionaryValue("Change")</p>
+            </button>
+            <div id="form-valid" class="form_text" style="display: none; text-align: center; margin-top: 1rem;"></div>
+        </div>
+    </div>
+</main>
+<script>
+    $('#personal_change').on("click", async function (event) {
+    event.stopImmediatePropagation();
+
+    let button = document.getElementById("personal_change");
+    button.disabled = true;
+
+    let email = document.getElementById("personal_email");
+
+    DisplayLoader(this);
+
+    const errors = $(".personal_error");
+
+    for (var i = 0, max = errors.length; i < max; i++) {
+        errors[i].style.display = "none";
+    }
+
+    const emailError = document.getElementById("email_error");
+
+    function validMail(mail) {
+        return /^(([^<>()\[\]\.,;:\s@@\"]+(\.[^<>()\[\]\.,;:\s@@\"]+)*)|(\".+\"))@@(([^<>()\.,;\s@@\"]+\.{0,1})+([^<>()\.,;:\s@@\"]{2,}|[\d\.]+))$/.test(mail);
+    }
+
+    if (!validMail(email.value)) {
+        console.error('Invalid email');
+        emailError.style.display = "block";
+        emailError.style.fontSize = "1.3rem";
+        emailError.style.color = "#F30000";
+        emailError.textContent = "Type valid email";
+        CloseLoader(this);
+        button.disabled = false;
+        return;
+    }
+
+    emailError.style.display = "none";
+    document.querySelector("#form-valid").style.display = "none";
+
+    let formData = new FormData();
+    formData.append("email", email.value);
+
+        let resp = await fetch(`/VerifyEmail/ChangeEmail`,
+        {
+            method: "POST",
+            headers:
+            {
+                'X-Fetch-Indicator': 'true'
+            },
+            body: formData
+        })
+
+    let respBody = await resp.json();
+
+    if (resp.ok) {
+        CloseLoader(this);
+        
+        let buttonValue = button.querySelector(".button_link");
+        let currentValue = buttonValue.textContent;
+        button.style.backgroundColor = "#13902A";
+        button.style.color = "#fff";
+        buttonValue.textContent = document.getElementById("changed_button_text").value;
+        button.disabled = true;
+
+        let timer = setTimeout(function () {
+            button.style.removeProperty("background-color");
+            button.style.removeProperty("color");
+            buttonValue.textContent = currentValue;
+            button.disabled = false;
+
+             let langIso = document.getElementById("langIso").value;
+                        if (langIso !== '') {
+                    window.location.href = `${langIso}/verify-email`;
+                        } else {
+                    window.location.href = '/verify-email';
+                        }
+        }, 3000);
+    }
+    else {
+        document.querySelector("#form-valid").style.display = "block";
+        document.querySelector("#form-valid").style.color = "#F30000";
+        document.querySelector("#form-valid").textContent = `${respBody.resultMessage}`
+        CloseLoader(this);
+        button.disabled = false;
+    }
+})
+</script>

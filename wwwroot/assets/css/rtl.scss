@@ -1,0 +1,1731 @@
+﻿body {
+  .search_button {
+    border-radius: 8px 0 0 8px;
+  }
+  .tzahal_promo_wrap{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: right;
+    margin-top: 40px;
+  }
+  .tournament_info_wrap_clock p{
+    margin-left: 0;
+    margin-right: 24px;
+  }
+  .customer-info-wrap{
+    text-align: right;
+  }
+  .stripe-logo-price{
+    left: 1rem;
+  }
+  .suspended_body_text{
+    text-align: right;
+  }
+  .tzahal_main_text{
+    font-size: 20px;
+    max-width: 850px;
+    font-weight: 500;
+    margin-top: 20px;
+  }
+  .tzahal_promo_img{
+    margin-top: 40px;
+  }
+  .intro_text_wrapper{
+    text-align: right;
+  }
+  .connect_four_rules_wrapper{
+    text-align: right;
+  }
+  .game_bet_button{
+    margin-right: 30px;
+    margin-left: 0;
+  }
+  .header_inner{
+    padding-right: 40px !important;
+    padding-left: 0 !important;
+  }
+  .social-items{
+    align-items: flex-end;
+  }
+  #language-select{
+    margin-left: 0 !important;
+  }
+  .step_wrap{
+    margin-left: 0;
+    margin-right: 17px;
+  }
+  .step_wrap_one{
+    margin-left: 0;
+    margin-right: 24px;
+  }
+  .step_text{
+    text-align: right;
+  }
+  .banner_text_wrapper:after{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    background-image: url(/images/banners/player1banner.png);
+    background-repeat: no-repeat;
+    background-position: right top;
+    background-size: 900px 680px;
+    z-index: -1;
+    transform: scaleX(-1);
+  }
+  .entries_table {
+    direction: ltr;
+  }
+  .search_title{
+    text-align: right;
+  }
+  .my_account_balance{
+    text-align: right;
+  }
+  .checkboxes_wrap div input[type="checkbox"]{
+    margin-left: 10px;
+    margin-right: 0;
+  }
+  .checkboxes_wrap, .card_option{
+    text-align: right;
+  }
+  .game_description{
+    text-align: right;
+  }
+  .my_account_winning{
+    text-align: right;
+  }
+  .my_account_activity{
+    text-align: right;
+  }
+  .lottery_syndicate_description {
+    text-align: right;
+  }
+
+  .wpcb-message {
+    text-align: right;
+  }
+  .bet_button_wrapper .game_bet_option_radio{
+    margin-left: 0px;
+    margin-right: 10px;
+  }
+  .bet_button_wrapper:first-child .game_bet_option_radio{
+    margin-right: 0;
+  }
+  .game_preview_img_wrap_choosed{
+    padding: 0 0 0 50px !important;
+  }
+  .landing_faq_wrap {
+    text-align: right;
+  }
+
+  .syndicate_lottery_info_wrapper {
+    direction: ltr;
+  }
+
+  .header_social {
+    direction: ltr;
+  }
+
+  .card_description {
+    text-align: right;
+  }
+  .balance_user{
+    direction: ltr;
+  }
+  .statistics_jackpot_new {
+    direction: ltr;
+  }
+
+  .included_price_new {
+    direction: ltr;
+  }
+
+  .percantage_winning_chance {
+    direction: ltr;
+  }
+  .lang-name{
+    margin-left: 0;
+    margin-right: 8px;
+  }
+  .chevron_wrapper{
+    margin-left: 0;
+    margin-right: 7px;
+  }
+  .personality_link{
+    text-align: right;
+  }
+  .syndicate_payment_type_radio {
+    margin-left: 0;
+    margin-right: 20px;
+  }
+  .promotions_invite_title{
+    text-align: right;
+  }
+  .transactions_title{
+    text-align: right;
+  }
+  .shared_with_text{
+    margin-right: 12px;
+    margin-left: 0;
+  }
+
+  .about_package_text_new {
+    text-align: right;
+    margin-left: 0;
+    margin-right: 20px;
+  }
+
+  .about_package_text:before {
+    left: initial;
+    right: -15px;
+  }
+
+  .year_git_text_wrapper {
+    margin-left: 0;
+    margin-right: 10px;
+  }
+
+  /*  #back_button_from_personal_info{
+      width: 100%;
+      padding: 0 30px 0 0;
+    }
+    #back_button_from_personal_info:before{
+      right: 0;
+      transform: rotate(0);
+    }*/
+  footer {
+    text-align: right;
+  }
+
+  .password_change_help_link {
+    right: initial;
+    left: 30px;
+  }
+
+  #change-phone-but {
+    margin: 0;
+  }
+
+  .year_git_text_wrapper a {
+    margin-left: 0;
+    margin-right: 10px;
+  }
+
+
+  .verification_number {
+    direction: ltr;
+  }
+
+  .personal_information_title {
+    text-align: right;
+  }
+
+  .info_title {
+    text-align: right;
+  }
+
+  .syndicate_entry:last-child {
+    border-right: 1px solid #e0e0e0;
+  }
+
+  .landing_lottery_name {
+    font-size: 40px;
+    margin-bottom: 20px;
+  }
+
+  .form label {
+    text-align: right;
+  }
+
+  .syndicate_entry:first-child {
+    border-right: 0;
+  }
+
+  .included_time {
+    margin-left: 0;
+    margin-right: 5px;
+  }
+
+  .social_telegram {
+    margin-right: 20px;
+    margin-left: 0;
+  }
+
+  #dropdownMenuButton:after {
+    margin-left: 0;
+    margin-right: 0.255em;
+  }
+  .method_text_crypto{
+    text-align: right;
+  }
+  .tournament_rules_desc{
+    text-align: right;
+  }
+  .tournament_rules_outro{
+    margin-right: -30px;
+    margin-left: 0;
+  }
+  .personal_help_link {
+    right: initial;
+    left: 0;
+    padding: 0 0 0 20px;
+  }
+  .personal_help_link:after{
+    left: 0;
+    right: initial;
+    transform: rotate(225deg);
+  }
+  .tournament_rules_desc li ul{
+    padding-left: 0px;
+    padding-right: 30px;
+  }
+  .header_account {
+    margin-right: 30px;
+    margin-left: 0;
+  }
+
+  .draw_schedule_list {
+    margin-right: 0;
+    margin-left: 15px;
+  }
+
+  .last_draw_inner {
+    direction: ltr;
+  }
+
+  .choose_item {
+    .choose_text {
+      text-align: right;
+    }
+  }
+
+  .lines_list {
+    direction: ltr;
+  }
+
+  .choose_field {
+    direction: ltr;
+  }
+
+  .last_draw_list {
+    margin-right: 0 !important;
+    margin-left: 10px !important;
+  }
+
+  .payment_back {
+    text-align: right;
+  }
+
+  .you_save_text {
+    margin-left: 0;
+    margin-right: 10px;
+  }
+
+  .syndicate_payment_type_radio {
+    margin-left: 20px;
+    margin-right: 0;
+  }
+
+  .syndicate_payment_type_info_wrapper {
+    text-align: right;
+  }
+  #card_information_empty{
+    text-align: right;
+  }
+  .congratulations {
+    text-align: right;
+  }
+
+  .congratulation_img {
+    margin-left: 10px;
+    margin-right: 0;
+  }
+
+  .what_next {
+    .join_list {
+      margin-right: 50px;
+      margin-left: 0;
+    }
+  }
+
+  .payment_back:before {
+    top: 55%;
+    right: 40px;
+    left: initial;
+  }
+
+  .verify_phone_help {
+    right: initial;
+    left: 30px;
+    margin-left: 0 !important;
+  }
+
+  .button_back {
+    text-align: right;
+  }
+
+  .currency_symbol_withdraw {
+    border-radius: 0 6px 6px 0;
+  }
+
+  .amount {
+    input {
+      border-radius: 8px 0 0 8px;
+    }
+  }
+
+  #sign_in_page_title {
+    padding-left: 0;
+    padding-right: 30px;
+  }
+
+  .button_back:before {
+    left: initial;
+    right: 40px;
+    transform: rotate(180deg);
+  }
+
+  .play_price {
+    direction: ltr;
+  }
+
+  #search_field {
+    border-radius: 0 8px 8px 0;
+  }
+
+  .language-flag {
+    margin-right: 0;
+    margin-left: 5px;
+  }
+
+  .language_logo {
+    margin-right: 0;
+    margin-left: 5px;
+  }
+
+  .lottery_title {
+    text-align: right;
+  }
+
+  .span-hide {
+    right: initial;
+    left: 20px;
+  }
+
+  #sigin_password {
+    margin-right: 0 !important;
+    margin-left: 20px !important;
+  }
+
+  .promo_subtitle {
+    text-align: right;
+  }
+
+  #dropdownMenuButton {
+    margin: 0 auto;
+
+    .language-flag {
+      margin-left: 10px;
+    }
+  }
+
+  #help_link_signIn {
+    right: initial;
+    left: 30px;
+    margin-left: 0;
+  }
+
+  .card_item {
+    margin-right: 0px;
+    margin-left: 0;
+  }
+
+  .card_item:nth-child(1) {
+    margin-right: 0;
+  }
+
+  .help_link:before {
+    right: initial;
+    left: -20px;
+    transform: translateY(-50%) rotate(225deg);
+  }
+
+  .instruction_item:after {
+    right: initial;
+    left: -90px;
+    transform: rotate(180deg);
+  }
+
+  #lottery_group_help_link {
+    right: initial;
+    left: 15px;
+    margin-left: 0;
+  }
+
+  .item_statistics {
+    padding-right: 45px;
+    padding-left: 0;
+
+    .statistics_jackpot {
+      direction: ltr;
+    }
+  }
+
+  .package_statistics {
+    padding: 20px 45px 0 0;
+    text-align: right;
+
+    .info_text {
+      text-align: right;
+    }
+
+    .about_package_text {
+      margin-right: 20px;
+      margin-left: 0;
+    }
+
+    .about_package_text:before {
+      left: initial;
+      right: -15px;
+    }
+
+    .statistics_jackpot {
+      text-align: right;
+    }
+  }
+
+  .lotteries_included_text {
+    text-align: right;
+  }
+
+  .lotteries_included_line {
+    text-align: right;
+  }
+
+  .included_middle {
+    .info_text {
+      text-align: right;
+    }
+
+    .about_package_title {
+      text-align: right;
+    }
+
+    .about_package_text {
+      margin-right: 20px;
+      margin-left: 0;
+      text-align: right;
+    }
+
+    .about_package_text:before {
+      left: initial;
+      right: -15px;
+    }
+
+    .statistics_jackpot {
+      text-align: right;
+    }
+  }
+
+  .included_top {
+    padding-right: 30px;
+    padding-left: 0;
+  }
+
+  .included_bottom {
+    margin-left: 0;
+    margin-right: 30px;
+
+    .included_price {
+      direction: ltr;
+    }
+  }
+  #back_button_from_personal_info{
+    padding: 0 30px 0 0;
+    width: 100%;
+  }
+  #back_button_from_personal_info:before{
+    right: 0;
+    transform: rotate(0deg);
+  }
+  .draw_days_title {
+    text-align: right;
+  }
+
+  .select_arrow_bottom {
+    background-position-x: 0;
+  }
+
+  .withdraw_back {
+    width: 100%;
+    padding: 0 30px 0 0;
+  }
+
+  .withdraw_back:before {
+    right: 0;
+    transform: rotate(0);
+  }
+
+  .withdraw_help {
+    padding-left: 20px;
+    padding-right: 0;
+  }
+
+  .withdraw_help:after {
+    right: initial;
+    left: 0;
+    transform: translateY(-50%) rotate(225deg);
+  }
+
+  .withdraw_item:after {
+    right: initial;
+    left: 20px;
+    transform: translateY(-50%) rotate(225deg);
+  }
+
+  .withdraw_logo {
+    margin-left: 8px;
+    margin-right: 0;
+  }
+
+  .bank_list {
+    text-align: right;
+  }
+
+  .dropdown_withdraw {
+    text-align: right;
+  }
+
+  .balance_details {
+    text-align: right;
+  }
+
+  .draw_days_item {
+    margin-left: 35px;
+    margin-right: 0px;
+  }
+
+  .promotion_right-list {
+    .info_title {
+      width: 100%;
+    }
+
+    .info_title_rtl_prom {
+      width: 520px;
+    }
+
+    .info_title_rtl_prom:after {
+      width: 240px;
+      right: initial;
+      left: 40px;
+    }
+  }
+
+
+  .draw_days_item:last-child {
+    margin-left: 0;
+  }
+
+  .group_info_text {
+    text-align: right !important;
+  }
+
+
+  .social {
+    margin-right: 0;
+  }
+
+  /*  .social_item {
+      margin-right: 0;
+      margin-left: 10px;
+    }*/
+
+  .lottery_price {
+    text-align: right;
+    text-wrap: nowrap;
+  }
+
+  .accordion_he {
+    text-align: right;
+  }
+
+  .accordion_header_he:after {
+    right: initial;
+    left: 28px !important;
+  }
+
+  .after_faq_wrapper {
+    text-align: right;
+  }
+
+  .pasword_text {
+    text-align: right;
+  }
+
+  .title_logo {
+    margin: 0;
+  }
+
+  .winners_description {
+    direction: ltr;
+  }
+
+  .promotion_right_link {
+    margin-right: 0;
+    margin-left: 10px;
+  }
+
+  .lottery_join .join_list {
+    padding-right: 30px;
+    padding-left: 0 !important;
+  }
+
+  .lottery_result {
+    direction: ltr;
+  }
+
+  .winners_date {
+    text-align: right;
+  }
+
+  .details_link {
+    margin-left: 50px;
+  }
+
+  .question_title {
+    text-align: right;
+  }
+
+  .social_link:last-child {
+    margin-left: 0;
+    margin-right: 0px;
+  }
+
+  select {
+    background-position-x: left;
+  }
+
+  .banner_container {
+    direction: ltr;
+  }
+
+  .jackpot_win {
+    font-size: 24px !important;
+    font-weight: 700;
+    direction: ltr;
+    margin-right: 5px;
+  }
+
+  .baner_item_text {
+    display: flex;
+    direction: rtl;
+  }
+
+  .after_faq_topic:first-child {
+    margin-right: initial;
+  }
+
+  .after_faq_topic:last-child {
+    margin-right: 10px;
+  }
+
+  .after_faq_topic p {
+    padding-left: 5px;
+    padding-right: initial;
+  }
+
+  .jackpot_text {
+    direction: ltr;
+  }
+
+  .lines_clear {
+    margin-right: 15px;
+    margin-left: 0;
+  }
+
+  .controls_text:last-child:before {
+    content: "";
+    display: block;
+    height: 100%;
+    width: 2px;
+    background-color: #000;
+    position: absolute;
+    top: 0;
+    right: -15px;
+    border-radius: 8px;
+  }
+
+  .controls_text {
+    margin-right: 0;
+    margin-left: 30px;
+  }
+
+  .controls_text:last-child {
+    margin-left: 0;
+  }
+
+  .info_description_iwin {
+    text-align: right;
+  }
+
+  .controls_text:after {
+    content: "";
+    display: none !important;
+    height: 100%;
+    width: 0;
+    background-color: #000;
+    position: absolute;
+    top: 0;
+    right: -15px;
+    border-radius: 8px;
+  }
+
+  .promo_contet:after {
+    transform: rotate(225deg);
+    left: -10px;
+    right: initial;
+  }
+
+  .gray_arrow {
+    transform: scaleX(-1);
+  }
+
+  .benefits_list li {
+    margin: 0 30px 10px 0;
+    text-align: right;
+    direction: ltr;
+  }
+
+  .accordion_title {
+    text-align: right;
+  }
+
+  .accordion_header:after {
+    right: initial;
+    left: 28px;
+  }
+
+  .benefits_list li:before {
+    left: initial;
+    right: -30px;
+  }
+
+  .lottery_timer {
+    margin: 0 40px 0 0 !important;
+  }
+
+  .timer_syndicate {
+    padding: 0 0 0 5px;
+  }
+
+  .lottery_time {
+    padding: 0 4px 0 0 !important;
+  }
+
+  .content_item_text:first-child {
+    padding-left: 5px;
+  }
+  .table_user_entry_header{
+    text-align: right !important;
+  }
+
+  .social_link {
+    margin: 0 0 0 9px;
+  }
+
+  .accordion_content {
+    text-align: right;
+  }
+
+  .info_title_rtl {
+    text-align: right;
+  }
+
+  .promotion_left-col {
+    padding: 0 0 0 10px;
+  }
+
+  /*  .gray_arrow:after,.gray_arrow:before{
+      right: -3px;
+      left: initial;
+      border-radius: 2px 0 0 2px;
+    }
+    .gray_arrow:before{
+      transform: rotate(45deg);
+    }
+    .gray_arrow:after{
+      transform: rotate(-45deg);
+    }
+    .gray_arrow{
+      border-radius: 3px 100% 100% 3px;
+    }*/
+  .tickets_arrow {
+    transform: scaleX(-1);
+  }
+
+  .list_number:last-child {
+    margin-right: 10px;
+  }
+
+
+  .time {
+    padding-left: 20px;
+  }
+
+  .after_faq_wrapper {
+    padding-left: initial;
+    padding-right: 20px;
+  }
+
+  .my_account_left {
+    margin-left: 60px;
+    margin-right: 0;
+  }
+
+  .lotteries_price {
+    direction: ltr;
+  }
+
+  .tickets_sum {
+    direction: ltr;
+  }
+
+  .title_text_sum {
+    margin-right: 5px;
+    margin-left: 0px;
+  }
+
+  .paymethod_title {
+    text-align: right;
+  }
+
+  .last_draw_list:last-child {
+    margin-right: 10px
+  }
+
+  .last_draw_list:first-child {
+    margin-right: 0;
+  }
+
+  .draw_title {
+    text-align: right;
+  }
+
+  .gray_arrow {
+    margin-left: 5px;
+    margin-right: 0;
+  }
+
+  .about_package_title {
+    text-align: right;
+  }
+
+  .included_lottery_description {
+    text-align: right;
+  }
+
+  .included_lottery_secondary_main_info_wrapper {
+    text-align: right;
+  }
+
+  .played_lines_no_and_nums_header:nth-child(odd) {
+    padding-left: 0;
+    margin-left: 125px !important;
+  }
+
+  .row_number {
+    margin-left: 25.5px;
+    margin-right: 0;
+  }
+
+  .played_lines_no_and_nums_header:nth-child(even) {
+    margin-left: 0 !important;
+  }
+
+  .played_lines_no_and_nums_header:first-child {
+    padding-right: 39px;
+  }
+
+  .red_arrow {
+    transform: rotate(180deg);
+  }
+
+  .lottery_item {
+    margin-left: 0;
+  }
+
+  .highest_text {
+    text-align: right;
+  }
+
+  #first_form {
+    border-right: 2px solid #E0E0E0;
+    border-left: 0;
+    padding: 30px 28px 30px 0;
+  }
+
+  #second_form {
+    border-right: 2px solid #E0E0E0;
+    border-left: 0;
+    padding: 30px 28px 30px 0;
+  }
+
+  #third_form {
+    border-right: 2px solid #E0E0E0;
+    border-left: 0;
+    padding: 30px 28px 30px 0;
+  }
+
+  .select {
+    right: initial;
+    left: 10px;
+  }
+
+  .biggest_upcoming_wrapper {
+    justify-content: space-evenly;
+  }
+
+  #year {
+    margin-left: 0;
+    margin-right: 15px;
+  }
+
+  .form_text {
+    text-align: right;
+  }
+
+  .lotteries_included {
+    margin: 30px 35px 0 0;
+  }
+
+  .lines_change {
+    margin-right: 0px;
+    margin-left: 0;
+  }
+
+  .footer_security .footer_link:last-child {
+    margin-right: 10px;
+  }
+
+  .validation_message {
+    text-align: right;
+  }
+
+  .text_align_center {
+    text-align: center;
+  }
+
+  .info_text_title {
+    text-align: right;
+  }
+
+  .statistics_jackpot_total {
+    text-align: right;
+  }
+
+  .send_text {
+    margin-left: 0;
+    margin-right: 20px;
+  }
+
+  .statistics_jackpot_average {
+    text-align: right;
+  }
+
+  .statistics_text_profit {
+    text-align: right;
+  }
+
+  .personal_information_left {
+    border-right: 0;
+    border-left: 2px solid #e0e0e0;
+    padding: 8px 0 0 30px;
+  }
+
+  .package_account:after {
+    left: initial;
+    right: 15px;
+  }
+
+  #bank_submit {
+    margin-left: 20px;
+    margin-right: 0;
+  }
+
+  .dropdown_menu:after {
+    right: initial;
+    left: 15px;
+  }
+
+  .deposit_help_link {
+    margin-left: 0;
+    margin-right: 0;
+    right: initial;
+    left: 30px;
+  }
+
+  .deposit_help_link:before {
+    right: initial;
+    left: -20px;
+    transform: translateY(-50%) rotate(225deg);
+  }
+
+  .transactions_table {
+    direction: ltr;
+  }
+
+  .pagination_inner {
+    direction: ltr;
+  }
+
+  .currency_choice {
+    margin-right: 0;
+    margin-left: 15px;
+  }
+
+  .deposit_title {
+    text-align: right;
+
+  }
+
+  .title_page {
+    text-align: right;
+  }
+
+  .transaction_help_link {
+    right: initial;
+    left: 60px;
+  }
+
+  .lottery_price {
+    direction: ltr;
+  }
+
+  .card_information_text {
+    text-align: left !important;
+  }
+
+  .password_link {
+    margin-left: 20px !important;
+    margin-right: 0 !important;
+  }
+
+  #help_link_page1 {
+    right: initial;
+    left: 30px;
+  }
+
+  .join_list {
+    .list_item {
+      padding: 6px 10px 6px 0px;
+    }
+
+    .list_item:before {
+      right: 0;
+    }
+  }
+
+  .your_choise-item_lottery_rtl {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #checkboxLbl {
+    padding-right: 10px;
+    padding-left: 0;
+    text-align: right;
+  }
+
+  .draws_change {
+    margin-right: 10px;
+  }
+
+  #checkbox_2 {
+    width: 20px;
+  }
+
+  #to_pay_sum {
+    margin-right: 5px;
+    margin-left: 0;
+  }
+
+  .your_choise-text-jackpot {
+    direction: ltr;
+  }
+
+  .join_question-title {
+    text-align: right;
+  }
+
+  .join_list {
+    text-align: right;
+  }
+
+  .list_item:before {
+    left: initial;
+    right: -30px !important;
+  }
+
+  .your_choise-item {
+    text-align: right;
+  }
+
+  .phone_for_forgot {
+    direction: ltr;
+  }
+
+  .lottery_description {
+    direction: ltr;
+    padding: 0 12px 0 0;
+    text-align: center;
+  }
+
+  .verification_help_link {
+    left: 30px;
+    right: initial;
+    margin-left: 0;
+  }
+
+  .subtitle_page_history {
+    text-align: right;
+  }
+
+  .lottery_syndicate_table {
+    direction: ltr;
+  }
+
+  .button_back_history:before {
+    transform: rotate(180deg);
+  }
+
+  .add_new_syndicate_help {
+    right: initial;
+    left: 30px;
+  }
+
+  .lottery_syndicate_title {
+    text-align: right;
+  }
+
+  .lottery_syndicate_subtitle {
+    text-align: right;
+  }
+
+  .lottery_syndicate_link {
+    right: initial;
+    left: 30px;
+  }
+
+  .lottery_syndicate_help_link {
+    right: initial;
+    left: 30px;
+  }
+
+  .lottery_syndicate_help_link:after {
+    right: initial;
+    left: -20px;
+    top: 6px;
+    transform: rotate(225deg);
+  }
+
+  .subtitle_page {
+    text-align: right;
+  }
+
+  .help_link_card_confirm {
+    right: initial;
+    left: 30px;
+  }
+
+  .button_back_identity:before {
+
+    transform: rotate(180deg);
+  }
+
+  .entries_title {
+    text-align: right;
+  }
+
+  .lottery_item:first-child {
+    margin-right: 0;
+  }
+
+  .lottery_item:last-child {
+    margin-right: 15px !important;
+  }
+
+  .jackpot_syndicate {
+    text-align: left;
+  }
+
+  /*  .phone_input_prom {
+      padding: 0 195px 0 50px !important;
+    }*/
+  .country_code_phone_wrap {
+    position: relative;
+  }
+
+  .lottery_syndicate_price {
+    width: 100%;
+    text-align: right;
+  }
+
+  .play_timer_syndicate {
+    width: fit-content;
+    justify-self: flex-end;
+  }
+
+
+  .header_account {
+    text-align: right;
+  }
+
+  .account_free_vouchers {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .header_nav_rtl {
+    direction: rtl !important;
+  }
+  .deposit_currency{
+    direction: ltr !important;
+  }
+  .deposit_currency .currency_choice{
+    margin-right: 15px !important;
+    margin-left: 0 !important;
+  }
+  .deposit_currency .select_arrow_bottom{
+    background-position: right -5px;
+  }
+  .nav_link {
+    text-align: right;
+  }
+
+  #language-select {
+    min-width: initial;
+  }
+
+  .header_account_mobile {
+    padding-right: 25px;
+    margin-right: 0;
+  }
+
+  .country_code_wrapper_prom {
+    border-right: 2px solid #e0e0e0;
+    left: 0;
+  }
+  #phone{
+    direction: ltr;
+  }
+
+  .telegram_restore_password_icon {
+    margin: 0 0 0 10px;
+  }
+  .transaction_help_link:after{
+    transform: translateY(-50%) rotate(225deg);
+    left: -20px;
+    right: initial;
+  }
+  .button_back_history:before{
+    right: initial !important;
+    left: 0 !important;
+  }
+  .pagination_inner{
+    flex-direction: row-reverse;
+  }
+  .pagination_item{
+    direction: rtl;
+  }
+  .pagination_item a img{
+    transform: rotate(180deg);
+  }
+  .pagination_item:last-child{
+    margin-right: 60px;
+  }
+  .pagination_item:first-child{
+    margin-right: 0;
+  }
+  .help_link_email{
+    margin-left: 0;
+    left: 30px;
+  }
+  .wraper_title{
+    padding: 30px 30px 0 0;
+  }
+  .we_sent_title{
+    text-align: center;
+  }
+}
+
+
+@media (max-width: 1230px) {
+  .mobil_row .card_information_text {
+    right: initial;
+    left: 0;
+  }
+  .social_link_whatsapp {
+    margin-left: 6px;
+    margin-right: 0;
+  }
+  body {
+    .item_statistics {
+      padding: 0 20px;
+      justify-content: center;
+    }
+  }
+  .lottery_item:nth-child(n+1) {
+    margin-right: 15px;
+  }
+
+
+}
+
+@media (max-width: 1060px) {
+  body {
+
+    .syndicate_entry:first-child {
+      border-right: 1px solid #e0e0e0;
+    }
+  }
+}
+
+@media (max-width: 1000px) {
+  .cookie-container-message p {
+    padding-left: 10px;
+    padding-right: 0;
+  }
+  body .tzahal_main_text {
+    padding: 0 20px;
+  }
+  .my_account_left {
+    align-self: center;
+  }
+  body .draw_days_item {
+    margin-left: 0;
+    margin-right: 0px;
+  }
+  #year {
+    margin-right: 0 !important;
+  }
+}
+
+@media (max-width: 880px) {
+  .form {
+    border: 0 !important;
+  }
+  body {
+    .player1_banner{
+      transform: scaleX(-1); 
+    }
+    #language-select {
+      min-width: 120px;
+    }
+  }
+  .what_next {
+    margin: 0;
+
+    .join_list {
+      margin-right: 30px !important;
+    }
+  }
+  #first_form {
+    padding: 0 !important;
+  }
+  #second_form {
+    padding: 0 !important;
+  }
+  #third_form {
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 804px) {
+  body {
+    .lottery_item:last-child {
+      margin-right: 0 !important;
+    }
+  }
+}
+@media (max-width: 800px) {
+  body {
+    .tournament_rules_outro{
+      margin-left: 0;
+      margin-right: -20px;
+    }
+    .tournament_header_wrap h1{
+      margin-left: 0;
+      margin-right: 10px;
+    }
+    .tournament_info_wrap_clock p{
+      margin-left: 0;
+      margin-right: 5px;
+    }
+  }
+}
+
+@media (max-width: 779px) {
+  .promotion_right-list > div {
+    margin-right: 30px;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 705px) {
+  body {
+    .card_item {
+      margin-right: 0;
+    }
+
+    .card_inner {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    .item_statistics {
+      padding-bottom: 20px;
+    }
+
+
+    .content_item_text:first-child {
+      text-align: right;
+    }
+  }
+}
+
+@media (max-width: 700px) {
+  .lines_change {
+    font-size: 1.2em;
+    position: initial;
+    top: 0;
+    right: initial;
+    left: 0;
+  }
+  .my_account_left {
+    margin-left: 0 !important;
+
+  }
+}
+
+@media (max-width: 660px) {
+  body{
+    #language-select .language-button-drop{
+      left: -10px !important;
+      right: initial !important;
+      top: 30px !important;
+    }
+    #language-select{
+      min-width: initial;
+    }
+    #dropdownMenuButton{
+      width: 40px;
+    }
+    #dropdownMenuButton{
+      margin: 0 !important;
+    }
+    .nav_link_prom{
+      text-align: right;
+    }
+    #language-select{
+      min-width: initial !important;
+    }
+  }
+}
+@media (max-width: 610px) {
+  .draw_days_text {
+    margin-right: 0;
+    margin-left: 10px;
+  }
+  body {
+    .draw_days_title_new {
+      text-align: center;
+    }
+
+    .syndicate_payment_type_radio {
+      margin-right: 0;
+      margin-left: 20px;
+    }
+  }
+  .info_title_rtl {
+    text-align: center !important;
+  }
+
+}
+
+@media (max-width: 600px) {
+  #checkbox_2 {
+    width: 32px !important;
+  }
+  body .tzahal_main_text {
+    font-size: 14px;
+    margin-top: 15px;
+    padding: 0 15px;
+  }
+  body{
+
+    .footer_wrapper{
+      padding: 11px 12px 32px 0 !important;
+    }
+    .security_img_wrap img:last-child{
+      margin-right: 18px;
+      margin-left: 0;
+    }
+  }
+}
+
+@media(max-width: 560px) {
+  body {
+    .lines__clear {
+      right: initial;
+      left: 10px;
+    }
+  }
+}
+
+@media (max-width: 530px) {
+  .footer_security {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 500px) {
+  .social_right {
+    left: 0;
+    right: initial;
+  }
+  body{
+    #help_link_page1{
+      margin-left: 0;
+    }
+    div{
+
+      .span-hide {
+        right: initial !important;
+        left: 0 !important;
+      }
+      .password_link{
+        margin-left: 0 !important;
+      }
+      #sigin_password {
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+      }
+    }
+  }
+  .balance_title, .affiliate_text, .actyvity_link, .activity_link_works{
+    margin-left: 0;
+    margin-right: 48px;
+  }
+  .transaction_help_link:after {
+    right: 75px;
+    transform: rotate(225deg);
+    top: 6px;
+  }
+  .subtitle_form {
+    text-align: right;
+  }
+  body .personal_information_left {
+    border-left: 0;
+    padding: 10px 0 0;
+    text-align: right;
+  }
+  #sign_in_page_title {
+    padding-right: 0 !important;
+  }
+  .password_change_help_link {
+    margin-left: 0 !important;
+  }
+  .my_account_left {
+    width: 100%;
+  }
+  body {
+    .activity_view {
+      margin-left: 48px;
+      margin-right: 0;
+    }
+
+    .activity_text {
+      margin-right: 48px;
+
+    }
+
+    .lotteries_included {
+      margin: 0;
+    }
+
+    .syndicate_details {
+      .question_title {
+        text-align: center;
+      }
+    }
+  }
+  .accordion_title {
+    width: 100%;
+    text-align: right;
+  }
+  .accordion_header:after {
+    right: initial !important;
+    left: 10px !important;
+  }
+  .lines_clear {
+    left: 10px;
+  }
+  .lottery_item:nth-child(n+1) {
+    margin-right: 0;
+  }
+  .transaction_help_link {
+    left: 25px !important;
+  }
+
+  .tickets_content {
+    margin-left: 10px;
+    margin-right: 0;
+  }
+  .personality_error {
+    right: initial;
+    left: 100px;
+  }
+  .footer_security {
+  }
+}
+
+@media (max-width: 412px) {
+  body {
+    .lottery_item {
+      width: 100%;
+    }
+
+    .lottery_timer {
+      margin-left: 0;
+    }
+  }
+}
+
+@media(min-width: 1230px) {
+  body {
+    .lottery_item:nth-child(3) {
+      margin-right: 0 !important;
+    }
+
+    .two_lotteries:nth-child(3) {
+      margin-right: 15px !important;
+    }
+  }
+}
+
+@media(min-width: 1000px) {
+  .syndicate_main_title {
+    padding-right: 0px;
+    padding-left: 60px;
+  }
+}

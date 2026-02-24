@@ -1,0 +1,141 @@
+@using System.Collections.Generic
+@using System.Threading
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.GamesListModel
+@inject UmbracoHelper _helper
+
+@{
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" :
+	$"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+	var rtlLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ar", "he", "fa", "ur" };
+	var isRtl = rtlLanguages.Contains(Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName);
+}
+
+<div class="games-list-wrap compact">
+
+	<div class="games-title-nav-buttons">
+		<div class="flex text-base xs:text-lg md:text-xl font-medium items-center">
+
+			@if (!Model.StudioGameList)
+			{
+				<img class="h-6 mr-2" src="~/images/game_category_icons/@Html.Raw(Model.CategoryID.ToString() + ".png")"
+					alt="@Html.Raw(Model.Title)" />
+			}
+			<h2>@Html.Raw(Model.Title)</h2>
+
+
+			@if (Model.List.Count > 7)
+			{
+				<div class="nav-buttons-wrap hidden md:flex @(isRtl ? "flex-row-reverse mr-10" : "ml-10")">
+					<div class="@(isRtl ? "mr-2" : "") playerclub-button game-nav-button"
+						onclick="document.querySelector('#@Html.Raw("c-" + Model.CategoryID)').previous()">
+						<img src="/images/casino/arrow.svg" @(isRtl ? "style=\"transform:scaleX(-1);\"" : "") />
+					</div>
+					<div class="@(isRtl ? "" : "ml-2") playerclub-button game-nav-button"
+						onclick="document.querySelector('#@Html.Raw("c-" + Model.CategoryID)').next()">
+						<img src="/images/casino/arrow.svg" @(isRtl ? "style=\"transform:scaleX(-1);\"" : "") />
+					</div>
+				</div>
+			}
+		</div>
+		<a href="@Html.Raw($"{langIso}{Model.ViewLink.Replace(' ', '-')}")" class="playerclub-button view-all-wrap uppercase max-sm:px-2! min-w-fit! h-fit">
+			@Html.Raw(_helper.GetDictionaryValueOrDefault("View all", "View all"))
+		</a>
+	</div>
+
+	@if (Model.List.Count > 7)
+	{
+		<div class="games-wrap">
+			<sl-carousel loop pagination slides-per-page="7" slides-per-move="1" id="@Html.Raw("c-" + Model.CategoryID)"
+				autoplay="true">
+				@foreach (var g in Model.List)
+				{
+					if (g is null)
+						continue;
+
+					g.Slug = string.IsNullOrEmpty(g.Slug) ? g?.Name is null
+					? "" : string.Join("-",
+					g.Name
+					.ToLowerInvariant()
+					.Trim()
+					// normalize to spaces first so we can split on them
+					.Replace('+', ' ')
+					.Replace("&", " and ")
+					.Replace('/', ' ')
+					.Replace('\\', ' ')
+					.Replace('.', ' ')
+					.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+					// strip remaining characters that commonly break routes or look bad in slugs
+					.Replace("?", "")
+					.Replace("%", "")
+					.Replace("#", "")
+					.Replace("\"", "")
+					.Replace("'", "") : g.Slug;
+
+					<sl-carousel-item style="background: var(--sl-color-red-200);">
+						<a href="@Html.Raw($"{langIso}/game/{g.Id}/{g.Slug}")" class="game-wrap">
+							<div>
+								<img src="@Html.Raw(g.ImageUrl)" alt="@Html.Raw(g.Name)" class="w-full h-full" loading="lazy"
+									decoding="async" onerror="gamesOnImgError?.(this, '@Html.Raw(g.Name)')" />
+							</div>
+						</a>
+					</sl-carousel-item>
+				}
+			</sl-carousel>
+			<div class="overflow-game-gradient">
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="games-wrap gap-4 justify-start! overflow-x-auto no-scrollbar">
+			@foreach (var g in Model.List)
+			{
+				if (g is null)
+					continue;
+
+				g.Slug = string.IsNullOrEmpty(g.Slug) ? g?.Name is null
+					? "" : string.Join("-",
+					g.Name
+					.ToLowerInvariant()
+					.Trim()
+					// normalize to spaces first so we can split on them
+					.Replace('+', ' ')
+					.Replace("&", " and ")
+					.Replace('/', ' ')
+					.Replace('\\', ' ')
+					.Replace('.', ' ')
+					.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+					// strip remaining characters that commonly break routes or look bad in slugs
+					.Replace("?", "")
+					.Replace("%", "")
+					.Replace("#", "")
+					.Replace("\"", "")
+					.Replace("'", "") : g.Slug;
+
+				<a href="@Html.Raw($"{langIso}/game/{g.Id}/{g.Slug}")" class="game-wrap">
+					<div>
+						<img src="@Html.Raw(g.ImageUrl)" alt="@Html.Raw(g.Name)" class="w-full h-full" loading="lazy" decoding="async"
+							onerror="gamesOnImgError?.(this, '@Html.Raw(g.Name)')" />
+					</div>
+				</a>
+			}
+		</div>
+	}
+</div>
+
+<script>
+	gamesOnImgError = (img, name) => {
+		img.outerHTML = `
+        <div class="w-full h-full flex flex-col items-center justify-center rounded-xl p-2
+                    bg-[#022b32] border-2 border-yellow-400 text-yellow-100 
+                    text-center font-semibold text-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+               class="w-12 h-12 mb-2 opacity-70">
+            <path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2ZM8 11l3 4 2-3 3 4H6l2-5Z"/>
+          </svg>
+          <span class="uppercase">${name}</span>
+        </div>
+      `;
+	};
+</script>

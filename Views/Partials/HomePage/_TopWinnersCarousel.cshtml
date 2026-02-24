@@ -1,0 +1,110 @@
+@using SmartWinners.Models
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.TopWinnersListModel
+@inject UmbracoHelper _helper
+
+
+@if (Model.FilterType == TopWinnersFilterType.Latest)
+{
+	<div class="winners-carousel-header">
+		<div class="w-[30%]">
+			@Html.Raw(_helper.GetDictionaryValue("Game"))
+		</div>
+		<div class="max-sm:hidden! w-[17%]">
+			@Html.Raw(_helper.GetDictionaryValue("User"))
+		</div>
+		<div class="max-sm:hidden! w-[25%]">
+			@Html.Raw(_helper.GetDictionaryValue("Time"))
+		</div>
+		<div class="max-sm:hidden! w-[12%]">
+			@Html.Raw(_helper.GetDictionaryValue("Bet"))
+		</div>
+		<div class="w-[auto] ml-auto">
+			@Html.Raw(_helper.GetDictionaryValueOrDefault("Score", "Score"))
+		</div>
+	</div>
+	<div class="winners-carousel-body">
+		<sl-carousel pagination slides-per-page="@Html.Raw(Model.Count + 1)" slides-per-move="1" id="winners-carousel-lasted" orientation="vertical" class="carousel-count-@Html.Raw(Model.Count)">
+			@foreach (var winner in Model.List)
+			{
+				<sl-carousel-item style="background: var(--sl-color-red-200);">
+					@Html.Partial("/Views/Partials/HomePage/_TopWinnersCarouselItem.cshtml", (winner, Model.FilterType))
+				</sl-carousel-item>
+			}
+		</sl-carousel>
+	</div>
+}
+else if (Model.FilterType == TopWinnersFilterType.BigWins)
+{
+	<div class="winners-carousel-header">
+		<div>
+			@Html.Raw(_helper.GetDictionaryValue("Game"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Time"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("User"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Multiplayer"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Bet"))
+		</div>
+		<div>
+			@Html.Raw(_helper.GetDictionaryValueOrDefault("Score", "Score"))
+		</div>
+	</div>
+	<div class="winners-carousel-body">
+		<sl-carousel pagination slides-per-page="@Html.Raw(Model.Count + 1)" slides-per-move="1" id="winners-carousel" orientation="vertical" class="carousel-count-@Html.Raw(Model.Count)">
+			@foreach (var winner in Model.List)
+			{
+				<sl-carousel-item style="background: var(--sl-color-red-200);">
+					@Html.Partial("/Views/Partials/HomePage/_TopWinnersCarouselItem.cshtml", (winner, Model.FilterType))
+				</sl-carousel-item>
+			}
+		</sl-carousel>
+	</div>
+}
+else if (Model.FilterType == TopWinnersFilterType.TopMultiplayers)
+{
+	<div class="winners-carousel-header">
+		<div>
+			@Html.Raw(_helper.GetDictionaryValue("Game"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Time"))1
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("User"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Bet"))
+		</div>
+		<div class="max-sm:hidden!">
+			@Html.Raw(_helper.GetDictionaryValue("Multiplayer"))
+		</div>
+		<div>
+			@Html.Raw(_helper.GetDictionaryValueOrDefault("Score", "Score"))
+		</div>
+	</div>
+	<div class="winners-carousel-body">
+		<sl-carousel pagination slides-per-page="@Html.Raw(Model.Count)" slides-per-move="1" id="winners-carousel" orientation="vertical" class="carousel-count-@Html.Raw(Model.Count)">
+			@foreach (var winner in Model.List)
+			{
+				<sl-carousel-item style="background: var(--sl-color-red-200);">
+					@Html.Partial("/Views/Partials/HomePage/_TopWinnersCarouselItem.cshtml", (winner, Model.FilterType))
+				</sl-carousel-item>
+			}
+		</sl-carousel>
+	</div>
+}
+
+<script>
+	document.addEventListener("DOMContentLoaded", function (){
+			UpdateCarousel(@Html.Raw(Convert.ToInt32(Model.FilterType)), @Html.Raw(Model.Count));
+	})
+</script>
+
+

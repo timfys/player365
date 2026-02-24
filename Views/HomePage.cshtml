@@ -1,0 +1,272 @@
+﻿@using System.Threading
+@using GoldCasino.ApiModule.Dtos.Games
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Models
+@using GoldCasino.ApiModule.Services.PlayerClub365Api.Models
+@using SmartWinners.Models
+@using SmartWinners.Services
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject GamesService gamesService
+@inject StudiosService studiosService
+@inject GameCategoriesService gameCategoriesService
+
+
+@{
+	Layout = "MasterPage.cshtml";
+
+	var winners = TopWinnersListModel.GetTest(Umbraco);
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	winners.List = winners.List.OrderByDescending(x => x.WonDate).Take(10).ToList();
+	winners.Count = 10;
+	winners.FilterType = TopWinnersFilterType.Latest;
+	var hash = winners.GetHashCode();
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var user = isAuthorized ? Context.User.ToUserApiAccess() : null;
+	var categries = await gameCategoriesService.GetCategoriesWithSEOAsync(langIso);
+
+	var recent = new GamesListModel();
+	var recommended = new GamesListModel();
+	var cat = new GameCategoryWithSEO();
+	if (isAuthorized)
+	{
+		cat = categries.FirstOrDefault(c => c.CategoryID == 1);
+
+		var recentParams = new GamesListParameters
+		{
+			Lang = langIso,
+			Start = 0,
+			Max = 20,
+			CategoryId = 1,
+			CategoryName = cat?.CategoryName ?? "",
+			EntityId = user.EntityId,
+			Username = user.Username,
+			Password = user.Password,
+			Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+		};
+		recent = await gamesService.GetList<GameSimpleWithCategoryDto>(recentParams);
+		recent.Title = cat?.H1Title ?? "";
+
+		cat = categries.FirstOrDefault(c => c.CategoryID == 2);
+		var recommendedParams = new GamesListParameters
+		{
+			Lang = langIso,
+			Start = 0,
+			Max = 20,
+			CategoryId = 2,
+			CategoryName = cat?.CategoryName ?? "",
+			EntityId = user.EntityId,
+			Username = user.Username,
+			Password = user.Password,
+			Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+		};
+		recommended = await gamesService.GetList<GameSimpleWithCategoryDto>(recommendedParams);
+		recommended.Title = cat?.H1Title ?? "";
+	}
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 4);
+	var popularParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 4,
+		CategoryName = cat?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var popular = await gamesService.GetList<GameSimpleWithCategoryDto>(popularParams);
+	popular.Title = cat?.H1Title ?? "";
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 5);
+	var topGamesParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 5,
+		CategoryName = cat?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var topGames = await gamesService.GetList<GameSimpleWithCategoryDto>(topGamesParams);
+	topGames.Title = cat?.H1Title ?? "";
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 6);
+	var newGamesParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 6,
+		CategoryName = cat?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var newGames = await gamesService.GetList<GameSimpleWithCategoryDto>(newGamesParams);
+	newGames.Title = cat?.H1Title ?? "";
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 8);
+	var exclusiveGamesParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 8,
+		CategoryName = categries.FirstOrDefault(c => c.CategoryID == 8)?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var exclusiveGames = await gamesService.GetList<GameSimpleWithCategoryDto>(exclusiveGamesParams);
+	exclusiveGames.Title = cat?.H1Title ?? "";
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 9);
+	var trendingGamesParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 9,
+		CategoryName = categries.FirstOrDefault(c => c.CategoryID == 9)?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var trendingGames = await gamesService.GetList<GameSimpleWithCategoryDto>(trendingGamesParams);
+	trendingGames.Title = cat?.H1Title ?? "";
+
+	cat = categries.FirstOrDefault(c => c.CategoryID == 13);
+	var liveParams = new GamesListParameters
+	{
+		Lang = langIso,
+		Start = 0,
+		Max = 20,
+		CategoryId = 13,
+		CategoryName = categries.FirstOrDefault(c => c.CategoryID == 13)?.CategoryName ?? "",
+		EntityId = user?.EntityId ?? 0,
+		Username = user?.Username ?? "",
+		Password = user?.Password ?? "",
+		Filters = isAuthorized ? [new("Hall_Balance", ">0")] : []
+	};
+	var live = await gamesService.GetList<GameSimpleWithCategoryDto>(liveParams);
+	live.Title = cat?.H1Title ?? "";
+
+	var gamestudios = await studiosService.Get(Umbraco.GetDictionaryValueOrDefault("Game Studios", "Game Studios"), 0, 60,
+	showAtRootOnly: true);
+
+	// Check if user has WellocomeOffer bonus (to hide MainBanner)
+
+}
+
+
+@{
+	bool CategoryEnabled(int categoryId)
+	{
+		var category = categries.FirstOrDefault(c => c.CategoryID == categoryId);
+		return category != null && category.Enabled == 1;
+	}
+}
+
+<div>
+	<partial name="Partials/HomePage/MainBanner" />
+
+	@if (isAuthorized)
+	{
+		if (recent.List.Count > 0)
+		{
+			<partial name="Partials/HomePage/GamesList" model="recent" />
+		}
+		if (recommended.List.Count > 0)
+		{
+			<partial name="Partials/HomePage/GamesList" model="recommended" />
+		}
+		<div class="hidden md:flex w-full justify-center">
+			<partial name="Partials/HomePage/DepositAndGet" />
+		</div>
+	}
+	@if (CategoryEnabled(4))
+	{
+		<partial name="Partials/HomePage/GamesList" model="popular" />
+	}
+	@if (CategoryEnabled(5))
+	{
+		<partial name="Partials/HomePage/GamesList" model="topGames" />
+	}
+	<div class="flex md:hidden w-full justify-center mt-6">
+		<partial name="Partials/HomePage/GetFreeSpins" />
+	</div>
+
+	@if (!isAuthorized)
+	{
+		<div class="hidden md:flex w-full justify-center">
+			<partial name="Partials/HomePage/DepositAndGet" />
+		</div>
+	}
+	else
+	{
+		<partial name="Partials/HomePage/StudioList" model="gamestudios" />
+	}
+	@if (CategoryEnabled(6))
+	{
+		<partial name="Partials/HomePage/GamesList" model="newGames" />
+	}
+
+	<div class="flex md:hidden w-full justify-center mt-6">
+		<partial name="Partials/HomePage/LotteryBanner" />
+	</div>
+
+	@if (CategoryEnabled(8))
+	{
+		<partial name="Partials/HomePage/GamesList" model="exclusiveGames" />
+	}
+
+	<div class="flex md:hidden w-full justify-center mt-6">
+		<partial name="Partials/HomePage/TopWinnersBanner" />
+	</div>
+
+	@if (CategoryEnabled(9))
+	{
+		<partial name="Partials/HomePage/GamesList" model="trendingGames" />
+	}
+
+	@if (!isAuthorized)
+	{
+		<partial name="Partials/HomePage/StudioList" model="gamestudios" />
+		if (CategoryEnabled(13))
+		{
+			<partial name="Partials/HomePage/GamesList" model="live" />
+		}
+	}
+	<partial name="Partials/HomePage/GetReadyToLoveBonuses" />
+	@if (isAuthorized)
+	{
+		if (CategoryEnabled(13))
+		{
+			<partial name="Partials/HomePage/GamesList" model="live" />
+		}
+	}
+	<partial name="Partials/HomePage/TopWinners" model="winners" />
+
+	<div class="flex flex-col items-center max-w-full">
+		<partial name="Partials/HomePage/WhatPlayersSays" model="UserReviewModel.GetTest()" />
+	</div>
+
+	@if (!isAuthorized)
+	{
+		<partial name="Partials/HomePage/LetsGetStarted" />
+	}
+
+	@if (isAuthorized)
+	{
+		<partial name="Partials/HomePage/EmailPopup.cshtml" />
+	}
+</div>

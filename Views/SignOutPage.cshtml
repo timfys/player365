@@ -1,0 +1,15 @@
+﻿@using GoldCasino.ApiModule.Constants
+@using Microsoft.AspNetCore.Http
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+	Layout = "MasterPage.cshtml";
+	WebStorageUtility.SignOut(Context);
+	Context.Response.Cookies.Delete(AuthConstants.CookieName, new CookieOptions { Path = "/" });
+	Context.Response.Cookies.Delete("email_verify_suppressed", new CookieOptions { Path = "/" });
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+    Context.Response.Redirect($"{(langIso.Equals("") ? "/" : langIso)}");
+}

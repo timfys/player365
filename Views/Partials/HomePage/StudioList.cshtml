@@ -1,0 +1,88 @@
+@using System.Collections.Generic
+@using System.Threading
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.StudiosListModel
+@inject UmbracoHelper _helper
+
+@{
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" :
+	$"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+	var rtlLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ar", "he", "fa", "ur" };
+	var isRtl = rtlLanguages.Contains(Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName);
+}
+
+<div class="games-list-wrap studio-list-wrap compact">
+
+		<div class="games-title-nav-buttons">
+			<div class="flex text-base xs:text-lg md:text-xl font-medium items-center">
+				<h2>@Html.Raw(Model.Title)</h2>
+				<div class="nav-buttons-wrap hidden md:flex @(isRtl ? "flex-row-reverse mr-10" : "ml-10")">
+					<div class="@(isRtl ? "mr-2" : "") playerclub-button game-nav-button"
+						onclick="document.querySelector('#@Html.Raw(Model.CarouselName)').previous()">
+						<img src="/images/casino/arrow.svg" @(isRtl ? "style=\"transform:scaleX(-1);\"" : "") />
+					</div>
+					<div class="@(isRtl ? "" : "ml-2") playerclub-button game-nav-button"
+						onclick="document.querySelector('#@Html.Raw(Model.CarouselName)').next()">
+						<img src="/images/casino/arrow.svg" @(isRtl ? "style=\"transform:scaleX(-1);\"" : "") />
+					</div>
+				</div>
+			</div>
+		<a href="@Html.Raw($"{langIso}/games/s/all")" class="playerclub-button view-all-wrap uppercase max-sm:px-2! min-w-fit! h-fit">
+			@Html.Raw(_helper.GetDictionaryValueOrDefault("View all", "View all"))
+		</a>
+	</div>
+
+	<div class="games-wrap studios-wrap">
+		<sl-carousel loop pagination slides-per-page="5" autoplay slides-per-move="1" id="@Html.Raw(Model.CarouselName)">
+			@foreach (var studio in Model.List)
+			{
+				<sl-carousel-item style="background: var(--sl-color-red-200);">
+					<a href="@Html.Raw($"{langIso}/games/s/{studio.Id}/{studio.Name.Replace(" ", "-").ToLower()}")"
+						class="w-full h-full rounded-lg no-underline! bg-white/5">
+						<div class="image-container">
+							<img src="@Html.Raw($"/images/casino/Studios/png/studio_{studio.Id}.png")" alt="@Html.Raw(studio.Name)"
+								class="studio-image "
+								onerror="this.onerror=null; this.outerHTML='<div class=\'flex items-center justify-center w-full h-full text-3xl text-center p-2 uppercase font-semibold transition-transform duration-100 ease-linear hover:scale-110 \'>@Html.Raw(studio.Name)</div>'" />
+						</div>
+						@* @Html.Raw(studio.GetGameCardBanner(_helper)) *@
+					</a>
+				</sl-carousel-item> 
+			}
+		</sl-carousel>
+		<div class="overflow-game-gradient">
+		</div>
+	</div>
+
+</div>
+
+
+<style>
+.image-container {
+    /* Container to match your original div's size */
+    width: 100%;
+    height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+    /* Key change: Hides the image as it scales up */
+    overflow: hidden; 
+}
+
+.studio-image {
+    /* Ensures the image fills the container */
+    width: 65%;
+    height: 65%;
+    object-fit: contain; /* Equivalent to your bg-cover or bg-size setting */
+    
+    /* Set up the transition */
+    transition: transform 100ms ease-in-out; 
+    
+    /* Initial state (scale of 1 is the default size) */
+    transform: scale(1.0);
+}
+
+.image-container:hover .studio-image {
+    /* Scale up on hover (e.g., scale by 10% from its original size) */
+    transform: scale(1.1); 
+}
+</style>

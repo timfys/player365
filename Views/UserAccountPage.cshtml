@@ -1,0 +1,389 @@
+﻿@using GoldCasino.ApiModule.Auth
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using GoldCasino.ApiModule.Mapping;
+@using GoldCasino.ApiModule.Dtos.User;
+@using System.Threading
+@using Newtonsoft.Json
+@using System.Globalization
+@using System.Drawing.Imaging
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject IBusinessApiService businessApiService
+@inject GoldCasino.ApiModule.Services.PlayerClub365Api.IPlayerClub365ApiService playerClub365ApiService
+@inject GoldCasino.ApiModule.Services.SmartWinnersApi.ISmartWinnersApiService smartWinnersApiService
+
+@{
+	Layout = "MasterPage.cshtml";
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+
+var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	var contextUser = Context.User;
+
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/account");
+		return;
+	}
+	var identityUser = contextUser.ToUserApiAccess();
+	var lid = contextUser.FindFirst("Lid");
+
+	await smartWinnersApiService.EntityBalanceCalcAsync(identityUser);
+
+	var result = await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserDto, UserBalanceDto, LegacyUserBalancesDto>.Fields,
+		Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+	}, identityUser);
+
+	var entity = result.Value?.Entities.FirstOrDefault();
+	var (user, balance, legacyBal) = EntityMapper.MapTo<UserDto, UserBalanceDto, LegacyUserBalancesDto>(entity);
+
+	var accountItems = new[]
+	{
+				new {
+						Key = "personal",
+						Icon = "/images/account/avatar.migrated-1.svg",
+						UseAvatar = true,
+						TextKey = "Personal Information",
+						LinkHref = $"{langIso}/personal-info",
+						LinkKey = "Change",
+						ShowError = ((!user?.EmailVerified??false) || (!user?.MobileVerified ?? false)),
+						ErrorKey = "Verify email/mobile",
+						ShowMoney = false,
+						MoneyText = ""
+				},
+				new {
+						Key = "verification",
+						Icon = "/images/account/verification.svg",
+						UseAvatar = false,
+						TextKey = "Verification",
+						LinkHref = $"{langIso}/identity",
+						LinkKey = "View",
+						ShowError = false,
+						ErrorKey = "",
+						ShowMoney = false,
+						MoneyText = ""
+				},
+				new {
+						Key = "history",
+						Icon = "/images/account/played_history.svg",
+						UseAvatar = false,
+						TextKey = "Played History",
+						LinkHref = $"{langIso}/played-history",
+						LinkKey = "View",
+						ShowError = false,
+						ErrorKey = "",
+						ShowMoney = false,
+						MoneyText = ""
+				},
+				new {
+						Key = "purchase-coins",
+						Icon = "/images/account/deposit.svg",
+						UseAvatar = false,
+						TextKey = "Purchase Coins",
+						LinkHref = $"{langIso}/purchase-coins",
+						LinkKey = "Purchase",
+						ShowError = false,
+						ErrorKey = "",
+						ShowMoney = false,
+						MoneyText = ""
+				},
+				@* new {
+						Key = "withdraw",
+						Icon = "/images/account/withdraw.svg",
+						UseAvatar = false,
+						TextKey = "Withdraw",
+						LinkHref = $"{langIso}/withdraw",
+						LinkKey = "Withdraw",
+						ShowError = false,
+						ErrorKey = "",
+						ShowMoney = true,
+						MoneyText = $"$ {balance?.BalanceUSD.ToString("0.00")}"
+				} *@
+		};
+}
+
+
+@functions
+{
+	public static string GetImageExtensionFromBase64(string base64Image)
+	{
+		byte[] imageBytes = Convert.FromBase64String(base64Image);
+
+		using (var ms = new System.IO.MemoryStream(imageBytes))
+		{
+			using (var image = System.Drawing.Image.FromStream(ms))
+			{
+				var format = image.RawFormat;
+				if (format.Equals(ImageFormat.Jpeg))
+				{
+					return "jpg";
+				}
+				else if (format.Equals(ImageFormat.Png))
+				{
+					return "png";
+				}
+				else if (format.Equals(ImageFormat.Gif))
+				{
+					return "gif";
+				}
+				else if (format.Equals(ImageFormat.Bmp))
+				{
+					return "bmp";
+				}
+				else if (format.Equals(ImageFormat.Tiff))
+				{
+					return "tiff";
+				}
+
+				return "unknown";
+			}
+		}
+	}
+}
+
+@{
+PaymentHelper.CacheUserBalance(Context, new(){ BalanceUSD = balance?.BalanceUSD ?? 0});
+var currencyDetails = WebStorageUtility.GetUserCurrencyDetails(Context);
+
+// Bonus balance - always fetch fresh and cache
+decimal bonusBalance = 0;
+var bonusResult = await playerClub365ApiService.EntityBonusesGetAsync(identityUser);
+if (bonusResult.IsSuccess)
+{
+	bonusBalance = bonusResult.Value.BonusBalance;
+	PaymentHelper.CacheUserBonusBalance(Context, bonusBalance);
+}
+var totalBalanceUSD = (balance?.BalanceUSD ?? 0) + bonusBalance;
+
+var tgId = await IdentityHelper.CheckForNotificationEnabled(user.Id);
+}
+<div class="md:max-w-[1330px] mt-4">
+	<div class="flex items-center md:items-start flex-col md:flex-row w-full gap-10 ">
+		<h1 class="text-xl/6 text-center inline md:hidden uppercase font-medium tracking-wide w-full self-stretch">@Umbraco.GetDictionaryOrDefault("Welcome Back"), @Html.Raw(string.IsNullOrEmpty(user?.FirstName) ? user?.Username : user.FirstName)</h1>
+		<!-- Left side -->
+		<div class="w-full max-w-[450px] md:max-w-[342px] flex">
+			<div class="w-full p-4 rounded-lg border-none! bg-(--c-teal-strong)  text-center md:text-left">
+				<div class="text-center pb-4 border-white/20!">
+					<div class="my_account_logo" onclick="(function () {document.querySelector('#fileId').click()})()">
+						@{
+							var image = IdentityHelper.GetFile("profile_img");
+							var imgSrc = image is null ? "/images/account/avatar.migrated-1.svg" : $"data:image;/{GetImageExtensionFromBase64(image.Base64ImgString)};base64,{image.Base64ImgString}";
+						}
+						<img class="" src="@imgSrc" alt="avatar">
+					</div>
+					<h3 class="my_account_title">@Html.Raw(string.IsNullOrEmpty(user?.FirstName) ? user?.Username : user.FirstName)</h3>
+					<a href="/sign-out" target="_blank" rel="noopener noreferrer" class="green-link text-sm cursor-pointer">Logout</a>
+					@* <a class="my_account_link my_account_link_change_img" onclick="(function () {document.querySelector('#fileId').click()})()">@Umbraco.GetDictionaryOrDefault("Change")</a> *@
+					<input accept=".jpg, .jpeg, .png" type="file" style="display: none;" id="fileId" onchange="CheckAndUploadImage(this)" />
+				</div>
+				<div class="my_account_balance border-white/20!">
+					<h4 class="balance_title balance_title_text">@Umbraco.GetDictionaryOrDefault("Your available balance")</h4>
+					<div class="balance_money balance_money_deposit flex items-center max-md:justify-center gap-2">
+						<span><img class="h-6" src="/images/p1.png"></span> @totalBalanceUSD.ToString("0.00")
+					</div>
+					<div class="playerclub-button-yellow py-2 text-lg uppercase">
+						<a href="@langIso/purchase-coins" target="_blank" rel="noopener noreferrer" class="my_account_button_link font-semibold!">@Umbraco.GetDictionaryOrDefault("Purchase Coins", "Purchase Coins")</a>
+					</div>
+				</div>
+				@* <div class="my_account_winning">
+					@*<div class="winning_item">
+                        <p class="winning_text">@Umbraco.GetDictionaryOrDefault("Your winnings balance")</p>
+                        <p class="balance_money">$0.00</p>
+                    </div>* @
+					<div class="winning_item balance_item">
+						<p class="winning_text mtl_0">@Umbraco.GetDictionaryOrDefault("Your winnings:")</p>
+
+						@{
+							var winnings = legacyBal.Player1TotalWinnings + legacyBal.TotalWinningsUsd + /*resp.AffiliateWithdrawAllowedSum + + user.UserAffiliateEarnings*/ -legacyBal.TotalWithdrawAmountUsd;
+						}
+
+						<p class="balance_money mtl_0">
+							<span>$</span> @($"{(winnings < 0 ? 0 : winnings) * currencyDetails.ExchangeRate:0.00}")
+						</p>
+					</div>
+					<div class="winning_item balance_item">
+						<p class="winning_text mtl_0">@Umbraco.GetDictionaryOrDefault("Your affiliate profits:")</p>
+						<p class="balance_money mtl_0"><span>$</span> @($"{legacyBal.UserAffiliateEarnings * currencyDetails.ExchangeRate:0.00}")</p>
+					</div>
+				</div> *@
+			</div>
+			@* <div class="my_account_activity border-none! bg-(--c-teal-strong)">
+				<h4 class="balance_title">@Umbraco.GetDictionaryOrDefault("Affilite activity:")</h4>
+				<p class="winning_text affiliate_text">@Umbraco.GetDictionaryOrDefault("Earn money by referring friends to play.")</p>
+
+				<p class="activity_text">
+					@Umbraco.GetDictionaryOrDefault("Earnings:") <span class="Earnings text-[#16DB2A]!"><span>$</span> @((currencyDetails.ExchangeRate * legacyBal.UserAffiliateEarnings).ToString("0.00"))</span>
+				</p>
+
+				<div class="flex_wrapper">
+					<p class="activity_text">
+						@Umbraco.GetDictionaryOrDefault("Refered:") <span class="Refered">@legacyBal.UserAffiliateReferred</span>
+						</p>
+						<a href="@(Umbraco.GetDictionaryOrDefault("View URL") + lid?.Value)" target="_blank" rel="noopener noreferrer" class="green-link activity_view">@Umbraco.GetDictionaryOrDefault("View")</a>
+				</div>
+					<a href="@(Umbraco.GetDictionaryOrDefault("View my referal links URL") + lid?.Value)" target="_blank" rel="noopener noreferrer" class="green-link actyvity_link">@Umbraco.GetDictionaryOrDefault("View my referral links")</a>
+					<a href="@Umbraco.GetDictionaryOrDefault("How it works URL (account)")" target="_blank" rel="noopener noreferrer" class="green-link activity_link_works">@Umbraco.GetDictionaryOrDefault("How it works?")</a>
+			</div> *@
+		</div>
+		<!-- Right side -->
+		<div class="w-full max-md:max-w-[450px]">
+			<h1 class="text-3xl/10 hidden md:inline uppercase font-medium tracking-wide w-full self-stretch">@Umbraco.GetDictionaryOrDefault("Welcome Back"), @Html.Raw(string.IsNullOrEmpty(user?.FirstName) ? user?.Username : user.FirstName)</h1>
+			<h5 class="id_image_validation_param" style="margin-top: 20px"></h5>
+			<div class="w-full @Html.Raw(tgId <= 0 ? "personality_notification_disabled" : "")">
+				@if (tgId <= 0)
+				{
+					<div class="flex items-center justify-between mb-2">
+						<a class="flex flex-row items-center gap-2" target="_blank" rel="noopener noreferrer" href="https://t.me/playerclub365_casino_bot">
+							<img src="/images/contacts/Telegram.svg" alt="telegram_icon" class="w-8" />
+							@Umbraco.GetDictionaryOrDefault("Enable notifications via Telegram.")
+						</a>
+						<a class="text-base" target="_blank" rel="noopener noreferrer" href="@Umbraco.GetDictionaryOrDefault("Telegram more info link")">@Umbraco.GetDictionaryOrDefault("(Learn more)")</a>
+					</div>
+				}
+				<div class="flex flex-col gap-2">
+					@foreach (var item in accountItems)
+					{
+						var logoClass = item.UseAvatar ? "personality_logo personality_logo_img" : "personality_logo";
+						var iconSrc = item.UseAvatar ? imgSrc : item.Icon;
+
+						<div class="flex relative items-center justify-between rounded-lg max-md:bg-(--c-teal-strong) max-md:p-2  h-24 md:h-28 md:border-b md:border-white/20">
+							<a href="@item.LinkHref" target="_blank" rel="noopener noreferrer" class="absolute top-0 bottom-0 right-0 left-0 rounded-lg inline md:hidden"></a>
+							<div class="flex items-center">
+								<div class="@logoClass">
+									<img class="personality_img" src="@iconSrc" alt="@item.Key" />
+								</div>
+
+								<p class="personality_text">@Umbraco.GetDictionaryOrDefault(item.TextKey)</p>
+
+								@if (item.ShowMoney && !string.IsNullOrEmpty(item.MoneyText))
+								{
+									<p class="personality_money">@item.MoneyText</p>
+								}
+							</div>
+
+							<div class="personality_links hidden! md:flex!">
+								<a href="@item.LinkHref" rel="noopener noreferrer" class="green-link personality_link ">
+									@Umbraco.GetDictionaryOrDefault(item.LinkKey, item.LinkKey)
+								</a>
+							</div>
+
+							@if (item.ShowError && !string.IsNullOrEmpty(item.ErrorKey))
+							{
+								<div class="personality_error absolute right-2">
+									<img src="/images/account/error-outline.svg" alt="error" class="error_img" />
+									<p class="error_text">@Umbraco.GetDictionaryOrDefault(item.ErrorKey)</p>
+								</div>
+							}
+						</div>
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	function CheckAndUploadImage(img){
+		let reader = new FileReader();
+		reader.onload = function (e){
+				let imgDataUrl = e.target.result;
+
+				let imgElem = new Image();
+
+				imgElem.onload = async function (e){
+						let width = imgElem.naturalWidth;
+						let height = imgElem.naturalHeight;
+						let validationField = document.querySelector(".id_image_validation_param")
+
+						if (height > 2400 || height < 200 || width > 2400 || width < 200){
+								validationField.textContent = "@Html.Raw(Umbraco.GetDictionaryOrDefault("Image can't be smaller than 200x200 pixels or can't be larger than 5000x5000 pixels"))";
+								validationField.style.display = "block";
+								return;
+						}
+						validationField.style.display = "none";
+
+						let dataObj = {
+								FileName : "profile_img",
+								Height : height,
+								Width : width,
+								Base64FileString : imgDataUrl.split(",")[1],
+						}
+
+						document.querySelector("#loading-screen").style.display = "block";
+
+						let resp = await fetch(`/Identity/UploadFile`, {
+								method : "POST",
+								headers : {
+										"Content-Type" : "application/json",
+										'X-Fetch-Indicator': 'true'
+								},
+								body : JSON.stringify(dataObj)
+						})
+
+
+						if (resp.ok){
+								validationField.style.display = "none";
+								window.location.reload();
+						}else{
+								document.querySelector("#loading-screen").style.display = "none";
+								validationField.textContent = await resp.text();
+								validationField.style.display = "block";
+						}
+
+				}
+
+				imgElem.src = imgDataUrl;
+		}
+
+		reader.readAsDataURL(img.files[0])
+	}
+
+	function detectImageFormat(base64String) {
+			const jpegMagicNumber = [0xFF, 0xD8, 0xFF, 0xE0];
+			const pngMagicNumber = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+			const extractedBytes = [];
+			const magicNumberLength = 8;  // Adjust this according to the format
+
+			const base64Data = atob(base64String);
+			for (let i = 0; i < magicNumberLength; i++) {
+					extractedBytes.push(base64Data.charCodeAt(i));
+			}
+
+			if (arraysAreEqual(extractedBytes, jpegMagicNumber)) {
+					return "jpeg";
+			} else if (arraysAreEqual(extractedBytes, pngMagicNumber)) {
+					return "png";
+			}
+
+			return "jpg";
+	}
+
+	function arraysAreEqual(arr1, arr2) {
+			if (arr1.length !== arr2.length) {
+					return false;
+			}
+
+			for (let i = 0; i < arr1.length; i++) {
+					if (arr1[i] !== arr2[i]) {
+							return false;
+					}
+			}
+
+			return true;
+	}
+</script>
+
+<script>
+	// Update header balance immediately
+	document.addEventListener('DOMContentLoaded', function() {
+		var balanceEl = document.getElementById('balance-usd');
+		if (balanceEl) {
+			balanceEl.textContent = '@totalBalanceUSD.ToString("0.00")';
+		}
+	});
+</script>

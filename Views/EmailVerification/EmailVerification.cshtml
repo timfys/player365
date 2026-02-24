@@ -1,0 +1,199 @@
+@using SmartWinners.Controllers
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<EmailVerificationPageViewModel>
+
+@{
+  Layout = "/Views/MasterPage.cshtml";
+  var email = Model?.Email ?? string.Empty;
+  var verified = Model?.IsEmailVerified == true;
+
+  var strButtonContinue = Umbraco.GetDictionaryValue("SIP - Continue Button ");
+  var strAgree = Umbraco.GetDictionaryValue("SIP - Agree");
+
+  var strChange = Umbraco.GetDictionaryValue("SIP - Page1 - Change");
+  var strEmailPrompt = Umbraco.GetDictionaryValue("Email verification", "Email verification");
+  var strEmailPlaceholder = Umbraco.GetDictionaryValue("Email", "Email");
+  var strSuccess = Umbraco.GetDictionaryValue("Your email has been updated.", "Your email has been updated.");
+  var strInvalidEmail = Umbraco.GetDictionaryValue("Please enter a valid email.", "Please enter a valid email.");
+}
+
+<style>
+  .ev-card {
+    background: #10141c;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 24px;
+    color: #e5e7eb;
+  }
+
+  .ev-title {
+    font-size: 22px;
+    margin: 0 0 10px;
+  }
+
+  .ev-muted {
+    color: #9ca3af;
+    font-size: 14px;
+  }
+
+  .ev-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .btn {
+    background: #374151;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    background: #4b5563;
+  }
+
+  .btn-primary {
+    background: #2563eb;
+  }
+
+  .btn-primary:hover {
+    background: #1d4ed8;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 12px;
+  }
+
+  .badge-ok {
+    background: #064e3b;
+    color: #34d399;
+    border: 1px solid #065f46;
+  }
+
+  .badge-warn {
+    background: #5b0020;
+    color: #fda4af;
+    border: 1px solid #7f1d1d;
+  }
+</style>
+
+
+<div class="mt-12 ">
+  <div class="flex flex-col items-center justify-center h-full w-full max-w-[740px]">
+    <div class="flex flex-col justify-between items-center w-full gap-4 mb-8!">
+      <div class="flex justify-between items-center w-full">
+        <p class="str-email w-fit! mb-0! text-2xl md:text-3xl">@strEmailPrompt</p>
+        <a target="_blank" href="@Umbraco.GetDictionaryValue("SIP - Page1 Need Help Url")" class="green-link"
+          id="help_link_page1">@Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+      </div>
+    </div>
+
+    <div class="w-full flex flex-col items-center gap-3 md:mt-4">
+      <div class="text-xl md:text-2xl">We have sent a verification email to:</div>
+      <div class="text-xl md:text-2xl"> <strong>@email</strong></div>
+      <a class="text-lg md:text-lg green-link" href="/email-verification/change">Change</a>
+    </div>
+
+      <button id="btn-send-again" class="playerclub-button-yellow py-2 px-6 text-black! font-semibold justify-center mt-12! cursor-pointer" type="button">Send again</button>
+      <div id="ev-feedback" class="mt-4 text-center" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const btn = document.getElementById('btn-send-again');
+    const fb = document.getElementById('ev-feedback');
+    const COOLDOWN_KEY = 'email_verify_cooldown';
+    const COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes
+
+    function show(msg, ok) {
+      if (!fb) return;
+      fb.style.display = msg ? 'block' : 'none';
+      fb.textContent = msg || '';
+      fb.style.color = ok ? '#118721' : '#fca5a5';
+    }
+
+    function getRemainingCooldown() {
+      const lastSent = sessionStorage.getItem(COOLDOWN_KEY);
+      if (!lastSent) return 0;
+      const elapsed = Date.now() - parseInt(lastSent, 10);
+      return Math.max(0, COOLDOWN_MS - elapsed);
+    }
+
+    function formatTime(ms) {
+      const mins = Math.floor(ms / 60000);
+      const secs = Math.floor((ms % 60000) / 1000);
+      return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    }
+
+    function updateButtonState() {
+      const remaining = getRemainingCooldown();
+      if (remaining > 0) {
+        btn.setAttribute('disabled', 'true');
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+        show(`Please wait ${formatTime(remaining)} before sending again.`, false);
+        return false;
+      } else {
+        btn.removeAttribute('disabled');
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        return true;
+      }
+    }
+
+    // Check cooldown on page load
+    if (getRemainingCooldown() > 0) {
+      updateButtonState();
+      const interval = setInterval(() => {
+        if (updateButtonState()) {
+          clearInterval(interval);
+          show('', true);
+        }
+      }, 1000);
+    }
+
+    btn?.addEventListener('click', async () => {
+      // Check cooldown before sending
+      if (getRemainingCooldown() > 0) {
+        updateButtonState();
+        return;
+      }
+
+      show('Sending...', true);
+      btn.setAttribute('disabled', 'true');
+      try {
+        const resp = await fetch('/api/user/verify-email', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+        const isJson = (resp.headers.get('content-type') || '').includes('application/json');
+        const data = isJson ? await resp.json().catch(() => ({})) : {};
+        if (resp.ok) {
+          // Set cooldown timestamp on success
+          sessionStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+          show('We\'ve sent you a new verification email.', true);
+          // Start countdown
+          const interval = setInterval(() => {
+            if (updateButtonState()) {
+              clearInterval(interval);
+              show('', true);
+            }
+          }, 1000);
+        } else {
+          show(data?.message || 'Failed to send verification email. Please try again later.', false);
+          btn.removeAttribute('disabled');
+        }
+      } catch (e) {
+        show('Network error. Please try again.', false);
+        btn.removeAttribute('disabled');
+      }
+    });
+  })();
+</script>

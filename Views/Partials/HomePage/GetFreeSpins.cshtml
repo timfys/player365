@@ -1,0 +1,92 @@
+﻿@using SmartWinners.Models
+@using Umbraco.Cms.Web.Common
+@using GoldCasino.ApiModule.Extensions
+@inject UmbracoHelper _helper
+
+<div class="gold-corners-ring relative rounded-3xl overflow-hidden
+            w-full
+            md:w-[clamp(320px,90vw,424px)] h-[clamp(317px,70vw,493px)]"
+		 style="background: linear-gradient(to bottom, #033435, #011E1D);">
+
+	<img src="/images/casino/slot-machine.png" alt="@_helper.GetDictionaryOrDefault("Home Page - Get Free Spins - Slot machine", "Slot machine")"
+			 class="absolute top-[-28px] md:top-0 left-1/2 -translate-x-1/2
+              w-[90%] md:w-[clamp(220px,90%,380px)] h-auto z-0 pointer-events-none" />
+
+	<div class="relative flex flex-col items-center justify-end h-full gap-2 pb-6 text-center px-2">
+		<div class="text-white text-[clamp(14px,2vw,16px)]">@_helper.GetDictionaryOrDefault("Home Page - Get Free Spins - Purchase 50+ Coins!", "Purchase 50+ Coins")</div>
+		<div class="gold-gradient-text font-bold text-[clamp(24px,4vw,36px)]">@_helper.GetDictionaryOrDefault("Home Page - Get Free Spins - Get 3 Bonus Spins!", "Get 100 extra Coins!")</div>
+		<div class="text-white text-[clamp(14px,2vw,16px)]">@_helper.GetDictionaryOrDefault("Home Page - Get Free Spins - On All Slot Games!", "For All Slot Games")</div>
+		<button class="gold-button mt-4 md:mt-12 rounded-md font-semibold text-black transition-colors
+		                   px-[clamp(16px,3vw,24px)] py-[clamp(8px,1.5vw,12px)] text-[clamp(14px,2vw,16px)] cursor-pointer"
+				data-confetti-bonus>
+				@_helper.GetDictionaryOrDefault("Home Page - Get Free Spins - Collect Bonus", "COLLECT BONUS")
+			</button>
+	</div>
+</div>
+
+	<style>
+		.confetti-piece {
+			position: fixed;
+			top: var(--y);
+			left: var(--x);
+			width: 6px;
+			height: 10px;
+			border-radius: 1px;
+			opacity: 1;
+			pointer-events: none;
+			z-index: 9999;
+			animation: confetti-fall 900ms ease-out forwards;
+			box-shadow: 0 0 10px 1px rgba(255, 215, 0, 0.35);
+		}
+
+		@@keyframes confetti-fall {
+			0% {
+				transform: translate3d(0, 0, 0) rotate(0deg);
+			}
+
+			100% {
+				transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
+				opacity: 0;
+			}
+		}
+	</style>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			const bonusButtons = document.querySelectorAll("[data-confetti-bonus]");
+			if (!bonusButtons.length) return;
+
+			const colors = ["#FFD700", "#FFCC33", "#FFB703", "#F7C948", "#E0AA3E", "#FFE39F"];
+
+			const burstConfetti = (anchor) => {
+				const rect = anchor.getBoundingClientRect();
+				const originX = rect.left + rect.width / 2;
+				const originY = rect.top + rect.height / 2;
+				const pieces = 32;
+
+				for (let i = 0; i < pieces; i++) {
+					const piece = document.createElement("span");
+					piece.className = "confetti-piece";
+					piece.style.setProperty("--x", `${originX}px`);
+					piece.style.setProperty("--y", `${originY}px`);
+					const angle = Math.random() * Math.PI * 2;
+					const distance = 100 + Math.random() * 160;
+					piece.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+					piece.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+					piece.style.setProperty("--rot", `${(Math.random() - 0.5) * 720}deg`);
+					piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+					piece.style.animationDelay = `${Math.random() * 60}ms`;
+
+					document.body.appendChild(piece);
+					piece.addEventListener("animationend", () => piece.remove());
+				}
+			};
+
+			bonusButtons.forEach((btn) => {
+				btn.addEventListener("click", (e) => {
+					if (e.defaultPrevented || e.button !== 0) return;
+					burstConfetti(btn);
+				});
+			});
+		});
+	</script>

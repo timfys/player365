@@ -1,0 +1,118 @@
+﻿@using System.Dynamic
+@using System.Globalization
+@using System.Threading
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@using Microsoft.AspNetCore.Localization
+@using SmartWinners.Middleware
+@using System.Linq
+@using Microsoft.AspNetCore.Http
+@using SmartWinners.Models
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<dynamic>
+
+
+@{
+	Layout = null;
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	var user = WebStorageUtility.GetSignedUser(Context);
+
+	var rtl = langIso is "/he" ? "direction: rtl" : "";
+	WebStorageUtility.SetString(WebStorageUtility.CurrencyCultureId, $"{Thread.CurrentThread.CurrentCulture.LCID}");
+
+
+	var seoModel = ViewData["Seo"] as SEOViewModel;
+	var loadingScreenMessage = ViewData["LoadingScreenMessage"] as string ?? Umbraco.GetDictionaryValue("Please wait");
+}
+
+<!DOCTYPE html>
+<html class="w-full h-full" lang="@langIso">
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport"
+				content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+	<meta name="robots" content="noindex, nofollow" />
+	<meta charset="UTF-8">
+
+	<seo model="seoModel"></seo>
+
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@shoelace-style/shoelace@2.20.1/cdn/themes/dark.css" />
+
+	<link rel="stylesheet" href="/assets/homepage/css/app.css" />
+	<link rel="stylesheet" href="/assets/css/main.css" />
+
+	<link rel="stylesheet" href="/assets/css/style.css" />
+	<link rel="stylesheet" href="/assets/css/output.css" />
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link
+	href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+	rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+				rel="stylesheet" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
+
+	@if (!string.IsNullOrEmpty(rtl))
+	{
+		<link rel="stylesheet" href="/assets/css/playerclubRtl.css" />
+	}
+	<link rel="stylesheet" href="/assets/css/playerclub.css" />
+
+	<script src="/assets/js/phone-number.umd.js"></script>
+</head>
+
+<body class="w-full h-full" style="overflow-y: overlay; @Html.Raw(rtl); position: relative">
+
+	<script type="text/javascript" src="/assets/js/ElemsScripts.js"></script>
+
+	<main class="flex w-full h-full justify-center items-center!">
+		@RenderBody()
+	</main>
+
+	<script type="text/javascript" src="/assets/js/script.js"></script>
+	<script src="/assets/homepage/js/app.js"></script>
+	<script type="text/javascript" src="/assets/js/Loader.js"></script>
+	<script type="text/javascript" src="/assets/js/Storage.js"></script>
+
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-LJ2TVPW0MV"></script>
+	<script>
+					window.dataLayer = window.dataLayer || [];
+					function gtag() { dataLayer.push(arguments); }
+					gtag('js', new Date());
+
+					gtag('config', 'G-LJ2TVPW0MV');
+	</script>
+
+	<script type="text/javascript">
+					(function (c, l, a, r, i, t, y) {
+							c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+							t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+							y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+					})(window, document, "clarity", "script", "kpby1q4dph");
+	</script>
+
+	<script>
+					document.addEventListener("DOMContentLoaded", function () {
+
+							Array.from(document.querySelectorAll("input")).filter(x => x.type === "number" || x.classList.contains("phone_input")).forEach(x => {
+									x.setAttribute("inputmode", "numeric");
+									x.setAttribute("pattern", "[0-9]*");
+							});
+					})
+					Promise.all([
+							customElements.whenDefined('sl-drawer'),
+							customElements.whenDefined('sl-dialog'),
+							customElements.whenDefined('sl-button')
+					]).then(() => {
+							document.body.style.opacity = '1';
+					});
+	</script>
+
+
+	<div class="contents!">
+		<partial name="_LoadingScreen" model="@loadingScreenMessage" />
+	</div>
+</body>
+</html>

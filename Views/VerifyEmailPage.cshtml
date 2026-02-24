@@ -1,0 +1,95 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<VerifyEmailPage>
+@using GoldCasino.ApiModule.Extensions
+@using Microsoft.AspNetCore.Http;
+@using SmartWinners.Configuration
+@using System.Timers;
+@using System.Net.Http;
+@using System.Threading;
+@using Umbraco.Cms.Web;
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using Umbraco.Cms.Web.Common;
+@using System.Globalization
+
+@{
+    var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+    langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+    Layout = "MasterPage.cshtml";
+
+    var isAuthenticated = Context.User.Identity?.IsAuthenticated;
+
+    var identityUser  = Context.User.ToUserApiAccess();
+
+    // Default to first page
+    Model.ActivePageIndex = 0;
+
+    // Force showing page 0 when ?change=1
+    var changeParam = Context.Request.Query["change"].ToString();
+    if (changeParam == "1")
+    {
+        Model.ActivePageIndex = 0;
+    }
+}
+
+<partial name="@($"VerifyEmailPage/_Page{Model.ActivePageIndex}")"/>
+@* @if (user is not null || Context.Request.Query.ContainsKey("eID"))
+{
+    IVerifyEmailPage model = Model;
+    
+    var eId = int.TryParse(Context.Request.Query["eID"], out var eID) ? eID : 0;
+    
+    user = eId > 0 ? IdentityHelper.FindUser(new Dictionary<string, string>{{"EntityId", $"{eId}"}}) : WebStorageUtility.GetSignedUser(Context);
+    
+    if (user == null)
+    {
+        ViewBag.OKResult = "";
+        ViewBag.ErrorResult = @Umbraco.GetDictionaryValue("VEP - Page0 - Email problem");
+        Model.ActivePageIndex = 2;
+    }
+    else
+    {
+        if (Context.Request.Method.ToLower() == "get")
+        {
+            var result = VerifyEmailController.VerifyEmail(Context, Model, ViewContext.ViewData.ModelState, user, out string resultMessage, out int resultCode);
+            var host = Context.Request.Host.Value;
+            if (model.VerificationCode != "")
+            {
+                if (result)
+                {
+                    if (GiftHelper.GetGifts(user.EntityId, user.UserName, user.Password).Count == 0)
+                    {
+                        GiftHelper.AddGift(user.EntityId, 5, Umbraco.GetDictionaryValue("Email verification gift"));
+                        /*user.NotUsedGifts = GiftHelper.GetNotUsedGifts(user.EntityId, user.UserName, user.Password);
+                        WebStorageUtility.SignIn(Context, user);*/
+                    }
+
+                    ViewBag.OKResult = @Umbraco.GetDictionaryValue("VEP - Page0 - Email verified 1");
+                    ViewBag.ErrorResult = "";
+                    Model.ActivePageIndex = 2;
+                }
+                else
+                {
+                    ViewBag.OKResult = "";
+                    ViewBag.ErrorResult = @Umbraco.GetDictionaryValue("VEP - Page0 - Email problem");
+                }
+            }
+
+            if (result == false && resultCode != -15)
+            {
+                ViewBag.OKResult = "";
+                ViewBag.ErrorResult = @Umbraco.GetDictionaryValue("VEP - Page0 - Email problem");
+            }
+        }
+    }
+    
+    
+    @if (eID > 0)
+    {
+        Model.ActivePageIndex = 2;
+    }
+    
+    <partial name="@($"VerifyEmailPage/_Page{Model.ActivePageIndex}")"/>
+}
+else
+{
+    Context.Response.Redirect($"{langIso}/");
+} *@

@@ -1,0 +1,349 @@
+﻿
+#slides {
+    display: none
+}
+
+    #slides .slidesjs-navigation {
+        margin-top: 5px;
+    }
+
+a.slidesjs-next,
+a.slidesjs-previous,
+a.slidesjs-play,
+a.slidesjs-stop {
+    --background-image: url(img/btns-next-prev.png);
+    background-repeat: no-repeat;
+    display: block;
+    width: 12px;
+    height: 18px;
+    overflow: hidden;
+    text-indent: -9999px;
+    float: left;
+    margin-right: 5px;
+}
+
+a.slidesjs-next {
+    margin-right: 10px;
+    background-position: -12px 0;
+}
+
+a:hover.slidesjs-next {
+    background-position: -12px -18px;
+}
+
+a.slidesjs-previous {
+    background-position: 0 0;
+}
+
+a:hover.slidesjs-previous {
+    background-position: 0 -18px;
+}
+
+a.slidesjs-play {
+    width: 15px;
+    background-position: -25px 0;
+}
+
+a:hover.slidesjs-play {
+    background-position: -25px -18px;
+}
+
+a.slidesjs-stop {
+    width: 18px;
+    background-position: -41px 0;
+}
+
+a:hover.slidesjs-stop {
+    background-position: -41px -18px;
+}
+
+.slidesjs-pagination {
+    margin: 7px 0 0;
+    float: right;
+    list-style: none;
+}
+
+    .slidesjs-pagination li {
+        float: left;
+        margin: 0 1px;
+    }
+
+        .slidesjs-pagination li a {
+            display: block;
+            width: 13px;
+            height: 0;
+            padding-top: 13px;
+            --background-image: url(img/pagination.png);
+            background-position: 0 0;
+            float: left;
+            overflow: hidden;
+        }
+
+            .slidesjs-pagination li a.active,
+            .slidesjs-pagination li a:hover.active {
+                background-position: 0 -13px
+            }
+
+            .slidesjs-pagination li a:hover {
+                background-position: 0 -26px
+            }
+
+#slides a:link,
+#slides a:visited {
+    color: #333
+}
+
+#slides a:hover,
+#slides a:active {
+    color: #9e2020
+}
+
+.navbar {
+    overflow: hidden
+}
+
+
+#slides {
+    display: none
+}
+
+
+
+.slides_container {
+    width: 100%;
+    height: 462px !important;
+    overflow: hidden;
+    text-align: left;
+}
+
+#slides .slide-box {
+    width: 100%;
+    height: 462px
+}
+
+    #slides .slide-box img.wall {
+        width: 100%;
+        height: 462px;
+        z-index: 1;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border-radius: 4px;
+    }
+
+    #slides .slide-box .foot {
+        width: 100%;
+        height: 40px;
+        position: absolute;
+        bottom: 5px;
+        left: 5px;
+        z-index: 2
+    }
+
+        #slides .slide-box .foot.opacity-50 {
+            background: url('/images/banners/foot_bg_50.png')
+        }
+
+        #slides .slide-box .foot.opacity-70 {
+            background: url('/images/banners/foot_bg_70.png')
+        }
+
+        #slides .slide-box .foot span {
+            height: 40px;
+            line-height: 40px;
+            text-indent: 27px;
+            display: block;
+            font-size: 18px;
+            color: #fff
+        }
+
+            #slides .slide-box .foot span.time {
+                float: left;
+                margin-left: 10px;
+                background: url('/images/lotteries/clock_24.png') left center no-repeat
+            }
+
+                #slides .slide-box .foot span.time em {
+                    font-style: normal
+                }
+
+            #slides .slide-box .foot span.money {
+                float: right;
+                margin-right: 10px;
+                background: url('/images/banners/money_bag.png') left center no-repeat
+            }
+
+    #slides .slide-box span.jackpot {
+        text-align: center;
+        font-size: 32px;
+        color: #fff;
+        position: absolute;
+        z-index: 2;
+        font-weight: bold;
+        -webkit-text-shadow: 1px 1px 0 #000;
+        -moz-text-shadow: 1px 1px 0 #000;
+        -ms-text-shadow: 1px 1px 0 #000;
+        -o-text-shadow: 1px 1px 0 #000;
+        text-shadow: 1px 1px 0 #000
+    }
+
+    #slides .slide-box a.baner_button {
+        width: 300px;
+        height: 72px;
+        display: flex;
+        cursor: pointer;
+        background: linear-gradient(to bottom, #fea501, #ff2d00);
+        z-index: 2;
+        text-align: center;
+        font-size: 38px;
+        font-weight: 600;
+        align-items: center;
+        color: #fff;
+        font-weight: bold;
+        -webkit-text-shadow: -1px -1px 0 #bf6f13;
+        -moz-text-shadow: -1px -1px 0 #bf6f13;
+        -ms-text-shadow: -1px -1px 0 #bf6f13;
+        -o-text-shadow: -1px -1px 0 #bf6f13;
+        text-shadow: -1px -1px 0 #bf6f13;
+        position: absolute;
+        transition: none;
+        text-decoration: none;
+        opacity: 1 !important;
+    }
+
+        #slides .slide-box a.baner_button:hover {
+            background: linear-gradient(to bottom, #ffbf62, #ff2d00);
+        }
+
+    #slides .slide-box p {
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+        z-index: 2;
+        position: absolute;
+        -webkit-text-shadow: 1px 1px 0 #222;
+        -moz-text-shadow: 1px 1px 0 #222;
+        -ms-text-shadow: 1px 1px 0 #222;
+        -o-text-shadow: 1px 1px 0 #222;
+        text-shadow: 1px 1px 0 #222
+    }
+
+    #slides .slide-box.one span.word {
+        width: 100%;
+        top: 62px;
+        left: -2px;
+        text-align: center;
+        font-size: 32px;
+        color: #fff;
+        position: absolute;
+        z-index: 2;
+        font-weight: bold;
+        -webkit-text-shadow: 1px 1px 0 #000;
+        -moz-text-shadow: 1px 1px 0 #000;
+        -ms-text-shadow: 1px 1px 0 #000;
+        -o-text-shadow: 1px 1px 0 #000;
+        text-shadow: 1px 1px 0 #000
+    }
+
+    #slides .slide-box.one span.jackpot {
+        text-align: center;
+        width: 100%;
+        top: 62px;
+        font-size: 40px;
+        line-height: 40px
+    }
+
+        #slides .slide-box.one span.jackpot strong {
+            font-size: 38px;
+            line-height: 38px;
+            font-weight: 700
+        }
+
+    #slides .slide-box.one a.baner_button {
+        position: relative;
+        margin: 0 auto;
+        top: 215px
+    }
+
+    #slides .slide-box.one p {
+        color: #9fbfff;
+        top: 215px;
+        left: 15px;
+        width: 230px;
+        -webkit-text-shadow: 1px 1px 2px #222;
+        -moz-text-shadow: 1px 1px 2px #222;
+        -ms-text-shadow: 1px 1px 2px #222;
+        -o-text-shadow: 1px 1px 2px #222;
+        text-shadow: 1px 1px 2px #222;
+        text-align: center;
+        font-size: 20px
+    }
+
+    #slides .slide-box.two span.jackpot {
+        top: 12px;
+        left: 408px
+    }
+
+        #slides .slide-box.two span.jackpot strong {
+            font-size: 40px;
+            line-height: 38px;
+            font-weight: 700
+        }
+
+    #slides .slide-box.two a.baner_button {
+        top: 215px;
+        left: 430px
+    }
+
+    #slides .slide-box.two p {
+        top: 175px;
+        right: 30px
+    }
+
+    #slides .slide-box.three span.word {
+        width: 100%;
+        top: 92px;
+        left: -2px;
+        text-align: center;
+        font-size: 32px;
+        color: #fff;
+        position: absolute;
+        z-index: 2;
+        font-weight: bold;
+        -webkit-text-shadow: 1px 1px 0 #000;
+        -moz-text-shadow: 1px 1px 0 #000;
+        -ms-text-shadow: 1px 1px 0 #000;
+        -o-text-shadow: 1px 1px 0 #000;
+        text-shadow: 1px 1px 0 #000
+    }
+
+    #slides .slide-box.three span.jackpot {
+        text-align: center;
+        width: 100%;
+        top: 92px
+    }
+
+        #slides .slide-box.three span.jackpot strong {
+            font-size: 40px;
+            line-height: 38px;
+            font-weight: 700
+        }
+
+    #slides .slide-box.three a.baner_button {
+        position: relative;
+        margin: 0 auto;
+        top: 215px
+    }
+
+    #slides .slide-box.three p {
+        font-size: 22px;
+        text-align: center;
+        width: 100%;
+        top: 180px
+    }
+
+    @media (max-width: 576px) {
+        #banner{
+            display: none;
+        }
+    }

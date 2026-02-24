@@ -1,0 +1,8 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = "MasterPage.cshtml";
+}
+
+<div class="suspended_body_text">
+    @Html.Raw(Umbraco.GetDictionaryValue("Account suspended"))
+</div>

@@ -1,0 +1,143 @@
+<div ng-controller="AiTools.DictionaryTranslateController as vm" class="umb-panel">
+  <div class="umb-panel-body">
+    <h3>AI Tools</h3>
+
+    <div class="umb-control-group">
+      <label class="control-label">Source language</label>
+      <div class="controls">
+        <input class="umb-textstring" type="text" ng-model="vm.sourceIso2" placeholder="en" />
+        <small>ISO-2 code, e.g. en, uk, de</small>
+      </div>
+    </div>
+
+    <div class="umb-control-group">
+      <label class="control-label">Only fill missing</label>
+      <div class="controls">
+        <label class="umb-label">
+          <input type="checkbox" ng-model="vm.onlyFillMissing" />
+          Yes
+        </label>
+      </div>
+    </div>
+
+    <div class="umb-control-group">
+      <label class="control-label">Delay (ms)</label>
+      <div class="controls">
+        <input class="umb-textstring" type="number" ng-model="vm.delayMs" min="0" step="10" />
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-success" ng-click="vm.run()" ng-disabled="vm.running">
+      {{ vm.running ? 'Running...' : 'Translate dictionaries' }}
+    </button>
+
+    <pre ng-if="vm.lastResult" style="margin-top: 12px;">{{ vm.lastResult | json }}</pre>
+
+    <hr style="margin: 20px 0;" />
+
+    <h4>Dictionary audit</h4>
+    <p class="muted">Scans source code for dictionary calls and reports missing keys.</p>
+
+    <div class="umb-control-group">
+      <label class="control-label">Scan root (relative to site)</label>
+      <div class="controls">
+        <input class="umb-textstring" type="text" ng-model="vm.auditRoot" placeholder="Views" />
+        <small>Examples: <code>Views</code>, <code>Controllers</code>, <code>.</code></small>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" ng-click="vm.runAudit()" ng-disabled="vm.auditRunning">
+      {{ vm.auditRunning ? 'Scanning...' : 'Scan missing dictionary keys' }}
+    </button>
+
+    <div class="umb-control-group" style="margin-top: 12px;">
+      <label class="control-label">Create behavior</label>
+      <div class="controls">
+        <label class="umb-label">
+          <input type="checkbox" ng-model="vm.createEnglishValueFromKey" />
+          Set EN value = key text
+        </label>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-warning"
+            ng-click="vm.createMissing()"
+            ng-disabled="vm.createRunning || !vm.auditResult || vm.auditResult.MissingKeys === 0">
+      {{ vm.createRunning ? 'Creating...' : 'Create missing keys' }}
+    </button>
+
+    <pre ng-if="vm.createResult" style="margin-top: 12px;">{{ vm.createResult | json }}</pre>
+
+    <hr style="margin: 20px 0;" />
+
+    <h4>Delete unused dictionary items</h4>
+    <p class="muted">Deletes dictionary items that are not referenced in scanned code. Use dry-run first.</p>
+
+    <div class="umb-control-group">
+      <label class="control-label">Safety</label>
+      <div class="controls">
+        <label class="umb-label">
+          <input type="checkbox" ng-model="vm.deleteDryRun" />
+          Dry run (preview only)
+        </label>
+        <br />
+        <label class="umb-label">
+          <input type="checkbox" ng-model="vm.deleteOnlyLeaf" />
+          Only delete leaf items
+        </label>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-danger"
+            ng-click="vm.deleteUnused()"
+            ng-disabled="vm.deleteRunning">
+      {{ vm.deleteRunning ? 'Working...' : (vm.deleteDryRun ? 'Preview unused items' : 'Delete unused items') }}
+    </button>
+
+    <pre ng-if="vm.deleteResult" style="margin-top: 12px;">{{ vm.deleteResult | json }}</pre>
+
+    <div ng-if="vm.auditResult" style="margin-top: 12px;">
+      <p>
+        <strong>Occurrences:</strong> {{ vm.auditResult.TotalOccurrences }}
+        &nbsp;|&nbsp;
+        <strong>Distinct keys:</strong> {{ vm.auditResult.DistinctKeys }}
+        &nbsp;|&nbsp;
+        <strong>Missing keys:</strong> {{ vm.auditResult.MissingKeys }}
+      </p>
+
+      <div ng-if="vm.auditResult.MissingKeysList && vm.auditResult.MissingKeysList.length">
+        <h5>Missing keys</h5>
+        <ul>
+          <li ng-repeat="k in vm.auditResult.MissingKeysList track by $index">{{ k }}</li>
+        </ul>
+      </div>
+
+      <div ng-if="vm.auditResult.MissingOccurrences && vm.auditResult.MissingOccurrences.length">
+        <h5>Occurrences</h5>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>File</th>
+              <th>Line</th>
+              <th>Call</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="o in vm.auditResult.MissingOccurrences track by $index">
+              <td style="white-space: nowrap;">{{ o.Key }}</td>
+              <td>{{ o.File }}</td>
+              <td style="white-space: nowrap;">{{ o.Line }}</td>
+              <td style="white-space: nowrap;">{{ o.Call }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details style="margin-top: 12px;">
+        <summary>Raw JSON</summary>
+        <pre style="margin-top: 8px;">{{ vm.auditResult | json }}</pre>
+      </details>
+    </div>
+  </div>
+</div>

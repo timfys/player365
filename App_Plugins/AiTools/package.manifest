@@ -1,0 +1,13 @@
+{
+  "dashboards": [
+    {
+      "alias": "aiToolsDashboard",
+      "view": "/App_Plugins/AiTools/aiToolsDashboard.html",
+      "sections": [ "settings" ],
+      "weight": 50
+    }
+  ],
+  "javascript": [
+    "/App_Plugins/AiTools/aiToolsDashboard.controller.js"
+  ]
+}

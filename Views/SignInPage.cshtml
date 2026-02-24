@@ -1,0 +1,33 @@
+﻿@using BusinessApi
+@using System.ServiceModel
+@using System.Threading
+@using Lucene.Net.Documents
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Server.Kestrel
+@using SiteToolsApi
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@{
+	var isMin = Context.Request.Query["min"] == "true";
+	Layout = isMin ? "MasterPageMin.cshtml" : "MasterPage.cshtml";
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var activePageIndex = ViewBag.PageIndex as string;
+}
+
+@if (!isAuthorized)
+{
+	@if (string.IsNullOrEmpty(activePageIndex))
+	{
+		activePageIndex = "0";
+	}
+
+	<partial name="@($"SignInPage/_Page{activePageIndex}")" />
+}
+
+<style>
+
+	.input {
+		max-width: 580px;
+	}
+</style>

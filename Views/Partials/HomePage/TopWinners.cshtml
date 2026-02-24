@@ -1,0 +1,96 @@
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.TopWinnersListModel
+@inject UmbracoHelper _helper
+
+<div class="winners-carousel compact">
+	<div class="winners-carousel-wrap">
+		<div class="winners-carousel-options max-sm:w-full max-sm:h-7">
+			<div class="gold-button text-center max-sm:px-0! max-sm:py-1! justify-center text-sm md:text-base! font-semibold text-black max-sm:flex-1	xs:h-10 sm:h-8 select-none cursor-pointer" value="0" onclick="SetClickedWinnersType(event.currentTarget)">
+				@Html.Raw(_helper.GetDictionaryValue("Latest Winners"))
+			</div>
+			<div class="playerclub-button-darker text-center max-sm:p-1! text-sm!  font-medium! md:text-base! max-sm:flex-1 h-auto! xs:h-10! sm:h-8! max-sm:min-h-0! select-none cursor-pointer" value="1" onclick="SetClickedWinnersType(event.currentTarget)">
+				@Html.Raw(_helper.GetDictionaryValue("Big Wins"))
+			</div>
+@* 			<div class="playerclub-button-darker max-sm:p-0! text-sm! md:text-lg! max-sm:flex-1 h-7! sm:h-9! max-sm:min-h-0!" value="2" onclick="SetClickedWinnersType(event.currentTarget)">
+				@Html.Raw(_helper.GetDictionaryValue("Top Multipliers"))
+			</div> *@
+		</div>
+		<div class="winners-carousel-dropdown-option-wrap hidden!">
+			<sl-dropdown placement="bottom-start" id="dropdown-winners-option">
+				<sl-button slot="trigger" caret size="large">
+					<div id="selected-option">
+						<div>
+							10
+						</div>
+						<div>
+						</div>
+					</div>
+				</sl-button>
+				<sl-menu id="menu-wrap">
+					<sl-menu-item value="25">
+						<div>
+							25
+						</div>
+					</sl-menu-item>
+					<sl-menu-item value="50">
+						<div>
+							50
+						</div>
+					</sl-menu-item>
+
+				</sl-menu>
+			</sl-dropdown>
+		</div>
+	</div>
+	<div class="winners-carousel-wrap winners-carousel-body-wrap">
+		@Html.Partial("/Views/Partials/HomePage/_TopWinnersCarousel.cshtml", Model)
+	</div>
+</div>
+
+<script>
+
+	window.WinnersCaruselSize = 10;
+	window.WinnersCaruselType = 0;
+
+	document.addEventListener("DOMContentLoaded", function (){
+			document.querySelector("#dropdown-winners-option").addEventListener("sl-select", function (e){
+					window.WinnersCaruselSize = e.detail.item.value;
+					e.currentTarget.querySelector("#selected-option").innerHTML = `<div>${e.detail.item.value}</div>`;
+
+					let menu = document.querySelector("#menu-wrap");
+
+					menu.innerHTML = `${DropDownMenuPart(e.detail.item.value, "10")}
+					${DropDownMenuPart(e.detail.item.value, "25")}
+					${DropDownMenuPart(e.detail.item.value, "50")}`;
+
+					UpdateCarousel(window.WinnersCaruselType, window.WinnersCaruselSize, true);
+			})
+
+			function DropDownMenuPart(current, next){
+					if (current === next)
+							return "";
+
+					return `<sl-menu-item value="${next}">
+											<div>
+													${next}
+											</div>
+									</sl-menu-item>`
+			}
+	})
+
+	function SetClickedWinnersType(selected){
+			document.querySelector(".winners-carousel-options").querySelectorAll("div").forEach(z => {
+					if(z === selected){
+							z.classList.add("active-winners-carousel-option");
+					}else{
+							z.classList.remove("active-winners-carousel-option");
+					}
+			});
+
+			window.WinnersCaruselType = selected.getAttribute("value");
+			UpdateCarousel(window.WinnersCaruselType, window.WinnersCaruselSize);
+	}
+
+
+</script>
+

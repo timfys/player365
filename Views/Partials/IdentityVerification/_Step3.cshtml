@@ -1,0 +1,122 @@
+﻿@using System.Threading
+@using SmartWinners.Models.Payment
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Context.Items.TryGetValue("LangIsoMaster", out var langIsoObj);
+    var langIso = langIsoObj as string;
+    Context.Items.TryGetValue("CultureInfo", out var cultureInfoObj);
+    var cultureInfo = cultureInfoObj as CultureInfo;
+    Thread.CurrentThread.CurrentCulture = cultureInfo;
+    Thread.CurrentThread.CurrentUICulture = cultureInfo;
+    var card = ViewBag.Card as PaymentInfo;
+}
+    <div class="page-wrap">
+
+        <div class="identity verification">
+            <h1 class="title_page">@card.CardPaymentSystemName (•••• @card.CardLastDigits) <b>@Umbraco.GetDictionaryValue("Verification")</b></h1>
+            <a href="/blog@(langIso == "" ? "/en" : langIso)/post/verifying-your-card-ownership-through-a-random-test-charge" class="details_link help_link help_link_card_confirm" target="_blank">@Umbraco.GetDictionaryValue("Need help?")</a>
+            <a href="@langIso/identity" class="button_back button_back_identity">@Umbraco.GetDictionaryValue("Back")</a>
+            <div class="identity_wrap">
+                <p class="line_text">@Umbraco.GetDictionaryValue("Please check")</p>
+
+                <div class="step">
+                    <h2 class="form_text">@Umbraco.GetDictionaryValue("I was charged")</h2>
+                    <input step="0.01" tabindex="-1" type="number" class="personal_input personal_date" id="verify_cvv" required="required" placeholder="">
+                    <p class="form_text validation_param_error validation_param_error_margin mt_top0" id="error_elem" style="display: none"></p>
+                    <p onclick="ProcessCardCharge(this)" class="playerclub-button">@Umbraco.GetDictionaryValue("Confirm")</p>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        let cvv = document.querySelector("#verify_cvv");
+        
+        cvv.focus();
+        cvv.oninput = function (e){
+            
+            if (e.data === "."){
+                return;
+            }
+            
+            let maxLength = 5;
+            const regex = /^\d+(\.\d{0,2})?$/;
+            let value = e.currentTarget.value;            
+                    
+            if (!regex.test(value)) {
+              e.currentTarget.value = RemoveLastChar(value);
+            }
+            
+            let splitedFloat = value.split(".");
+            splitedFloat[1] = splitedFloat[1] === undefined ? "" : `.${splitedFloat[1]}`;
+            
+            value = splitedFloat[0];
+            
+            if (value.length > maxLength){
+                
+                while (value.length > 5) {
+                  value = RemoveLastChar(value);
+                }
+                
+                e.currentTarget.value = `${value}${splitedFloat[1]}`; 
+            }
+            
+            
+        }
+        function RemoveLastChar(str){
+            let tempStr = "";
+            
+            for (let i = 0; i < str.length - 1; i++){
+                tempStr += str[i];
+            }
+            return tempStr;
+        }
+    
+        async function ProcessCardCharge(callElem){
+            
+            let textContent = callElem.textContent;
+            callElem.style.pointerEvents = "none";
+            callElem.textContent = "";
+            DisplayLoader(callElem);
+            
+            let errorElem = document.querySelector("#error_elem");
+            
+            if (cvv.value === ""){
+                cvv.classList.add("error");
+                return;
+            }
+            cvv.classList.remove("error");            
+            
+            let dataObj = {
+                CardNumber : "@Html.Raw(CryptoUtility.EncryptString(card.PayerNumber))",
+                PayerName : "@Html.Raw(CryptoUtility.EncryptString(card.PayerName))",
+                ExpireDate : '@Html.Raw(CryptoUtility.EncryptString(card.PayerDate.Value.ToString("yyyy-MM-dd")))',
+                Amount : parseFloat(cvv.value)
+            }
+            
+            let resp = await fetch("/Identity/VerifyCard", {
+                method : "POST",
+                headers : {
+                    "Content-Type" : "application/json",
+                    "ToVerify" : "1",
+                    'X-Fetch-Indicator': 'true'
+                },
+                body : JSON.stringify(dataObj)
+            });
+            
+            
+            CloseLoader(callElem);
+            callElem.textContent = textContent;
+            callElem.style.pointerEvents = "initial";
+            if (resp.ok){
+                window.location.href = "@Html.Raw($"{langIso}/identity")";
+            }else{
+                errorElem.style.display = "block";
+                errorElem.textContent = await resp.text();
+            }
+        }
+
+    </script>

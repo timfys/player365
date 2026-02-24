@@ -1,0 +1,82 @@
+@using SmartWinners.Models
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+
+@{
+	
+}
+
+<div class="deposit-bonus-wrap compact gap-4">
+	<partial name="Partials/HomePage/GetFreeSpins"/>
+	<partial name="Partials/HomePage/LotteryBanner" />
+	<partial name="Partials/HomePage/TopWinnersBanner" />
+</div>
+
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+			function IndexAmount(amount, dollarDelimiter, centDelimiter, currencySymbol) {
+
+					let dollarParts = amount.replace(currencySymbol, "").split(dollarDelimiter);
+					let centParts = dollarParts.pop().split(centDelimiter);
+
+					if (centParts.length === 1){
+							centParts.push("0");
+					}
+
+					let cent = parseInt(centParts[1]) + 1;
+
+					dollarParts.push(centParts[0]);
+
+					if (cent >= 100) {
+							cent = "00";
+
+							dollarParts = IndexDollarParts(dollarParts, dollarParts.length - 1);
+					}else{
+							cent = `${cent}`.length === 1 ? `0${cent}` : `${cent}`;
+					}
+
+
+					return `${currencySymbol}${dollarParts.join(dollarDelimiter)}${centDelimiter}${cent}`
+
+			}
+
+			function IndexDollarParts(parts, currentIndex) {
+
+					let part = parseInt(parts[currentIndex]);
+
+					part++;
+
+					part = `${part}`;
+
+					if (part >= 1000) {
+
+
+							part = "000";
+							parts[currentIndex] = part;
+
+							if (currentIndex - 1 < 0){
+
+									parts.unshift("1")
+
+									return parts;
+							}else{
+									return IndexDollarParts(parts, --currentIndex);
+							}
+
+					} else {
+
+							if (currentIndex !== 0){
+									if (part.length === 1){
+											part = `00${part}`;
+									}else if (part.length === 2){
+											part = `0${part}`;
+									}
+							}
+
+
+							parts[currentIndex] = part;
+							return parts;
+					}
+			}
+	})
+</script>

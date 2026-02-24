@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+		<Nullable>enable</Nullable>
+		<LangVersion>12</LangVersion>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="GoldCasino.ApiModule\**" />
+	  <Content Remove="GoldCasino.ApiModule\**" />
+	  <EmbeddedResource Remove="GoldCasino.ApiModule\**" />
+	  <None Remove="GoldCasino.ApiModule\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="umbraco\Data\TEMP\DistCache\062f7c86f3de30161fc35f30c4a9b7bb6203baff-lastsynced.txt" />
+	  <Content Include="umbraco\Data\TEMP\DistCache\8ed2e38d5f7bf70d17fb4f196ac97330db65b749-lastsynced.txt" />
+	  <Content Include="umbraco\Data\TEMP\DistCache\d469ee25dbdfe7ab2f3b301321f0a0376fcf5f76-lastsynced.txt" />
+	  <Content Include="umbraco\Data\TEMP\Install\install_387c9048581843708490736cf02cc79a.txt" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\07_12_2025_17_42_01.json" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\08_11_2025_04_00_27.json" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\12_11_2025_09_39_56.json" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\12_11_2025_09_40_08.json" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\14_11_2025_20_20_45.json" />
+	  <Content Include="umbraco\Data\TEMP\uSync\history\14_11_2025_20_21_37.json" />
+	  <Content Include="umbraco\Logs\UmbracoTraceLog.TERAN.20251207.json" />
+	  <Content Include="umbraco\Logs\UmbracoTraceLog.TERAN.20251208.json" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="wwwroot/**/*" Watch="false" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="compilerconfig.json" />
+		<None Include="Properties\PublishProfiles\FolderProfile.pubxml.user" />
+		<None Include="Properties\PublishProfiles\FTPProfile.pubxml.user" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\DeliveryApiContentIndex\segments.gen" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\DeliveryApiContentIndex\segments_4j" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\DeliveryApiContentIndex\write.lock" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\segments.gen" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\segments_j" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\write.lock" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_7.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_7.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_7.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_7_2.del" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_8.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_8.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_8.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_c.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_c.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\ExternalIndex\_c.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\segments.gen" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\segments_j" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\write.lock" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_7.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_7.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_7.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_7_2.del" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_8.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_8.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_8.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_a.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_a.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_a.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_d.cfe" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_d.cfs" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\InternalIndex\_d.si" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\MembersIndex\segments.gen" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\MembersIndex\segments_4j" />
+		<None Include="umbraco\Data\TEMP\ExamineIndexes\MembersIndex\write.lock" />
+		<None Include="umbraco\Data\TEMP\MainDom_065aada9806f088e6bf5da07948990e615ee5408.lock" />
+		<None Include="umbraco\Data\TEMP\MainDom_12fb9516ccf5b4cb789e1b156c55f573792bc44f.lock" />
+		<None Include="umbraco\Data\TEMP\MainDom_a21bf1eeafce3788ac9ca4c9c4f87ba71fa29441.lock" />
+		<None Include="umbraco\Data\TEMP\NuCache\NuCache.Content.db" />
+		<None Include="umbraco\Data\TEMP\NuCache\NuCache.Content.tlog" />
+		<None Include="umbraco\Data\TEMP\NuCache\NuCache.Media.db" />
+		<None Include="umbraco\Data\TEMP\NuCache\NuCache.Media.tlog" />
+		<None Include="umbraco\Data\Umbraco.sqlite.db" />
+		<None Include="umbraco\Data\Umbraco.sqlite.db-shm" />
+		<None Include="umbraco\Data\Umbraco.sqlite.db-wal" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Coinbase.Commerce" Version="3.0.1" />
+		<PackageReference Include="CsvHelper" Version="33.1.0" />
+		<PackageReference Include="IPinfo" Version="3.2.0" />
+		<PackageReference Include="libphonenumber-csharp" Version="9.0.18" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+		<PackageReference Include="Serilog.Sinks.Email" Version="4.1.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+		<PackageReference Include="Stripe.net" Version="47.4.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.6" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.6" />
+		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.6" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.10" />
+		<PackageReference Include="System.ServiceModel.Duplex" Version="6.0.0" />
+		<PackageReference Include="System.ServiceModel.Federation" Version="8.1.2" />
+		<PackageReference Include="System.ServiceModel.Http" Version="8.1.2" />
+		<PackageReference Include="System.ServiceModel.Security" Version="6.0.0" />
+		<PackageReference Include="Umbraco.Cms" Version="13.11.0" />
+	</ItemGroup>
+	<!-- Force Windows to use ICU. Otherwise Windows 10 2019H1+ will do it, but older Windows 10 and
+  most, if not all, Windows Server editions will run NLS -->
+	<ItemGroup>
+		<!-- Opt-in to app-local ICU to ensure consistent globalization APIs across different platforms -->
+		<PackageReference Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
+		<PackageReference Include="uSync" Version="13.3.2" />
+		<RuntimeHostConfigurationOption Include="System.Globalization.AppLocalIcu" Value="72.1.0.3" Condition="$(RuntimeIdentifier.StartsWith('linux')) or $(RuntimeIdentifier.StartsWith('win')) or ('$(RuntimeIdentifier)' == '' and !$([MSBuild]::IsOSPlatform('osx')))" />
+	</ItemGroup>
+	<ItemGroup>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<ItemGroup>
+		<Folder Include="umbraco\Data\TEMP\FileUploads\" />
+		<Folder Include="umbraco\models\" />
+		<Folder Include="Views\Partials\IdentityVerification\" />
+		<Folder Include="Views\Partials\Payment" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="Models\PublishedModels\HomePage.cs">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Compile>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include=".\GoldCasino.ApiModule\GoldCasino.ApiModule.csproj" Watch="false" />
+	</ItemGroup>
+	<PropertyGroup>
+		<CopyRazorGenerateFilesToPublishDirectory>true</CopyRazorGenerateFilesToPublishDirectory>
+	</PropertyGroup>
+	<!-- Keep this as false if ModelsBuilder mode is InMemoryAuto -->
+	<PropertyGroup>
+		<!-- <RazorCompileOnBuild>false</RazorCompileOnBuild>   -->
+		<RazorCompileOnPublish>false</RazorCompileOnPublish>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="System.ServiceModel.NetTcp" Version="8.*" />
+		<PackageReference Include="System.ServiceModel.Primitives" Version="8.*" />
+	</ItemGroup>
+</Project>

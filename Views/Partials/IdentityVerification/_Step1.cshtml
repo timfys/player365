@@ -1,0 +1,429 @@
+﻿@using System.Threading
+@using System.Drawing
+@using System.Drawing.Imaging
+@using System.Globalization
+@using GoldCasino.ApiModule.Dtos.Files
+@using GoldCasino.ApiModule.Dtos.User
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Enums
+@using SixLabors.ImageSharp.Formats
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@inject IBusinessApiService businessApiService;
+
+@{
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/account");
+		return;
+	}
+
+	var identityUser = Context.User.ToUserApiAccess();
+	var lid = Context.User.FindFirst("Lid")?.Value;
+
+	var result = await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserVerificationStateDto>.Fields,
+		Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+	}, identityUser);
+
+	var entity = result.Value?.Entities.FirstOrDefault();
+	var userPassportState = EntityMapper.MapTo<UserVerificationStateDto>(entity).VerificationState;
+
+	FileModel fileModel = null;
+
+	var passportHtmlClass = "";
+	var passportHtmlText = "";
+	@switch (userPassportState)
+	{
+		case IdDocVerificationState.NotVerified or
+	IdDocVerificationState.Declined:
+			passportHtmlClass = "not_verified";
+			passportHtmlText = Umbraco.GetDictionaryValue("Not Verified");
+			break;
+		case IdDocVerificationState.Approved:
+			passportHtmlClass = "verified";
+			passportHtmlText = Umbraco.GetDictionaryValue("Verified");
+			break;
+		case IdDocVerificationState.PendingVerification:
+			passportHtmlClass = "pending_verification";
+			passportHtmlText = Umbraco.GetDictionaryValue("Pending Verification");
+			break;
+		default:
+			throw new ArgumentOutOfRangeException();
+	}
+
+	var cards = await IdentityHelper.GetUserCardsToVerify(identityUser);
+}
+
+@functions
+{
+	public static string GetImageExtensionFromBase64(string base64Image)
+	{
+		byte[] imageBytes = Convert.FromBase64String(base64Image);
+
+		using (var ms = new System.IO.MemoryStream(imageBytes))
+		{
+			using (var image = SixLabors.ImageSharp.Image.Load(ms))
+			{
+				var format = image.Metadata.DecodedImageFormat;
+				// format.Name = "JPEG", "PNG", "GIF", "BMP", "TIFF", etc.
+				return format?.FileExtensions.FirstOrDefault() ?? "unknown";
+			}
+		}
+	}
+}
+
+<div class="md:max-w-[1330px] mt-4 mb-8 gap-10">
+	<!-- Header with back button -->
+	<div class="flex w-full gap-5 items-center justify-between">
+		<div class="flex gap-5 items-center">
+			<button id="back_button_from_personal_info"
+				class="flex items-center justify-center w-8 h-8  rounded-md bg-(--c-teal-action) hover:bg-(--c-teal-action-h) hover:cursor-pointer">
+				<svg xmlns="http://www.w3.org/2000/svg" class="text-white" fill="none" viewBox="0 0 24 24"
+					stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7">
+					</path>
+				</svg>
+			</button>
+			<!-- title -->
+			<h1 class="mb-0! text-center text-xl md:text-2xl uppercase">
+				@Umbraco.GetDictionaryValue("Idenity Verification")</h1>
+		</div>
+
+		<a href="/blog@(langIso == "" ? "/en" : langIso)/post/verifying-your-card-ownership-through-a-random-test-charge"
+			class="green-link" target="_blank">
+			@Umbraco.GetDictionaryValue("Need help?")</a>
+	</div>
+
+
+	<h5 class="id_image_validation_param"></h5>
+
+	@* Preload passport image if state allows *@
+	@{
+		if (userPassportState is IdDocVerificationState.PendingVerification
+		|| userPassportState is IdDocVerificationState.Approved
+		|| userPassportState is IdDocVerificationState.Declined)
+		{
+			var docGetResult = await businessApiService.EntityFilesGetAsync(new()
+			{
+				Fields = FieldHelper<EntityFileMinDto>.Fields,
+				Filter = new(){
+		{ "EntityId", $"{identityUser?.EntityId}" },
+		{ "Filename", "passport" }}
+			});
+
+			var verificationDocs = docGetResult.Value?.Files.FirstOrDefault();
+
+			if (verificationDocs != null)
+			{
+				fileModel = new()
+				{
+					FileId = verificationDocs.FileId,
+					FileName = verificationDocs.Filename,
+					Base64ImgString = Convert.ToBase64String(verificationDocs.FileData)
+				};
+			}
+		}
+	}
+
+	<input accept=".jpg, .jpeg, .png" type="file" id="fileId" style="display:none" onchange="CheckAndUploadImage(this)" />
+
+	<div class="w-full mx-auto mt-6 bg-(--c-teal-strong) rounded-lg shadow overflow-hidden">
+		<!-- Header row (desktop only) -->
+		<div class="hidden md:grid grid-cols-4 font-semibold py-3 px-4 rounded-t-lg border-b border-white text-center">
+			<div>@Umbraco.GetDictionaryValue("Requirement")</div>
+			<div>@Umbraco.GetDictionaryValue("Photo id")</div>
+			<div>@Umbraco.GetDictionaryValue("Date requested")</div>
+			<div>@Umbraco.GetDictionaryValue("Status")</div>
+		</div>
+
+		@* ===== PASSPORT / ID ===== *@
+		<!-- Mobile stacked -->
+		<div
+			class="grid md:hidden grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center py-3 px-4 [grid-template-rows:repeat(4,1fr_auto)] ">
+			<div class="font-semibold">@Umbraco.GetDictionaryValue("Requirement"):</div>
+			<div class="flex items-center justify-center">@Umbraco.GetDictionaryValue("Your ID (Passport or driver's license)")</div>
+
+			<div class="col-span-2 h-px bg-gray-300 self-auto"></div>
+			<div class="font-semibold">@Umbraco.GetDictionaryValue("Photo id"):</div>
+			<div class="flex flex-col items-center justify-center gap-2 p-2">
+				<img
+					src="@Html.Raw(fileModel is null ? "/images/pasport_identity.svg" : $"data:image/{GetImageExtensionFromBase64(fileModel.Base64ImgString)};base64,{fileModel.Base64ImgString}")"
+					alt="passport" class="identity_table_id max-w-[150px] max-h-[100px]" />
+				@if (userPassportState is IdDocVerificationState.Declined
+								|| userPassportState is IdDocVerificationState.PendingVerification
+								|| userPassportState is IdDocVerificationState.NotVerified)
+				{
+					<a class="flex green-link cursor-pointer" onclick="document.querySelector('#fileId').click()">
+						<img src="/images/upload.migrated-1.svg" alt="upload" class="identity_table_logo" />
+						@Umbraco.GetDictionaryValue("Upload")
+					</a>
+				}
+			</div>
+			<div class="col-span-2 h-px bg-gray-300 self-auto"></div>
+			<div class="font-semibold">@Umbraco.GetDictionaryValue("Date requested"):</div>
+			<div class="identity_table_text flex items-center justify-center"></div>
+			<div class="col-span-2 h-px bg-gray-300 self-auto"></div>
+			<div class="font-semibold">@Umbraco.GetDictionaryValue("Status"):</div>
+			<div class="status_text flex items-center justify-center @passportHtmlClass">@passportHtmlText</div>
+		</div>
+
+		<!-- Desktop row -->
+		<div class="hidden md:grid grid-cols-4 py-3 px-4 items-center">
+			<div class="text-base font-medium">
+				@Umbraco.GetDictionaryValue("Your ID (Passport or driver's license)")
+			</div>
+
+			<div class="flex flex-col items-center justify-center gap-2">
+				<img
+					src="@Html.Raw(fileModel is null ? "/images/pasport_identity.svg" : $"data:image/{GetImageExtensionFromBase64(fileModel.Base64ImgString)};base64,{fileModel.Base64ImgString}")"
+					alt="passport" class="identity_table_id max-w-[150px] max-h-[100px]" />
+				@if (userPassportState is IdDocVerificationState.Declined
+								|| userPassportState is IdDocVerificationState.PendingVerification
+								|| userPassportState is IdDocVerificationState.NotVerified)
+				{
+					<a class="flex green-link cursor-pointer" onclick="document.querySelector('#fileId').click()">
+						<img src="/images/upload.migrated-1.svg" alt="upload" class="identity_table_logo" />
+						@Umbraco.GetDictionaryValue("Upload")
+					</a>
+				}
+			</div>
+
+			<div class="identity_table_text"></div>
+
+			<div class="status_text @passportHtmlClass">@passportHtmlText</div>
+		</div>
+
+		@* ===== CARDS ===== *@
+		@foreach (var card in cards)
+		{
+			var cardHtmlClass = "";
+			var cardHtmlText = "";
+
+			switch (card.CardVerificationState)
+			{
+				case CardVerificationState.NotVerified:
+					cardHtmlClass = "not_verified";
+					cardHtmlText = Umbraco.GetDictionaryValue("Not Verified");
+					break;
+				case CardVerificationState.Verified:
+					cardHtmlClass = "verified";
+					cardHtmlText = Umbraco.GetDictionaryValue("Verified");
+					break;
+				case CardVerificationState.PendingVerification:
+					cardHtmlClass = "pending_verification";
+					cardHtmlText = Umbraco.GetDictionaryValue("Pending Verification");
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			<!-- Mobile stacked -->
+			<div class="grid md:hidden grid-cols-[auto_1fr] gap-x-2 gap-y-1 items-center py-3 px-4 border-b border-gray-200">
+				<div class="font-semibold">@Umbraco.GetDictionaryValue("Requirement"):</div>
+				<div class="identity_table_card inline-flex items-center gap-2">
+					<img class="identity_card_logo" src="@card.GetCardImgUrl()" alt="card" />
+					<p class="identity_card_name">
+						@card.GetCardPaymentSystemName() (••••&nbsp;@card.CardLastNumbers)
+					</p>
+				</div>
+
+				<div class="font-semibold">@Umbraco.GetDictionaryValue("Photo id"):</div>
+				<div>
+					@if (card.CardVerificationState is CardVerificationState.Verified)
+					{
+						<p class="status_text">&nbsp;</p>
+					}
+					else if (card.CardVerificationState is CardVerificationState.NotVerified)
+					{
+						<a href="@($"{langIso}/card-verification-charge/{card.CardLastNumbers}")" class="status_text green-link">
+							@Umbraco.GetDictionaryValue("Verify")
+						</a>
+					}
+					else if (card.CardVerificationState is CardVerificationState.PendingVerification)
+					{
+						<a href="@($"{langIso}/card-verification-confirm/{card.CardLastNumbers}")" class="status_text green-link">
+							@Umbraco.GetDictionaryValue("Verify")
+						</a>
+					}
+				</div>
+
+				<div class="font-semibold">@Umbraco.GetDictionaryValue("Date requested"):</div>
+				<div>
+					@(card.VerificationRequestDate.HasValue? card.VerificationRequestDate.Value.ToString("dd MMM yyyy") : "")
+				</div>
+
+				<div class="font-semibold">@Umbraco.GetDictionaryValue("Status"):</div>
+				<div class="status_text @cardHtmlClass">@cardHtmlText</div>
+			</div>
+
+			<!-- Desktop row -->
+			<div class="hidden md:grid grid-cols-4 py-3 px-4 border-b border-gray-200 items-center">
+				<div class="identity_table_card inline-flex items-center justify-start gap-2">
+					<img class="identity_card_logo" src="@card.GetCardImgUrl()" alt="card" />
+					<p class="identity_card_name">
+						@card.GetCardPaymentSystemName() (••••&nbsp;@card.CardLastNumbers)
+					</p>
+				</div>
+
+				<div class="text-center">
+					@if (card.CardVerificationState is CardVerificationState.Verified)
+					{
+						<p class="status_text">&nbsp;</p>
+					}
+					else if (card.CardVerificationState is CardVerificationState.NotVerified)
+					{
+						<a href="@($"{langIso}/card-verification-charge/{card.CardLastNumbers}")" class="status_text green-link">
+							@Umbraco.GetDictionaryValue("Verify")
+						</a>
+					}
+					else if (card.CardVerificationState is CardVerificationState.PendingVerification)
+					{
+						<a href="@($"{langIso}/card-verification-confirm/{card.CardLastNumbers}")" class="status_text green-link">
+							@Umbraco.GetDictionaryValue("Verify")
+						</a>
+					}
+				</div>
+
+				<div class="text-center">
+					@(card.VerificationRequestDate.HasValue? card.VerificationRequestDate.Value.ToString("dd MMM yyyy") : "")
+				</div>
+
+				<div class="status_text @cardHtmlClass">@cardHtmlText</div>
+			</div>
+		}
+	</div>
+</div>
+
+<script>
+	document.getElementById("passport_img").addEventListener("click", function () {
+		let base64Image = "@Html.Raw(fileModel is null ? "" : fileModel.Base64ImgString)";
+
+		if (base64Image === "")
+			return;
+
+		let imgExtension = detectImageFormat(base64Image);
+
+		let base64URL = `data:image/${imgExtension};base64,${base64Image}`;
+		let win = window.open();
+
+
+		win.document.write('<iframe src="' + base64URL + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+	});
+
+	function CheckAndUploadImage(img) {
+		let reader = new FileReader();
+		reader.onload = function (e) {
+			let imgDataUrl = e.target.result;
+
+			let imgElem = new Image();
+
+			imgElem.onload = async function (e) {
+				let width = imgElem.naturalWidth;
+				let height = imgElem.naturalHeight;
+				let validationField = document.querySelector(".id_image_validation_param")
+
+				let imgData = imgDataUrl.split(",")[1];
+
+				if (height > 2000 || width > 2000) {
+
+					document.querySelector("#loading-screen").style.display = "block";
+
+					let resp = await fetch("/Helper/CompressImage", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							'X-Fetch-Indicator': 'true'
+						},
+						body: JSON.stringify({ Base64Data: imgData })
+					})
+
+					imgData = await resp.text();
+				}
+
+				if (height < 200 || width < 200) {
+					validationField.textContent = "@Html.Raw(Umbraco.GetDictionaryValue("Image can't be smaller than 200x200 pixels"))";
+					validationField.style.display = "block";
+					return;
+				}
+				validationField.style.display = "none";
+
+				let dataObj = {
+					FileName: "passport",
+					Height: height,
+					Width: width,
+					Base64FileString: imgData,
+				}
+
+				document.querySelector("#loading-screen").style.display = "block";
+
+				let resp = await fetch(`/Identity/UploadIdDocument`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"UserPassportState": "@Html.Raw(Convert.ToInt32(userPassportState))",
+						'X-Fetch-Indicator': 'true'
+					},
+					body: JSON.stringify(dataObj)
+				})
+
+
+				if (resp.ok) {
+					validationField.style.display = "none";
+					window.location.reload();
+				} else {
+					document.querySelector("#loading-screen").style.display = "none";
+					validationField.textContent = await resp.text();
+					validationField.style.display = "block";
+				}
+
+			}
+
+			imgElem.src = imgDataUrl;
+		}
+
+		reader.readAsDataURL(img.files[0])
+	}
+
+	function detectImageFormat(base64String) {
+		const jpegMagicNumber = [0xFF, 0xD8, 0xFF, 0xE0];
+		const pngMagicNumber = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+
+		const extractedBytes = [];
+		const magicNumberLength = 8;  // Adjust this according to the format
+
+		const base64Data = atob(base64String);
+		for (let i = 0; i < magicNumberLength; i++) {
+			extractedBytes.push(base64Data.charCodeAt(i));
+		}
+
+		if (arraysAreEqual(extractedBytes, jpegMagicNumber)) {
+			return "jpeg";
+		} else if (arraysAreEqual(extractedBytes, pngMagicNumber)) {
+			return "png";
+		}
+
+		return "jpg";
+	}
+
+	function arraysAreEqual(arr1, arr2) {
+		if (arr1.length !== arr2.length) {
+			return false;
+		}
+
+		for (let i = 0; i < arr1.length; i++) {
+			if (arr1[i] !== arr2[i]) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+</script>

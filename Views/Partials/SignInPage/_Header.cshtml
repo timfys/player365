@@ -1,0 +1,33 @@
+﻿@using System.Globalization
+@using System.Threading
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<SignInPage>
+
+@{
+    
+    string GetPageTitle()
+    {
+        switch (Model.ActivePageIndex)
+        {
+            case 0: 
+                return Umbraco.GetDictionaryValue("SIP - Page0");
+            case 1:
+                return Umbraco.GetDictionaryValue("SIP - Page1")
+                .Replace("{name}", Model.FirstName);
+            default: return "";
+        }
+    }
+}
+
+@*<section class="main-ptop">
+    <div class="row align-items-start m-0">
+        <div class="">
+            <h1>@Html.Raw(GetPageTitle())</h1>
+        </div>
+        <div class="ml-auto">
+            <a class="link-22-14" href="@Umbraco.GetDictionaryValue("SIP - Need Help Url")">
+                @Umbraco.GetDictionaryValue("SIP - Need Help") <span class="ml-2 pl-1" style="font-size:1.2em;">&rsaquo;</span>
+            </a>
+        </div>
+    </div>
+</section>*@
+

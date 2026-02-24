@@ -1,0 +1,76 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Globalization
+@using System.Threading
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = "MasterPageMin.cshtml";
+
+    @* var errorText = Umbraco.GetDictionaryValue("Error Page"); *@
+}
+
+<div class="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#050505] font-sans text-white">
+
+  <div class="absolute -left-10 -top-10 h-64 w-64 rounded-full bg-[#EAB347]/10 blur-[80px]"></div>
+  
+  <div class="absolute -bottom-10 -right-10 h-64 w-64 rounded-full bg-blue-900/10 blur-[80px]"></div>
+
+  <div class="z-10 flex w-full max-w-sm flex-col items-center px-6 text-center">
+    
+    <div class="mb-10 flex items-center justify-center gap-3 text-[#EAB347]">
+      <div class="flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#EAB347]">
+        <span class="text-sm font-semibold tracking-tighter">PC</span>
+      </div>
+      <span class="text-2xl font-bold tracking-tight">PlayerClub365</span>
+    </div>
+
+    <div class="mb-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5">
+      <div class="h-2 w-2 rounded-full bg-[#EAB347]"></div>
+      <span class="text-xs font-medium uppercase tracking-wide text-gray-400">System Upgrade</span>
+    </div>
+
+    <h1 class="mb-4! text-4xl font-bold leading-tight tracking-tight text-white">
+      System upgrade <br /> in progress
+    </h1>
+
+    <p class="mb-12 text-base leading-relaxed text-gray-400">
+      We are currently upgrading our syst- ems to give you an even better experien. Please try again in a few moments.
+    </p>
+  </div>
+</div>
+@* 
+    <body class="bg-[#011F26] text-white font-sans antialiased overflow-hidden">
+
+        <div class="min-h-screen flex flex-col items-center justify-center relative z-0">
+
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-teal-500/5 rounded-full blur-[150px] pointer-events-none -z-10"></div>
+
+            <div class="relative z-10 text-center px-6 max-w-2xl mx-auto flex flex-col items-center pb-10">
+                
+                <h1 class="text-[120px] md:text-[140px] leading-none font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-gray-400 via-white to-gray-500 drop-shadow-2xl select-none">
+                    500
+                </h1>
+
+                <h2 class="text-xl md:text-2xl font-bold uppercase tracking-[0.3em] text-teal-100/90 mt-2">
+                    System Error
+                </h2>
+
+                <div class="h-px w-24 bg-gradient-to-r from-transparent via-teal-500/50 to-transparent my-8"></div>
+
+                <p class="text-teal-100/70 text-base md:text-lg leading-loose mb-12!">
+                    We are currently upgrading our systems to give you an even better experience.
+                    Please try again in a few moments.
+                </p>
+
+                <a href="/" class="relative inline-flex items-center justify-center px-5 py-4 text-sm font-bold uppercase tracking-widest text-[#3d2b0f] transition-all duration-300 ease-out bg-[linear-gradient(90deg,#F3B026_0%,#FCF28D_50%,#D2991E_100%)] rounded-xl hover:brightness-110 hover:shadow-[0_0_20px_rgba(191,149,63,0.4)] focus:outline-none focus:ring-1 focus:ring-[#fcf6ba] focus:ring-offset-2 focus:ring-offset-[#011F26] mb-8">
+                    Return to Lobby
+                </a>
+
+            </div>
+
+            <div class="absolute bottom-10 text-teal-900/40 text-[10px] font-bold tracking-[0.2em] uppercase">
+                Error Code: 500
+            </div>
+
+        </div>
+
+    </body> *@

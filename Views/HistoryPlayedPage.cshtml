@@ -1,0 +1,200 @@
+﻿@using System.Collections.Generic;
+@using System.Globalization;
+@using GoldCasino.ApiModule.Dtos.Games
+@using GoldCasino.ApiModule.Dtos.Transaction
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using SmartWinners.Configuration;
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading;
+@using GoldCasino.ApiModule.Services.PlayerClub365Api;
+
+@inject IPlayerClub365ApiService playerClub365;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage;
+
+@{
+	Layout = "MasterPage.cshtml";
+
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	if (!isAuthorized)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/played-history");
+	}
+
+	var user = Context.User.ToUserApiAccess();
+
+	var pageIndex = (int)(ViewBag.PageIndex ?? 1);
+	var perPage = 20;
+
+	var result = await playerClub365.GameTransactionsGetAsync(new()
+	{
+		Fields = FieldHelper<GameTransactionDto>.Fields,
+		Filter = new Dictionary<string, string>
+		{
+			["entityID"] = $"{user.EntityId}",
+			["transaction_Type"] = "in (1,3)",
+			["ORDER BY"] = $"sync_modified_date desc",
+			["amountUSD"] = "> 0"
+		},
+		LimitFrom = pageIndex <= 1 ? 0 : (pageIndex - 1) * perPage + 1, //wtf why not zero based??? 
+		LimitCount = perPage
+	});
+
+	var transactions = result.Value?.Transactions?
+	.Select(x => DtoMapper.MapTo<GameTransactionDto, GameTransaction>(x))
+	.ToList() ?? new List<GameTransactionDto>();
+
+	var gameIds = transactions
+	.Select(x => x.GameID)
+	.Distinct()
+	.ToArray();
+
+	var games = new Dictionary<int, string>();
+
+	if (gameIds.Length > 0)
+	{
+		var gamesResult = await playerClub365.GamesGetAsync(new()
+		{
+			LangCode = string.IsNullOrEmpty(langIso) ? "en" : langIso,
+			Fields = FieldHelper<GameMinDto>.Fields,
+			Filter = new Dictionary<string, string>
+			{
+				["GameID"] = $"in ({string.Join(",", gameIds)})"
+			}
+		});
+
+		games = gamesResult.Value?.Games?
+		.ToDictionary(g => g.Id, g => g.Name) ?? new Dictionary<int, string>();
+	}
+
+	foreach (var tx in transactions)
+	{
+		if (games.TryGetValue(tx.GameID, out var name))
+		{
+			tx.Name = name;
+		}
+	}
+
+	var hasPrev = pageIndex > 1;
+	var hasNext = transactions.Count == perPage; // heuristic
+}
+
+<div class="md:max-w-[1330px] mt-4 mb-8 gap-10">
+	<div class="flex w-full gap-5 items-center justify-between">
+		<div class="flex gap-5 items-center">
+			<button id="back_button"
+				class="flex items-center justify-center w-8 h-8  rounded-md bg-(--c-teal-action) hover:bg-(--c-teal-action-h) hover:cursor-pointer">
+				<svg xmlns="http://www.w3.org/2000/svg" class="text-white" fill="none" viewBox="0 0 24 24"
+					stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7">
+					</path>
+				</svg>
+			</button>
+			<!-- title -->
+			<h1 class="mb-0! text-center text-xl md:text-2xl uppercase">
+				@Umbraco.GetDictionaryValue("Played History")</h1>
+		</div>
+
+		<a href="/blog/en/page/transactions" class="green-link" target="_blank">@Umbraco.GetDictionaryValue("Need help?")</a>
+	</div>
+	<p class="text-base w-full text-left">@Umbraco.GetDictionaryValue("PHP - Historical Look")</p>
+
+	@if (transactions?.Any() == true)
+	{
+		var en = CultureInfo.GetCultureInfo("en-US");
+
+		<div class="w-full overflow-x-auto mt-4">
+			<table class="w-full min-w-[720px] md:min-w-[960px] xl:min-w-[1200px] text-left border-separate border-spacing-y-1">
+				<thead class="bg-(--c-teal-strong) text-white md:sticky md:top-0 md:z-10">
+					<tr class="text-sm uppercase">
+						<th class="py-2 px-4 first:rounded-tl-xl">@Umbraco.GetDictionaryValue("Transaction ID", "Transaction ID")</th>
+						<th class="py-2 px-4">@Umbraco.GetDictionaryValue("Date", "Date")</th>
+						<th class="py-2 px-4">@Umbraco.GetDictionaryValue("Game", "Game")</th>
+						<th class="py-2 px-4">@Umbraco.GetDictionaryValue("Type", "Type")</th>
+						<th class="py-2 px-4 last:rounded-tr-xl text-right">@Umbraco.GetDictionaryValue("Amount", "Amount")</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var tx in transactions.OrderByDescending(t =>
+					{
+						DateTime d;
+						return DateTime.TryParse(t.SyncModifiedDate, out d) ? d : DateTime.MinValue;
+					}))
+					{
+						DateTime parsed;
+						var dateStr = DateTime.TryParse(tx.SyncModifiedDate, out parsed)
+							? parsed.ToString("MMMM dd yyyy HH:mm:ss", en)
+							: tx.SyncModifiedDate;
+
+						var gameName = string.IsNullOrWhiteSpace(tx.Name) ? "" : tx.Name;
+						var slug = Uri.EscapeDataString((gameName ?? string.Empty).Replace(" ", "-").Replace(".", ""));
+						var gameHref = $"{(string.IsNullOrEmpty(langIso) ? "" : langIso)}/game/{tx.GameID}/{slug}";
+
+						var typeLabel = tx.TransactionType == 1
+							? Umbraco.GetDictionaryValue("Bet", "Bet")
+							: Umbraco.GetDictionaryValue("Win", "Win");
+						var amountText = tx.AmountUSD == 0m
+							? "0.00"
+							: tx.TransactionType == 1
+								? $"-{tx.AmountUSD.ToString("N2", en)}"
+								: $"{tx.AmountUSD.ToString("N2", en)}";
+
+						<tr class="bg-white/5 rounded-xl @(tx.TransactionType == 3 ? "font-semibold" : string.Empty)">
+							<td class="py-3 px-4 font-mono tabular-nums">@tx.GameTransactionID</td>
+							<td class="py-3 px-4">@dateStr</td>
+							<td class="py-3 px-4">
+								@if (!string.IsNullOrEmpty(gameName))
+								{
+									<a class="green-link" href="@gameHref">@gameName</a>
+								}
+								else
+								{
+									<span>—</span>
+								}
+							</td>
+							<td class="py-3 px-4">@typeLabel</td>
+							<td class="py-3 px-4 text-right font-semibold font-mono tabular-nums flex justify-end items-center gap-1"> <img class="h-4" src="/images/p1.png">@amountText</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Pagination -->
+		<div class="flex items-center justify-between mt-4 gap-4">
+			<a href="@(hasPrev ? $"?page={pageIndex - 1}" : "#")"
+				 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg hover:no-underline! bg-(--c-teal-action) text-white hover:bg-(--c-teal-action-h) @(hasPrev ? "" : "opacity-50! pointer-events-none!")">
+				&larr; @Umbraco.GetDictionaryValue("Prev","Prev")
+			</a>
+
+			<div class="text-sm opacity-80">
+				@Umbraco.GetDictionaryValue("Page","Page"): @pageIndex
+			</div>
+
+			<a href="@(hasNext ? $"?page={pageIndex + 1}" : "#")"
+				 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg hover:no-underline! bg-(--c-teal-action) text-white hover:bg-(--c-teal-action-h) @(hasNext ? "" : "opacity-50 pointer-events-none")">
+				@Umbraco.GetDictionaryValue("Next","Next") &rarr;
+			</a>
+		</div>
+	}
+	else
+	{
+		<div class="text-center text-base opacity-70 py-10">
+			@Umbraco.GetDictionaryValue("PHP - No Transaction History", "You do not have any transaction history yet.")
+		</div>
+	}
+
+</div>
+
+<script>
+	$("#back_button").on("click", function (event) {
+		event.stopImmediatePropagation();
+		let langIso = '@langIso';
+		if (langIso !== '') window.location.href = `${langIso}/account`;
+		else window.location.href = '/account';
+	});
+</script>

@@ -1,0 +1,33 @@
+@using System.Globalization
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.BannerWinnersModel
+@inject UmbracoHelper _helper
+
+@{
+  string FormatScore(decimal? value) => string.Concat((value ?? 0m).ToString("N0", CultureInfo.InvariantCulture), " Coins");
+}
+
+<div class="flex flex-col w-full px-3">
+  @foreach (var winner in Model.List.OrderByDescending(x => x.UsdAmount).Take(6))
+  {
+    var winningTimeAgo = DateTime.UtcNow - winner.Date;
+
+    var t = winningTimeAgo.Days > 0 ? $"{winningTimeAgo.Days}{_helper.GetDictionaryOrDefault("d ago")} {_helper.GetDictionaryValue("ago")}" : $"{winningTimeAgo.Hours}{_helper.GetDictionaryValue("h ago")} {_helper.GetDictionaryValue("ago")}";
+
+    <div class="second-banner-winner">
+      <div class="winner-info-money-wrap">
+        <div class="winner-name">
+          @Html.Raw(_helper.GetDictionaryOrDefault("collected")?.Replace("{0}", winner.Name))
+        </div>
+        <div class="winner-name-money">
+          <img src="/images/casino/gold-pig.svg" />&nbsp;&nbsp;&nbsp;&nbsp;
+          <img class="h-4" src="/images/p1.png"> &nbsp;
+          <span>@Html.Raw(FormatScore(winner.UsdAmount))</span>
+        </div>
+      </div>
+      <div class="winner-date-wrap">
+        @Html.Raw(t)
+      </div>
+    </div>
+  }
+</div>

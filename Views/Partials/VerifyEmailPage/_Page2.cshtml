@@ -1,0 +1,23 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@if (!string.IsNullOrEmpty((string)ViewBag.OKResult))
+{
+    <div class="verification_text">
+        @Html.Raw(ViewBag.OKResult)
+    </div>
+}
+else
+{
+    <div style="color: red" class="verification_text">
+        @Html.Raw(ViewBag.ErrorResult)
+    </div>
+}
+    
+
+<script>
+    
+    setTimeout(function (){
+        window.location.href = `@Html.Raw(WebStorageUtility.RewriteUrlWithUserIso("/"))`
+    }, 20000)
+    
+</script>

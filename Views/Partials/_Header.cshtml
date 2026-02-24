@@ -1,0 +1,618 @@
+﻿@using System.Text.RegularExpressions
+@using System.Threading
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Models
+@using SmartWinners.IPlayerclub365service
+@using SmartWinners.Models
+@using System.Text.Json
+@using SmartWinners.Services
+@using Umbraco.Cms.Web.Common
+@using GoldCasino.ApiModule.Services
+@using GoldCasino.ApiModule.Services.PlayerClub365Api
+@inject UmbracoHelper _helper
+@inject GameCategoriesService gameCategoriesService
+@inject GamesService gamesService
+@inject ISupportedLanguagesService supportedLanguagesService
+@inject IPlayerClub365ApiService playerClub365ApiService
+
+@{
+  var regLanguagePrefix = new Regex(@$"^\/((en|fr|ru|uk|es|he|ar|pt|th|vi|ms|ph|fi|it|pl|zh)\/)?", RegexOptions.Singleline |
+  RegexOptions.IgnoreCase);
+  var regLanguagePrefixBks = new Regex(@$"^\/((en|fr|ru|uk|es|he|ar|pt|th|vi|ms|ph|fi|it|pl|zh))?", RegexOptions.Singleline |
+  RegexOptions.IgnoreCase);
+
+  // Fetch supported languages from API
+  var supportedLanguages = await supportedLanguagesService.GetAsync(Context.RequestAborted);
+  var langs = supportedLanguages.ToDictionary(
+    l => l.LanguageIso,
+    l => l.Name ?? l.NameEnglish ?? "Unknown",
+    StringComparer.OrdinalIgnoreCase);
+
+  var flags = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+  {
+    ["en"] = "us",
+    ["fr"] = "fr",
+    ["ru"] = "ru",
+    ["uk"] = "ua",
+    ["es"] = "es",
+    ["he"] = "il",
+    ["pt"] = "pt",
+    ["th"] = "th",
+    ["vi"] = "vn",
+    ["fil"] = "ph",
+    ["it"] = "it",
+    ["pl"] = "pl",
+    ["zh"] = "cn"
+  };
+
+  var request = Context.Request;
+  var pathAndQuery = request.Path + request.QueryString;
+  var curl = regLanguagePrefixBks.Replace(pathAndQuery, "");
+  curl = regLanguagePrefix.Replace(curl, "");
+
+  var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+  var langPrefix = langIso == "en" ? "" : $"/{langIso}";
+  var rtlLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "ar", "he", "fa", "ur" };
+  var isRtl = rtlLanguages.Contains(langIso);
+  var mobileNavSideClass = isRtl
+    ? "right-0 translate-x-full peer-checked:translate-x-0"
+    : "left-0 -translate-x-full peer-checked:translate-x-0";
+
+  var isOpenedMenu = Context.Request.Cookies.TryGetValue("slidable-menu-opened", out var isOpened) &&
+  isOpened.Equals("1");
+
+  var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+
+  var user = isAuthorized ? Context.User.ToUserApiAccess() : null;
+  var currency = WebStorageUtility.GetUserCurrencyDetails();
+  var grouped = await gameCategoriesService.GetGroupedCategoriesAsync(langIso);
+  var bal = WebStorageUtility.GetUserBalance(Context);
+  if (bal is null && isAuthorized)
+  {
+    bal = await PaymentHelper.GetUserBalance(user, true);
+  }
+
+  // Bonus balance logic with caching
+  decimal bonusBalance = 0;
+  if (isAuthorized && user != null)
+  {
+    var cachedBonus = WebStorageUtility.GetUserBonusBalance(Context);
+    if (cachedBonus.HasValue)
+    {
+      bonusBalance = cachedBonus.Value;
+    }
+    else
+    {
+      var bonusResult = await playerClub365ApiService.EntityBonusesGetAsync(user);
+      if (bonusResult.IsSuccess)
+      {
+        bonusBalance = bonusResult.Value.BonusBalance;
+        PaymentHelper.CacheUserBonusBalance(Context, bonusBalance);
+      }
+    }
+  }
+  var totalBalance = (bal?.BalanceUSD ?? 0) + bonusBalance;
+
+  var order = new[] { 1, 0, 2 };
+  var orderedGroups = grouped
+  .OrderBy(g => Array.IndexOf(order, g.Key))
+  .ToList();
+
+  var searchEndpoint = string.IsNullOrWhiteSpace(langIso)
+  ? "/api/games/search"
+  : $"{langPrefix}/api/games/search";
+
+  var unableText = @_helper.GetDictionaryValueOrDefault("No results", "No results");
+  var a = 1;
+}
+
+<header class="site-header relative flex lg:grid grid-cols-[1fr_auto_1fr] lg:gap-4 items-center justify-between w-full px-1 xs:px-2 lg:px-8 py-[10px] bg-teal-50 h-[56px] lg:h-[64px] z-10 ">
+  <input id="nav-toggle" type="checkbox" class="peer sr-only" aria-hidden="true" />
+
+  <div class="flex flex-row items-center gap-2 lg:gap-6">
+    <div class="flex flex-row items-center gap-2 lg:gap-6 h-10 peer-checked:[&_.burger]:hidden peer-checked:[&_.close]:block">
+      <label for="nav-toggle"
+             class="inline-flex items-center justify-center rounded-md cursor-pointer select-none outline-none ring-0 h-10">
+
+        <svg class="burger block" width="22" height="18" viewBox="0 0 18 14" fill="none" aria-hidden="true">
+          <path d="M7 1H17M1 7H17H4M1 13H11" stroke="#f0f0f0" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </svg>
+
+        <svg class="close hidden" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="#f0f0f0" stroke-width="2" stroke-linecap="round" />
+        </svg>
+
+        <span class="sr-only">Toggle menu</span>
+      </label>
+
+      <a href="@Html.Raw($"{langPrefix}/")" class="logo w-max">
+        <img src="/images/logo.png" alt="@_helper.GetDictionaryValue("Logo")" class="h-8" />
+      </a>
+    </div>
+    <div x-data="headerSearch()" data-search-endpoint="@searchEndpoint" data-lang-prefix="@langPrefix" data-min-chars="2"
+         data-limit="10" data-fallback-image="/images/casino/studio-image.svg" data-unable-text="@unableText"
+         @@keydown="onKeyDown($event)" @@keydown.escape.stop="close()" @@click.outside="close()"
+         class="relative rounded-md min-h-10 w-full  lg:flex gap-3 items-center bg-white hidden max-w-[380px]">
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="max-h-4 min-w-4 max-w-4 ml-2 fill-black" aria-hidden="true">
+        <use href="/images/icons-base.svg#i-icon-search"></use>
+      </svg>
+
+      <input type="text" id="search-field" name="game-search" x-model="term" @@input="queueSearch()" @@focus="onFocus()" autocomplete="off"
+             class="h-full w-full text-gray-900 rounded-md focus:outline-none" data-lpignore="true" data-form-type="other"
+             placeholder="@_helper.GetDictionaryOrDefault("Find game")" aria-autocomplete="list" :aria-expanded="open"
+             aria-controls="search-results-panel" />
+
+      <button type="button" class="mr-2" x-show="term.length > 0" @@click="clear()" x-transition.opacity
+              aria-label="@_helper.GetDictionaryOrDefault("Clear")">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-black" aria-hidden="true">
+          <use href="/images/icons-base.svg#i-icon-close"></use>
+        </svg>
+      </button>
+
+
+      <div id="search-results-panel" x-cloak x-show="open"
+           class="absolute left-0 top-full mt-2 w-full rounded-lg bg-white shadow-lg ring-1 ring-black/10 z-50"
+           x-transition>
+
+
+        <div class="px-4 py-3 text-sm text-black/90" x-show="isLoading">
+          @_helper.GetDictionaryOrDefault("Searching")...
+        </div>
+
+
+        <div class="px-4 py-3 text-sm text-red-600" x-show="!isLoading && error" x-text="error">
+        </div>
+
+
+        <div class="px-4 py-3 text-sm text-gray-500"
+             x-show="!isLoading && !error && term.trim().length > 0 && results.length === 0">
+          @_helper.GetDictionaryOrDefault("No results found")
+        </div>
+
+        <ul class="max-h-80 overflow-y-auto divide-y divide-gray-100" role="listbox"
+            x-show="!isLoading && !error && results.length > 0">
+
+          <template x-for="(item, index) in results" :key="item.id">
+            <li :class="{
+                         'bg-gray-100': index === selectedIndex
+                     }" class="cursor-pointer">
+
+              <a :href="buildGameUrl(item)" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-black">
+
+                <img :src="resultImage(item)" alt="" class="h-10 w-10 rounded object-cover bg-gray-100"
+                     @@error.once="$event.target.src = fallbackImage" />
+
+                <div class="flex flex-col">
+                  <span class="font-medium text-sm" x-text="item.name"></span>
+
+                  <span class="text-xs text-gray-500"
+                        x-text="item.studioName || '@_helper.GetDictionaryOrDefault("Unknown")'"></span>
+                </div>
+
+              </a>
+            </li>
+          </template>
+        </ul>
+        <div class="px-4 py-2 text-xs text-gray-500 border-t border-gray-100" x-show="!isLoading && !error && hasMore">
+          @_helper.GetDictionaryOrDefault("Showing first results")
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (!isAuthorized)
+  {
+    <div class="flex gap-1 xs:gap-3">
+      <a href="@langPrefix/account"
+         class="rounded-md px-4 py-2 bg-(--c-teal-action) hover:bg-(--c-teal-action-h) transition-colors text-white text-sm font-medium lg:text-base no-underline! h-10 uppercase">
+        @_helper.GetDictionaryOrDefault("Header - Menu - Login")
+      </a>
+      <a href="@langPrefix/account"
+         class="playerclub-button-yellow rounded-md px-4 py-2 transition-colors text-black! text-sm font-medium lg:text-base no-underline! h-10 uppercase">
+        @_helper.GetDictionaryOrDefault("Header - Menu - Sign Up")
+      </a>
+    </div>
+  }
+  else
+  {
+    <div class="flex gap-1 xs:gap-3">
+      <a href="@langPrefix/played-history" class="flex justify-center items-center relative rounded-md bg-(--c-teal-strong) hover:bg-(--c-teal-strong-h) px-4 py-2 teal-ring h-10" >
+        <span class="hidden md:flex justify-center items-center">
+          @_helper.GetDictionaryOrDefault("Header - User - Your Balance") &nbsp;
+        </span>
+        <img class="h-4" src="/images/p1.png" />&nbsp; <span id="balance-usd"
+                                                             class="gold-gradient-text">@($"{totalBalance:0.00}")</span>
+      </a>
+      <a href="@langPrefix/purchase-coins" data-confetti-buy="true"
+         class="playerclub-button-yellow flex items-center gap-1 rounded-md px-3 py-2 transition-colors text-black! no-underline! text-md md:text-md font-medium lg:text-md text-h leading-[22px] h-10 uppercase">
+        <img class="mb-1 max-xs:hidden" src="~/images/casino/wallet.svg" />
+        @_helper.GetDictionaryOrDefault("BUY COINS", "BUY COINS")
+      </a>
+      </div>
+    }
+
+  @if (!isAuthorized)
+  {
+    <div class="hidden lg:block">
+      <div class="language">
+        <details class="lang-select">
+          <summary class="lang-summary flex items-center gap-2 cursor-pointer select-none">
+            <span class="flag fi-@Html.Raw(flags.ContainsKey(langIso) ? flags[langIso] : langIso)" aria-hidden="true"></span>
+            <span class="label">@Html.Raw(langs.ContainsKey(langIso) ? langs[langIso] : "English")</span>
+            <span class="caret" aria-hidden="true"></span>
+          </summary>
+          <ul class="menu mt-2 rounded-md bg-white shadow p-2" role="listbox" aria-label="Choose a language">
+            @foreach (var lang in langs)
+            {
+              var flag = flags.ContainsKey(lang.Key) ? flags[lang.Key] : lang.Key;
+              var prefix = lang.Key == "en" ? "" : $"{lang.Key}/";
+              <li>
+                <a href="/@prefix@curl"
+                   class="flex justify-start gap-2 px-3 my-2 py-2 w-full text-left hover:bg-teal-950 @(lang.Key == langIso ? "bg-teal-900 text-white" : "")">
+                  <span class="flag fi-@flag"></span>@Html.Raw(lang.Value)
+                </a>
+              </li>
+            }
+          </ul>
+        </details>
+      </div>
+    </div>
+  }
+  else
+  {
+    <div class="hidden md:flex relative items-center justify-end h-9 md:h-10">
+
+      <div class="flex h-9 md:h-10 flex-row items-center">
+        <a class="h-full" href="@langPrefix/sign-in?r=@langPrefix/account">
+          <img class="h-full" src="/images/account/avatar.migrated-1.svg" alt="profile_icon" />
+        </a>
+        <button type="button"
+                class="flex items-center gap-2 h-full px-3 rounded-md hover:bg-gray-700 transition hover:cursor-pointer"
+                id="profile-menu-btn">
+
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      <div id="profile-dropdown"
+           class="hidden absolute right-0 top-full mt-2 w-40 rounded-md bg-white  hover:bg-gray-500 shadow-lg ring-1 ring-black/5 z-20">
+        <a href="/@Html.Raw(langIso)/sign-out" class="block px-4 py-2 text-sm text-black!">
+          @_helper.GetDictionaryValue("Header - User - Sign Out")
+        </a>
+      </div>
+    </div>
+  }
+
+
+
+  <nav id="mobileNav" class="fixed top-[56px] lg:top-[64px] bottom-0 z-50 @(mobileNavSideClass)
+   flex flex-col gap-5 bg-(--header-bg) px-6 py-6 border-none
+   w-full lg:w-[400px]
+   transition-transform duration-300  ease-out
+   overflow-y-auto text-white">
+
+    <div class="language">
+      <details class="lang-select w-full">
+        <summary class="lang-summary flex items-center gap-2 cursor-pointer select-none">
+          <span class="flag fi-@Html.Raw(flags.ContainsKey(langIso) ? flags[langIso] : langIso)" aria-hidden="true"></span>
+          <span class="label">@Html.Raw(langs.ContainsKey(langIso) ? langs[langIso] : "English")</span>
+          <span class="caret" aria-hidden="true"></span>
+        </summary>
+
+        <ul class="menu mt-2 rounded-md bg-white shadow p-2" role="listbox" aria-label="Choose a language">
+          @foreach (var lang in langs)
+          {
+            var flag = flags.ContainsKey(lang.Key) ? flags[lang.Key] : lang.Key;
+            var href = lang.Key == "en" ? $"/{curl}" : $"/{lang.Key}/{curl}";
+            <li>
+              <a href="@href"
+                 class="flex justify-start gap-2 px-3 my-2 py-2 w-full text-left hover:bg-teal-950 @(lang.Key == langIso ? "bg-teal-900 text-white" : "")">
+                <span class="flag fi-@flag"></span>@Html.Raw(lang.Value)
+              </a>
+            </li>
+          }
+        </ul>
+      </details>
+    </div>
+
+
+    @if (isAuthorized)
+    {
+      <div class="flex md:hidden relative justify-between items-center h-full gap-3 ">
+        <a href="/account"
+           class="flex justify-between items-center h-10 py-2 px-3 no-underline! w-full rounded-md bg-(--c-teal-strong)! hover:bg-(--c-teal-strong-h)! ">
+          <div class="flex justify-between items-center h-full gap-3 ">
+            <img class="h-full " src="/images/casino/profile_icon.png" alt="profile_icon">
+            My Account
+          </div>
+        </a>
+        <button type="button"
+                class="absolute right-0 flex items-center gap-2 h-full px-3 rounded-md hover:bg-gray-700 transition hover:cursor-pointer"
+                id="profile-mobile-menu-btn">
+
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div id="profile-mobile-dropdown"
+             class="hidden absolute right-0 top-full mt-2 w-40 rounded-md bg-white hover:bg-gray-500 shadow-lg ring-1 ring-black/5 z-999">
+          <a href="/@Html.Raw(langIso)/sign-out" class="block px-4 py-2 text-sm text-black!">
+            @_helper.GetDictionaryValue("Header - User - Sign Out")
+          </a>
+        </div>
+      </div>
+    }
+
+    @* Search Box *@
+
+    <div x-data="headerSearch()" data-search-endpoint="@searchEndpoint" data-lang-prefix="@langPrefix" data-min-chars="2"
+         data-limit="10" data-fallback-image="/images/casino/studio-image.svg" data-unable-text="@unableText"
+         @@keydown="onKeyDown($event)" @@keydown.escape.stop="close()" @@click.outside="close()"
+         class="relative rounded-md min-h-9 md:min-h-9 w-full flex gap-3 items-center bg-white lg:hidden">
+
+
+      <svg xmlns="http://www.w3.org/2000/svg" class="max-h-4 min-w-4 max-w-4 ml-2 fill-black" aria-hidden="true">
+        <use href="/images/icons-base.svg#i-icon-search"></use>
+      </svg>
+
+
+      <input type="text" id="search-field" name="game-search" x-model="term" @@input="queueSearch()" @@focus="onFocus()" autocomplete="off"
+             class="h-full w-full text-gray-900 rounded-md focus:outline-none" data-lpignore="true" data-form-type="other"
+             placeholder="@_helper.GetDictionaryValue("Find game")" aria-autocomplete="list" :aria-expanded="open"
+             aria-controls="search-results-panel" />
+
+      <button type="button" class="mr-2" x-show="term.length > 0" @@click="clear()" x-transition.opacity
+              aria-label="@_helper.GetDictionaryValue("Clear")">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-black" aria-hidden="true">
+          <use href="/images/icons-base.svg#i-icon-close"></use>
+        </svg>
+      </button>
+
+
+      <div id="search-results-panel" x-cloak x-show="open"
+           class="absolute left-0 top-full mt-2 w-full rounded-lg bg-white shadow-lg ring-1 ring-black/10 z-50"
+           x-transition>
+
+
+        <div class="px-4 py-3 text-sm text-black/90" x-show="isLoading">
+          @_helper.GetDictionaryValue("Searching")...
+        </div>
+
+
+        <div class="px-4 py-3 text-sm text-red-600" x-show="!isLoading && error" x-text="error">
+        </div>
+
+
+        <div class="px-4 py-3 text-sm text-gray-500"
+             x-show="!isLoading && !error && term.trim().length > 0 && results.length === 0">
+          @_helper.GetDictionaryValue("No results found")
+        </div>
+
+        <ul class="max-h-80 overflow-y-auto divide-y divide-gray-100" role="listbox"
+            x-show="!isLoading && !error && results.length > 0">
+
+          <template x-for="(item, index) in results" :key="item.id">
+            <li :class="{
+                        'bg-gray-100': index === selectedIndex
+                    }" class="cursor-pointer">
+
+              <a :href="buildGameUrl(item)" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-black">
+
+                <img :src="resultImage(item)" alt="" class="h-10 w-10 rounded object-cover bg-gray-100"
+                     @@error.once="$event.target.src = fallbackImage" />
+
+                <div class="flex flex-col">
+                  <span class="font-medium text-sm" x-text="item.name"></span>
+
+                  <span class="text-xs text-gray-500"
+                        x-text="item.studioName || '@_helper.GetDictionaryValue("Unknown")'"></span>
+                </div>
+
+              </a>
+            </li>
+          </template>
+        </ul>
+        <div class="px-4 py-2 text-xs text-gray-500 border-t border-gray-100" x-show="!isLoading && !error && hasMore">
+          @_helper.GetDictionaryValue("Showing first results")
+        </div>
+
+      </div>
+    </div>
+
+    <ul class="space-y-1 text-base">
+      @for (int gi = 0; gi < orderedGroups.Count; gi++)
+      {
+        var group = orderedGroups[gi];
+
+        foreach (var cat in group)
+        {
+          if (cat.IsDynamic is 1)
+          { // is_dynamic 1 is for categoris that need user password
+            if (!isAuthorized)
+            {
+              continue;
+            }
+          }
+
+          var id = $"m-{cat.CategoryID}";
+          var href = $"{langPrefix}/games/{cat.CategoryID}/{cat.CategoryName.Replace(' ', '-')}";
+
+          <li class="pb-2 border-b border-white/20">
+            <input id="@id" type="checkbox" class="peer sr-only" />
+            <a href="@href" for="@id"
+               class="flex items-center justify-between px-2 py-3 rounded-lg hover:bg-white/5 cursor-pointer select-none no-underline!">
+              <span class="flex items-center gap-3">
+                <img class="h-6" src="~/images/game_category_icons/@Html.Raw(@cat.CategoryID.ToString() + ".png")" />
+                <span class="font-medium">@Html.Raw(cat.CategoryName)</span>
+              </span>
+              <svg class="h-4 w-4 opacity-60 transition-transform duration-300 peer-checked:rotate-90" viewBox="0 0 20 20"
+                   fill="currentColor">
+                <path d="M7.293 14.707a1 1 0 0 1 0-1.414L10.586 10
+                                       7.293 6.707A1 1 0 0 1 8.707 5.293l4 4a1 1 0
+                                       0 1 0 1.414l-4 4a1 1 0 0 1-1.414 0z" />
+              </svg>
+            </a>
+          </li>
+        }
+
+        if (gi < orderedGroups.Count - 1)
+        {
+          if (gi != 0 && !isAuthorized)
+          {
+            <li class="h-5"></li>
+            continue;
+          }
+          if (isAuthorized)
+          {
+            <li class="h-5"></li>
+          }
+        }
+      }
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .confetti-piece {
+    position: fixed;
+    top: var(--y);
+    left: var(--x);
+    width: 6px;
+    height: 10px;
+    border-radius: 1px;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 9999;
+    animation: confetti-fall 900ms ease-out forwards;
+    box-shadow: 0 0 10px 1px rgba(255, 215, 0, 0.35);
+  }
+
+  @@keyframes confetti-fall {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    100% {
+      transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const buyButtons = document.querySelectorAll("[data-confetti-buy]");
+    const colors = ["#FFD700", "#FFCC33", "#FFB703", "#F7C948", "#E0AA3E", "#FFE39F"];
+
+    const burstConfetti = (anchor) => {
+      const rect = anchor.getBoundingClientRect();
+      const originX = rect.left + rect.width / 2;
+      const originY = rect.top + rect.height / 2;
+      const pieces = 38;
+
+      for (let i = 0; i < pieces; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.setProperty("--x", `${originX}px`);
+        piece.style.setProperty("--y", `${originY}px`);
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 120 + Math.random() * 180;
+        piece.style.setProperty("--dx", `${Math.cos(angle) * distance}px`);
+        piece.style.setProperty("--dy", `${Math.sin(angle) * distance}px`);
+        piece.style.setProperty("--rot", `${(Math.random() - 0.5) * 720}deg`);
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = `${Math.random() * 60}ms`;
+
+        document.body.appendChild(piece);
+        piece.addEventListener("animationend", () => piece.remove());
+      }
+    };
+
+    buyButtons.forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        if (e.defaultPrevented || e.button !== 0) return;
+        e.preventDefault();
+        burstConfetti(btn);
+        setTimeout(() => {
+          window.location.href = btn.href;
+        }, 420);
+      });
+    });
+  });
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("profile-menu-btn");
+    const menu = document.getElementById("profile-dropdown");
+
+    // Toggle on button click
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); // не пробрасываем выше
+      menu.classList.toggle("hidden");
+    });
+
+    // Close if click outside
+    document.addEventListener("click", (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add("hidden");
+      }
+    });
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("profile-mobile-menu-btn");
+    const menu = document.getElementById("profile-mobile-dropdown");
+
+    // Toggle on button click
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.classList.toggle("hidden");
+    });
+
+    // Close if click outside
+    document.addEventListener("click", (e) => {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.add("hidden");
+      }
+    });
+  });
+</script>
+
+
+
+@if (isOpenedMenu)
+{
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+
+      let drawer = document.querySelector('#slidable-menu');
+
+      document.querySelector('#slidable-menu').parentElement.classList.add("drawer-wrap-width");
+      drawer.show();
+      if (window.screen.width < 1366) {
+        document.querySelector(".cookie-container-message").style.left = "0";
+
+      } else {
+        if (document.querySelector(".cookie-container-message"))
+          document.querySelector(".cookie-container-message").style.left = "240px";
+      }
+
+    })
+  </script>
+}
+else
+{
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      if (document.querySelector(".cookie-container-message"))
+        document.querySelector(".cookie-container-message").style.left = "0px";
+    })
+  </script>
+}

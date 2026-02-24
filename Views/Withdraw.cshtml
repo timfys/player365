@@ -1,0 +1,686 @@
+﻿@using GoldCasino.ApiModule.Dtos.User
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Enums
+@using SmartWinners.Models.Payment
+@using System.Threading
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@inject IBusinessApiService businessApiService;
+
+@{
+	Layout = "MasterPage.cshtml";
+
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+
+	var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/withdraw");
+		return;
+	}
+
+	var identityUser = Context.User.ToUserApiAccess();
+
+	var result = await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserVerificationStateDto, UserDto>.Fields,
+		Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+	}, identityUser);
+
+	var entity = result.Value?.Entities.FirstOrDefault();
+	var (userPassportState, user) = EntityMapper.MapTo<UserVerificationStateDto, UserDto>(entity);
+	var verificationState = userPassportState.VerificationState;
+	var withdrawForms = WithdrawForm.Init() ?? new List<WithdrawForm>();
+}
+
+@{
+	var currencyDetails = WebStorageUtility.GetUserCurrencyDetails(Context);
+	var sessionId = WebStorageUtility.GetSessionId();
+	var withdrawMethods = PaymentHelper.GetUserWithdraws(false);
+	var transactions = PaymentHelper.GetUserWithdraws(true, 0);
+	var currencies = CurrencyHelper.GetCurrencies();
+
+	var cards = await IdentityHelper.GetUserCardsToVerify(identityUser);
+
+
+	var cardsVerified = (cards.TrueForAll(x => x.CardVerificationState == CardVerificationState.Verified) || cards.Count == 0);
+
+
+	sessionId = string.IsNullOrEmpty(sessionId) ? "" : $"?sId={sessionId}";
+
+	var isLastPage = !(transactions.Count > 10);
+
+	if (transactions.Count >= 2)
+		transactions.Remove(transactions.Last());
+	var idVerified = userPassportState.VerificationState == IdDocVerificationState.Approved;
+	
+	var cardsAndIdVerified = cardsVerified && idVerified;
+	var resp = await PaymentHelper.RecalculateUserBalance(null, null, Context);
+	var winnings = resp.WithdrawAllowedSum;
+
+}
+	<div class="page-wrap">
+		<div class="personal_information personal_information_mb">
+			<h1 class="personal_information_title">@Umbraco.GetDictionaryValue("Withdraw")</h1>
+			<button class="button_back withdraw_back" onclick='Redirect("@langIso/account")'> @Umbraco.GetDictionaryValue("Back")</button>
+			<div class="personal_information_inner">
+				<a href="@Umbraco.GetDictionaryValue("Need help URL Withdraw")" class="personal_help_link withdraw_help">@Umbraco.GetDictionaryValue("Need help?")</a>
+				<div class="personal_information_left">
+					<div class="withdraw_item active" id="withdraw">
+						<div class="withdraw_logo">
+							<img src="/images/account/withdraw.svg" alt="withdraw" class="withdraw_img">
+						</div>
+						<p class="information_text">@Umbraco.GetDictionaryValue("Withdraw")</p>
+					</div>
+					<div class="withdraw_item" id="transactions">
+						<div class="withdraw_logo">
+							<img src="/images/account/transaction.svg" alt="transaction" class="withdraw_img">
+						</div>
+						<p class="information_text">@Umbraco.GetDictionaryValue("Transactions")</p>
+					</div>
+				</div>
+
+				<div class="withdraw_right">
+					<div class="information_form" id="withdraw_form" style="display: block">
+						<div class="withdraw_request">
+							<p class="withdraw_text">@Umbraco.GetDictionaryValue("Available balance")</p>
+							<p class="withdraw_price">@currencyDetails.Symbol @($"{(int)Math.Floor((winnings < 0 ? 0 : winnings) * currencyDetails.ExchangeRate):0.00}")</p>
+							<p class="withdraw_title">
+								@if (EnvironmentHelper.IsClub)
+								{
+									@Umbraco.GetDictionaryValue("Choose where to you want to withdraw your earnings")
+								}
+								else
+								{
+									@Umbraco.GetDictionaryValue("Choose where to you want to withdraw your winning")
+								}
+							</p>
+
+							<div class="withdraw_method">
+								@if (user.CountryIso.ToLower().Equals("il"))
+								{
+									<button class="withdraw_method-button" id="withdraw_by_cheque">
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+											<path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM232 344V280H168c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H280v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"></path>
+										</svg>
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+											<path d="M243.4 2.6l-224 96c-14 6-21.8 21-18.7 35.8S16.8 160 32 160v8c0 13.3 10.7 24 24 24H456c13.3 0 24-10.7 24-24v-8c15.2 0 28.3-10.7 31.3-25.6s-4.8-29.9-18.7-35.8l-224-96c-8.1-3.4-17.2-3.4-25.2 0zM128 224H64V420.3c-.6 .3-1.2 .7-1.8 1.1l-48 32c-11.7 7.8-17 22.4-12.9 35.9S17.9 512 32 512H480c14.1 0 26.5-9.2 30.6-22.7s-1.1-28.1-12.9-35.9l-48-32c-.6-.4-1.2-.7-1.8-1.1V224H384V416H344V224H280V416H232V224H168V416H128V224zM256 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"></path>
+										</svg>
+										@Umbraco.GetDictionaryValue("By cheque")
+									</button>
+								}
+								<button class="withdraw_method-button" id="withdraw_online">
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+										<path d="M256 512c141.4 0 256-114.6 256-256S397.4 0 256 0S0 114.6 0 256S114.6 512 256 512zM232 344V280H168c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H280v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"></path>
+									</svg>
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+										<path d="M243.4 2.6l-224 96c-14 6-21.8 21-18.7 35.8S16.8 160 32 160v8c0 13.3 10.7 24 24 24H456c13.3 0 24-10.7 24-24v-8c15.2 0 28.3-10.7 31.3-25.6s-4.8-29.9-18.7-35.8l-224-96c-8.1-3.4-17.2-3.4-25.2 0zM128 224H64V420.3c-.6 .3-1.2 .7-1.8 1.1l-48 32c-11.7 7.8-17 22.4-12.9 35.9S17.9 512 32 512H480c14.1 0 26.5-9.2 30.6-22.7s-1.1-28.1-12.9-35.9l-48-32c-.6-.4-1.2-.7-1.8-1.1V224H384V416H344V224H280V416H232V224H168V416H128V224zM256 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"></path>
+									</svg>
+									@Umbraco.GetDictionaryValue("Add Wire transfer")
+								</button>
+							</div>
+							<div id="withdraw_method_validation"></div>
+						</div>
+
+						<div class="modal_box" id="add_bank">
+							<div class="modal_content">
+								<div class="modal_header">
+									<h5 class="modal_title">@Umbraco.GetDictionaryValue("Add new bank account")</h5>
+									<button class="close_btn">x</button>
+								</div>
+								<div class="modal_body">
+									<label class="form_text" for="modal_country">@Umbraco.GetDictionaryValue("Your bank country"):</label>
+									<dl id="modal_country" class="dropdown">
+										<dt>
+
+											@{
+												var preselectedFormOption = withdrawForms.FirstOrDefault(x => x.CountryIso.ToLower().Equals(user.CountryIso.ToLower())) ?? withdrawForms.First();
+
+											}
+											<a currencyIso="@preselectedFormOption.CurrencyIso" twoLetterIso="@preselectedFormOption.CountryIso">
+												<img class="flag" src="/assets@(preselectedFormOption.CountryFlagUrl)" alt="">@preselectedFormOption.CountryName (@preselectedFormOption.CurrencyIso)
+											</a>
+
+
+										</dt>
+										<dd class="dropdown_withdraw">
+											<ul>
+
+												@foreach (var formOption in withdrawForms)
+												{
+													<li>
+														<a id="form_option_@formOption.CountryIso" currencyIso="@formOption.CurrencyIso" twoLetterIso="@formOption.CountryIso">
+															<img class="flag" src="/assets@(formOption.CountryFlagUrl)" alt="">@formOption.CountryName (@formOption.CurrencyIso)
+														</a>
+													</li>
+												}
+
+											</ul>
+										</dd>
+									</dl>
+									@foreach (var withdrawForm in withdrawForms)
+									{
+										<div class="modal_group" style="@Html.Raw(withdrawForm.CurrencyIso.ToLower().Equals(currencyDetails.CurrencyIso.ToLower()) ? "display: flex" : "display: none")" currencyIso="@withdrawForm.CurrencyIso" id="not_iban_group">
+
+											@if (withdrawForm.SecondaryFormFields is not null && withdrawForm.SecondaryFormFields.Count > 0)
+											{
+												<input type="radio" class="modal_radio" id="choice_bank" name="@withdrawForm.CurrencyIso" currencyIso="@withdrawForm.CurrencyIso" checked="">
+											}
+
+											@foreach (var withdrawFormField in withdrawForm.MainFormFields)
+											{
+												@switch (withdrawFormField.FieldType)
+												{
+													case FieldType.DropDown:
+														<label class='form_text' for='@(withdrawFormField.Name)_@withdrawForm.CountryIso'>@Umbraco.GetDictionaryValue(withdrawFormField.Title):</label>
+														<div wsName="@withdrawFormField.WsName" class="dropdown_menu withdraw_input_field" field_name="@withdrawFormField.Name" id='@(withdrawFormField.Name)_@withdrawForm.CountryIso' preselected_value="@withdrawFormField.DropDownOptions.First()">
+															<div class="dropdown_menu_data">
+																<p class="dropdown_menu_text">@withdrawFormField.DropDownOptions.First()</p>
+																<div class="dropdown_menu_select">
+																	@foreach (var dropDownOption in withdrawFormField.DropDownOptions)
+																	{
+																		<p class="dropdown_menu_option">@dropDownOption</p>
+																	}
+
+																</div>
+															</div>
+														</div>
+														break;
+													case FieldType.Field:
+														<label class='form_text' for='@(withdrawFormField.Name)_@withdrawForm.CountryIso'>@Umbraco.GetDictionaryValue(withdrawFormField.Title):</label>
+														<input wsName="@withdrawFormField.WsName" @Html.Raw(withdrawFormField.Name.Equals("firstName") ? $"value=\"{user.FirstName}\"" : "") @Html.Raw(withdrawFormField.Name.Equals("lastName") ? $"value=\"{user.LastName}\"" : "") type='@Html.Raw(withdrawFormField.WsName == "PayerName" ? "text" : "number")' maxL="@withdrawFormField.MaxLength.Value" class='withdraw_input_field' id='@(withdrawFormField.Name)_@withdrawForm.CountryIso' field_name='@withdrawFormField.Name'>
+														break;
+													case FieldType.Remark:
+														<div class="input_warning">@Umbraco.GetDictionaryValue($"{withdrawFormField.Title} 1") @Umbraco.GetDictionaryValue($"{withdrawFormField.Title} 2")</div>
+														break;
+												}
+											}
+
+										</div>
+										@if (withdrawForm.SecondaryFormFields is not null && withdrawForm.SecondaryFormFields.Count > 0)
+										{
+											<div class="modal_group" id="iban_group" currencyIso="@withdrawForm.CurrencyIso" style="@Html.Raw(withdrawForm.CurrencyIso.ToLower().Equals(currencyDetails.CurrencyIso.ToLower()) ? "display: flex" : "display: none")">
+												<input type="radio" class="modal_radio" id="choice_iban" name="@withdrawForm.CurrencyIso" currencyIso="@withdrawForm.CurrencyIso">
+												@foreach (var withdrawFormField in withdrawForm.SecondaryFormFields)
+												{
+													@switch (withdrawFormField.FieldType)
+													{
+														case FieldType.DropDown:
+															<label class='form_text' for='@(withdrawFormField.Name)_@withdrawForm.CountryIso'>@Umbraco.GetDictionaryValue(withdrawFormField.Title):</label>
+															<div wsName="@withdrawFormField.WsName" class="dropdown_menu withdraw_input_field" field_name="@withdrawFormField.Name" id="@(withdrawFormField.Name)_@withdrawForm.CountryIso" preselected_value="@withdrawFormField.DropDownOptions.First()">
+																<div class="dropdown_menu_data">
+																	<p class="dropdown_menu_text">@withdrawFormField.DropDownOptions.First()</p>
+																	<div class="dropdown_menu_select">
+																		@foreach (var dropDownOption in withdrawFormField.DropDownOptions)
+																		{
+																			<p class="dropdown_menu_option">@dropDownOption</p>
+																		}
+
+																	</div>
+																</div>
+															</div>
+															break;
+														case FieldType.Field:
+															<label class='form_text' for='@(withdrawFormField.Name)_@withdrawForm.CountryIso'>@Umbraco.GetDictionaryValue(withdrawFormField.Title):</label>
+															<input wsName="@withdrawFormField.WsName" @Html.Raw(withdrawFormField.Name.Equals("firstName") ? $"value=\"{user.FirstName}\"" : "") @Html.Raw(withdrawFormField.Name.Equals("lastName") ? $"value=\"{user.LastName}\"" : "") disabled type='number' maxL="@withdrawFormField.MaxLength.Value" class='withdraw_input_field' id='@(withdrawFormField.Name)_@withdrawForm.CountryIso' field_name='@withdrawFormField.Name'>
+															break;
+														case FieldType.Remark:
+															<div class="input_warning">@withdrawFormField.Name</div>
+															break;
+													}
+												}
+											</div>
+										}
+									}
+									<div id="withdraw_validation_error" class="validation_param_error"></div>
+								</div>
+								<div class="modal_footer">
+									<button type="button" class="modal_submit" id="bank_submit">Save</button>
+									<button type="button" class="modal_cancel">Cancel</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal_box" id="verify_bank">
+							<div class="modal_content">
+								<div class="modal_header">
+									<h5 class="modal_title">Verify your bank account</h5>
+									<button class="close_btn">x</button>
+								</div>
+								<div class="modal_body">
+									<div class="upload-documents">
+										<p class="small" role="alert">
+											To fully verify your bank account, please upload copies of the following documents: Account holder ID document and bank document.
+										</p>
+										<div class="upload-photo pt-2">
+											<div class="post-a-job-box bd-n">
+												<div class="custom-file choose-file d-block mx-auto mt-4">
+													<input required="required" accept="image/jpeg, image/gif, image/png ,application/pdf" type="file" class="custom-file-input" name="identityCard" id="identityCard" onchange="UploadDocument('identityCard')">
+													<label style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="identityCardDiv" class="custom-file-label" for="identityCard">
+														<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+															<path d="M0 96l576 0c0-35.3-28.7-64-64-64H64C28.7 32 0 60.7 0 96zm0 32V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V128H0zM64 405.3c0-29.5 23.9-53.3 53.3-53.3H234.7c29.5 0 53.3 23.9 53.3 53.3c0 5.9-4.8 10.7-10.7 10.7H74.7c-5.9 0-10.7-4.8-10.7-10.7zM176 192a64 64 0 1 1 0 128 64 64 0 1 1 0-128zm176 16c0-8.8 7.2-16 16-16H496c8.8 0 16 7.2 16 16s-7.2 16-16 16H368c-8.8 0-16-7.2-16-16zm0 64c0-8.8 7.2-16 16-16H496c8.8 0 16 7.2 16 16s-7.2 16-16 16H368c-8.8 0-16-7.2-16-16zm0 64c0-8.8 7.2-16 16-16H496c8.8 0 16 7.2 16 16s-7.2 16-16 16H368c-8.8 0-16-7.2-16-16z"></path>
+														</svg>
+														<span id="identityCardSpan">
+															Upload identity card
+														</span>
+													</label>
+													<div id="divIdentityCard" class="invalid-tooltip">
+														Please provide a valid file.
+													</div>
+												</div>
+												<p class="small w-sm-75 mx-auto text-sm-center pt-1 text-muted">
+													You can upload a passport or drivers license.
+												</p>
+												<div id="ContentPlaceHolder1_divOther" class="custom-file choose-file d-block mx-auto mt-4">
+													<input required="required" accept="image/*,application/pdf" type="file" class="custom-file-input" name="bankDetails" id="bankDetails" onchange="UploadDocument('bankDetails')">
+													<label style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="bankDetailsDiv" class="custom-file-label" for="bankDetails">
+														<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+															<path d="M512 80c8.8 0 16 7.2 16 16v32H48V96c0-8.8 7.2-16 16-16H512zm16 144V416c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V224H528zM64 32C28.7 32 0 60.7 0 96V416c0 35.3 28.7 64 64 64H512c35.3 0 64-28.7 64-64V96c0-35.3-28.7-64-64-64H64zm56 304c-13.3 0-24 10.7-24 24s10.7 24 24 24h48c13.3 0 24-10.7 24-24s-10.7-24-24-24H120zm128 0c-13.3 0-24 10.7-24 24s10.7 24 24 24H360c13.3 0 24-10.7 24-24s-10.7-24-24-24H248z"></path>
+														</svg>
+														<span id="bankDetailsSpan" class="h5">
+															Upload bank details
+														</span>
+													</label>
+													<div class="text-center invalid-tooltip">
+														Please provide a valid file.
+													</div>
+												</div>
+												<p id="ContentPlaceHolder1_pOther" class="small w-sm-75 mx-auto text-sm-center pt-1 text-muted">
+													You can upload bank check, bank account or photo credit/debit-card.
+												</p>
+												<p class="small w-sm-75 mx-auto text-sm-center pt-3 text-muted">
+													Please upload clear, full-color image files (JPEG, GIF, PNG, or PDF) at high resolution (150 DPI minimum) and high quality (32 bit). Documents should be English-language originals or translations, preferably notarized.
+												</p>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="modal_footer">
+									<button type="button" class="modal_submit" id="verify_submit">Verify</button>
+									<button type="button" class="modal_cancel">Cancel</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="bank_details">
+
+							@if (withdrawMethods is not null && withdrawMethods.Count > 0)
+							{
+								foreach (var method in withdrawMethods)
+								{
+									if (cardsAndIdVerified)
+									{
+										method.Status = WithdrawMethodStatus.Verified;
+									}
+									else if (cards.Count(x => x.CardVerificationState is CardVerificationState.NotVerified) == 0 && verificationState is IdDocVerificationState.PendingVerification)
+									{
+										method.Status = WithdrawMethodStatus.WaitingForVerification;
+									}
+									else if (cards.Count(x => x.CardVerificationState is CardVerificationState.NotVerified) > 0 || verificationState is IdDocVerificationState.NotVerified or IdDocVerificationState.Declined)
+									{
+										method.Status = WithdrawMethodStatus.NotVerified;
+									}
+
+									var formFieldsText = new List<string>();
+
+									if (string.IsNullOrEmpty(method.CurrencyIso))
+										continue;
+
+									var form = withdrawForms.First(x => x.CurrencyIso.ToLower().Equals(method.CurrencyIso.ToLower()));
+									{
+										var formFields = new List<WithdrawFormField>();
+										formFields.AddRange(form.MainFormFields);
+
+										if (form.SecondaryFormFields is not null)
+											formFields.AddRange(form.SecondaryFormFields);
+
+										var type = typeof(WithdrawApiModel);
+
+										foreach (var property in type.GetProperties())
+										{
+											var value = property.GetValue(method);
+
+											if ((property.Name.Contains("PayerNumber") || property.Name.Contains("Parm"))
+											&& property.PropertyType == typeof(string) && !string.IsNullOrEmpty(value as string))
+											{
+												try
+												{
+													var field = formFields.First(x => x.WsName.ToLower().Equals(property.Name.ToLower()));
+
+													formFieldsText.Add($"{@Umbraco.GetDictionaryValue(field.Title)}: <b>{value}</b>");
+												}
+												catch
+												{
+												}
+											}
+										}
+									}
+
+
+									<div class="bank_item @method.WithdrawStatusFormClass(cardsAndIdVerified)">
+										<div class="bank_info">
+											<span class="bank_country">
+												<img class="flag" src="/assets@(form.CountryFlagUrl)" alt="">@form.CountryName (@form.CurrencyIso) @Html.Raw(method.PaymentId.Equals("9") ? "" : @Umbraco.GetDictionaryValue("By Cheque"))
+											</span>
+											<ul class="bank_list">
+												@foreach (var field in formFieldsText)
+												{
+													<li class="bank_text">
+														@Html.Raw(field)
+													</li>
+												}
+
+											</ul>
+											<span class="status @method.WithdrawStatusTextClass(cardsAndIdVerified)">
+												@Umbraco.GetDictionaryValue("Status"):
+												@switch (method.Status)
+												{
+													case WithdrawMethodStatus.Declined:
+														{
+															<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+																<path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"></path>
+															</svg>
+															break;
+														}
+													case WithdrawMethodStatus.Verified:
+														{
+															<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+																<path d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"></path>
+															</svg>
+															break;
+														}
+													case WithdrawMethodStatus.NotVerified:
+														{
+															<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+																<path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z"></path>
+															</svg>
+															break;
+														}
+													case WithdrawMethodStatus.WaitingForVerification:
+														{
+															<svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+																<path d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"></path>
+															</svg>
+															break;
+														}
+												}
+
+												<b>@Umbraco.GetDictionaryValue(method.WithdrawStatus(cardsAndIdVerified))</b>
+											</span>
+										</div>
+										<div class="bank_nav">
+
+
+											@{
+												var buttonEvent = "";
+
+												switch (method.Status)
+												{
+													case WithdrawMethodStatus.Verified:
+														buttonEvent = $@"(function(){{window.location.href='{langIso}/withdraw-balance/{method.purchase_paymentId}'}})()";
+														break;
+													case WithdrawMethodStatus.Declined or WithdrawMethodStatus.NotVerified or WithdrawMethodStatus.WaitingForVerification:
+														buttonEvent = $@"(function(){{window.location.href='{langIso}/identity'}})()";
+														break;
+													default:
+														throw new ArgumentOutOfRangeException();
+												}
+											}
+
+											<button class="@method.WithdrawStatusButtonClass(cardsAndIdVerified)" onclick="@buttonEvent">@Umbraco.GetDictionaryValue(method.WithdrawStatusButton(cardsAndIdVerified))</button>
+											@*Remove if edit options is needed*@
+											@if (!true)
+											{
+												<button class="bank_icon bank_edit">
+													<img class="bank_img" src="/images/edit.svg" alt="edit">
+												</button>
+											}
+											<button class="bank_icon bank_delete" withdraw_id="@method.purchase_paymentId">
+												<img class="bank_img" src="/images/delete.svg" alt="delete">
+											</button>
+										</div>
+									</div>
+								}
+							}
+
+						</div>
+					</div>
+
+
+					<div class="information_form" id="transactions_form">
+						<div class="withdraw_request">
+							<h2 class="transactions_title">@Umbraco.GetDictionaryValue("All withdrawal transactions")</h2>
+							<div class="transactions_table">
+								<div class="transactions_table_wrap" style="@Html.Raw(transactions.Count > 0 ? "" : "display:none")">
+									<div class="transactions_table_inner">
+										<div class="transactions_table_head">
+											<h5 class="transactions_table_title">@Umbraco.GetDictionaryValue("Date")</h5>
+										</div>
+										@foreach (var transaction in transactions)
+										{
+											<div class="transactions_table_item">
+												<p class="transactions_table_text">@transaction.PaymentDateLocal.Value.ToString("dd.MM.yyyy")</p>
+												<p class="transactions_table_subtext">@transaction.PaymentDateLocal.Value.ToString("HH:mm:ss")</p>
+											</div>
+										}
+
+									</div>
+									<div class="transactions_table_inner">
+										<div class="transactions_table_head">
+											<h5 class="transactions_table_title">@Umbraco.GetDictionaryValue("Amount")</h5>
+										</div>
+										@foreach (var transaction in transactions)
+										{
+											var symbol = "";
+
+											@* if (!string.IsNullOrEmpty(transaction.CurrencyIso))
+											{
+												symbol = currencies.FirstOrDefault(x => x.CurrencyIso.ToLower().Equals(transaction.CurrencyIso.ToLower()))?.Symbol;
+												symbol ??= "";
+											} *@
+
+											<div class="transactions_table_item">
+												<p class="transactions_table_text">@transaction.PaymentValue&nbsp;@symbol</p>
+											</div>
+										}
+									</div>
+									<div class="transactions_table_inner">
+										<div class="transactions_table_head">
+											<h5 class="transactions_table_title">@Umbraco.GetDictionaryValue("Payment kind")</h5>
+										</div>
+										@foreach (var transaction in transactions)
+										{
+											var field = new WithdrawFormField();
+											var subStr = "";
+
+											{
+												@if (!string.IsNullOrEmpty(transaction.PayerNumber) && !string.IsNullOrEmpty(transaction.CurrencyIso))
+												{
+													var form = withdrawForms.First(x => x.CurrencyIso.ToLower().Equals(transaction.CurrencyIso.ToLower()));
+
+													var formFields = new List<WithdrawFormField>();
+													formFields.AddRange(form.MainFormFields);
+													if (form.SecondaryFormFields is not null)
+													{
+														formFields.AddRange(form.SecondaryFormFields);
+													}
+
+													field = formFields.First(x => x.WsName.ToLower().Equals("payernumber"));
+													subStr = $"{field.Title} •••• {(transaction.PayerNumber.Length > 4 ? transaction.PayerNumber.Substring(transaction.PayerNumber.Length - 4) : transaction.PayerNumber)}";
+												}
+											}
+
+											<div class="transactions_table_item">
+												<div class="transactions_table_text">@Umbraco.GetDictionaryValue("Withdrawal of funds by").Replace("{}", subStr)</div>
+											</div>
+										}
+									</div>
+									<div class="transactions_table_inner">
+										<div class="transactions_table_head">
+											<h5 class="transactions_table_title">@Umbraco.GetDictionaryValue("Status")</h5>
+										</div>
+										@foreach (var transaction in transactions)
+										{
+											<div class="transactions_table_item">
+												<div class="transactions_table_text @Html.Raw(transaction.Status == 0 ? "withdraw" : "verified")">@Html.Raw(transaction.Status == 0 ? Umbraco.GetDictionaryValue("PROCESS") : Umbraco.GetDictionaryValue("APPROVED"))</div>
+											</div>
+										}
+									</div>
+								</div>
+							</div>
+
+
+							<div class="pagination_inner" pageIndex="0" style="@Html.Raw(transactions.Count > 0 ? "" : "display:none")">
+								<div class="pagination_item prevButton disabled_pagination">
+									<a class="pagination_link">
+										<img src="/images/lottery_syndicate/chevron-double-left.svg" alt="chevron-double-left">
+										<p class="pagination_text">@Umbraco.GetDictionaryValue("Previous")</p>
+									</a>
+								</div>
+								<div class="pagination_item nextButton @Html.Raw(isLastPage ? "disabled_pagination" : "")">
+									<a class="pagination_link">
+										<p class="pagination_text">@Umbraco.GetDictionaryValue("Next")</p>
+										<img src="/images/lottery_syndicate/chevron-double-right.svg" alt="chevron-double-right">
+									</a>
+
+								</div>
+							</div>
+
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+	<script src="/assets/js/myCustomTimer.js"></script>
+
+	<script>
+
+		document.addEventListener("DOMContentLoaded", function (e){
+				document.querySelector("#form_option_@user.CountryIso").click();
+		})
+
+		function RenderElements (e) {
+
+				let elem = typeof e === "object" && e.target.tagName === "A" ? e.target.parentElement : e.target;
+
+				if (typeof e === "object" && e.target !== this) {
+
+						var text = $(elem).html();
+						$(elem).parent().parent().prev().html(text);
+						$(elem).parent().parent().parent().removeClass('active');
+						$(elem).parent().hide();
+						$(elem).parent().parent().parent().removeClass('active');
+				}
+
+				let currencyIso = typeof e === "string" ? e : elem.querySelector("a").attributes.currencyIso.value;
+
+				let modalGroups = document.querySelectorAll(".modal_group");
+
+				modalGroups.forEach(x => {
+						if (x.attributes.currencyIso.value === currencyIso){
+								x.style.display = "flex";
+						}else
+								x.style.display = "none";
+				})
+
+				}
+
+				try {
+						let dropDowns = document.querySelectorAll(".dropdown_menu_data");
+
+						for(let i = 0; i < dropDowns.length; i++){
+
+						dropDowns[i].addEventListener("click", function (e) {
+								e.stopImmediatePropagation();
+
+								let dropDownMenu = this.querySelector(".dropdown_menu_select");
+
+								if (dropDownMenu.classList.contains("active")) {
+										this.parentElement.classList.remove("active");
+										dropDownMenu.classList.remove("active");
+										dropDownMenu.style.display = "none";
+								} else {
+										this.parentElement.classList.add("active");
+										dropDownMenu.classList.add("active");
+										dropDownMenu.style.display = "block";
+								}
+						})
+						document.querySelectorAll(".dropdown_menu_option").forEach(x => {
+								x.addEventListener("click", function (e) {
+										e.stopImmediatePropagation();
+										let dropDownMenu = this.parentElement.parentElement.parentElement;
+										dropDownMenu.attributes.preselected_value.value = this.textContent;
+										dropDownMenu.classList.remove("active");
+										dropDownMenu.querySelector(".dropdown_menu_text").textContent = this.textContent;
+										dropDownMenu.querySelector(".dropdown_menu_select").classList.remove("active");
+										dropDownMenu.querySelector(".dropdown_menu_select").style.display = "none";
+								})
+						})
+						}
+
+				} catch (e) {
+				}
+				let modal = RenderModal2("@Umbraco.GetDictionaryValue("Cancel")", "@Umbraco.GetDictionaryValue("Yes")");
+
+						document.querySelectorAll(".bank_delete").forEach(x => {
+								x.addEventListener("click", async function (e) {
+										e.stopImmediatePropagation();
+
+										let bankTextElem = x.parentElement.parentElement.querySelector(".bank_text");
+										let bankTextInfo = "";
+										if(bankTextElem === undefined || bankTextElem === null){
+												bankTextInfo = "By Cheque";
+										}else
+												bankTextInfo = bankTextElem.textContent.trimEnd();
+
+
+										document.querySelector(`#withdraw_method_delete_text_${modal.ModalId}`).textContent = `@Html.Raw(Umbraco.GetDictionaryValue("Are you sure you want to delete")) ${bankTextInfo}?`;
+
+										modal.Open();
+
+										let withdrawId = x.attributes.withdraw_id.value;
+										let elem = e.target.parentElement.parentElement.parentElement;
+										modal.SetDelegates(modal.Close ,DeleteWithdraw.bind(null, [withdrawId, elem, modal.Close]))
+								})
+						})
+
+
+						async function DeleteWithdraw([id, elem, callBack], event) {
+
+								let resp = await fetch(`/Payment/Withdraw/Delete/${id}`, {
+										headers:{
+												'X-Fetch-Indicator': 'true'
+										}
+								});
+
+								if (resp.ok) {
+										elem.remove();
+										document.querySelector(".modal_window_background").style.display = "none";
+										callBack();
+								} else {
+										callBack();
+								}
+						}
+		$(".dropdown dd ul li").click((e) => {RenderElements(e)});
+
+
+		document.querySelectorAll(".withdraw_input_field").forEach(x => {
+				if (x.hasAttribute("maxL") && Number.isInteger(parseInt(x.attributes.maxL.value))){
+						let maxFieldL = parseInt(x.attributes.maxL.value);
+
+						x.addEventListener("input", function (e) {
+								if (e.target.value.length > maxFieldL)
+										e.target.value = e.target.value.substring(0, e.target.value.length - 1)
+						})
+				}
+		})
+	</script>
+	<script src="/assets/js/FormScript.js"></script>

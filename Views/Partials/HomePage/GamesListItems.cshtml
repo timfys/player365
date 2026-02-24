@@ -1,0 +1,46 @@
+﻿@using SmartWinners.Models
+@using System.Threading
+@model GamesListModel
+
+@{
+  var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" :
+  $"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+}
+
+@foreach (var g in Model.List)
+{
+  if (g is null)
+    continue;
+
+  g.Slug = string.IsNullOrEmpty(g.Slug) ? g?.Name is null
+    ? "" : string.Join("-",
+    g.Name
+    .ToLowerInvariant()
+    .Trim()
+    // normalize to spaces first so we can split on them
+    .Replace('+', ' ')
+    .Replace("&", " and ")
+    .Replace('/', ' ')
+    .Replace('\\', ' ')
+    .Replace('.', ' ')
+    .Split(' ', StringSplitOptions.RemoveEmptyEntries))
+    // strip remaining characters that commonly break routes or look bad in slugs
+    .Replace("?", "")
+    .Replace("%", "")
+    .Replace("#", "")
+    .Replace("\"", "")
+    .Replace("'", "") : g.Slug;
+
+  <a data-game-item data-game-id="@g.Id" href="@Html.Raw($"{langIso}/game/{g.Id}/{g.Slug}")"
+    class="block rounded-xl shadow-sm hover:shadow transition overflow-hidden bg-white/25">
+    <div class="aspect-[3/4]">
+      <img src="@g.ImageUrl" alt="@g.Name" class="w-full h-full object-fill" loading="lazy" />
+
+      <style>
+        img:not([src]) {
+          visibility: hidden;
+        }
+      </style>
+    </div>
+  </a>
+}

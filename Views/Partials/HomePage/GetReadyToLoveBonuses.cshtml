@@ -1,0 +1,19 @@
+@using Umbraco.Cms.Web.Common
+@inject UmbracoHelper _helper
+
+<div class="max-w-[1330px] flex flex-col justify-center items-center gap-4 mt-8">
+	<h2 class="text-2xl lg:text-4xl gold-gradient-text self-start">
+		@_helper.GetDictionaryValue("Get Ready to Love Our Bonuses")
+	</h2>
+
+	<div class="grid max-sm:gap-1 sm:gap-2 md:gap-[clamp(5px,3.5vw,56px)] grid-cols-2 md:grid-cols-4 w-full">
+		<img src="/images/casino/bonus-img-1.png" class="w-full h-auto rounded-[clamp(14px,5vw,20px)]" />
+		<img src="/images/casino/bonus-img-2.png" class="w-full h-auto rounded-[clamp(14px,5vw,20px)]" />
+		<img src="/images/casino/bonus-img-3.png" class="w-full h-auto rounded-[clamp(14px,5vw,20px)]" />
+		<img src="/images/casino/bonus-img-4.png" class="w-full h-auto rounded-[clamp(14px,5vw,20px)]" />
+	</div>
+
+	<a href="/casino-bonus" class="playerclub-button-yellow rounded-md px-8 py-2 text-lg font-semibold transition-colors text-black! no-underline!">
+		@Html.Raw(_helper.GetDictionaryValue("Find Out More"))
+	</a>
+</div>

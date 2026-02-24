@@ -1,0 +1,145 @@
+﻿@using System.Threading
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using SmartWinners.Models.Payment
+@using System.Globalization
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+    langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+    var card = ViewBag.Card as PaymentInfo;
+    var currency = WebStorageUtility.GetUserCurrencyDetails();
+
+    var blogLangSegment = string.IsNullOrEmpty(langIso) ? "/en" : langIso;
+    var helpLink = $"/blog{blogLangSegment}/post/verifying-your-card-ownership-through-a-random-test-charge";
+    var backHref = string.IsNullOrEmpty(langIso) ? "/identity/1" : $"{langIso}/identity/1";
+    var cardTitle = card == null
+    ? string.Empty
+    : $"{card.CardPaymentSystemName} (•••• {card.CardLastDigits})";
+}
+<div class="md:max-w-[1330px] mt-4 mb-10 gap-10">
+    <div class="flex w-full gap-5 items-center justify-between flex-wrap">
+        <div class="flex gap-5 items-center">
+            <button id="back_button" type="button"
+                class="flex items-center justify-center w-8 h-8  rounded-md bg-(--c-teal-action) hover:bg-(--c-teal-action-h) hover:cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" class="text-white" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7">
+                    </path>
+                </svg>
+            </button>
+            <div>
+                <p class="mb-1 text-xs uppercase tracking-[0.35em] opacity-70">
+                    @Umbraco.GetDictionaryValue("Verification")</p>
+                <h1 class="mb-0 text-xl md:text-2xl uppercase leading-tight">@(string.IsNullOrEmpty(cardTitle) ?
+                                        Umbraco.GetDictionaryValue("Verification") : cardTitle)</h1>
+            </div>
+        </div>
+
+        <a href="@helpLink" class="green-link text-sm" target="_blank">@Umbraco.GetDictionaryValue("Need help?")</a>
+    </div>
+
+    <div class="text-base w-full text-left mt-4 space-y-2">
+        <p class="opacity-80">@Umbraco.GetDictionaryValue("To confirm")</p>
+        <p class="opacity-80">@Umbraco.GetDictionaryValue("After the charge")</p>
+    </div>
+
+    <div class="bg-white/5 border border-white/10 rounded-2xl mt-6 p-6 shadow-[0_10px_40px_rgba(15,23,42,0.35)]">
+        <h2 class="text-lg font-semibold mb-4">
+            @Umbraco.GetDictionaryValue("I authorize you to charge a random amount between $1 and $2.").Replace("$",
+            currency.Symbol)
+        </h2>
+
+        <form class="flex flex-col gap-6" autocomplete="off">
+            <div class="flex flex-col gap-5 md:flex-row md:items-center">
+                <span
+                    class="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl px-4 py-3 w-full md:w-2/3">
+                    <img class="identity_table_img w-14 h-auto object-contain" src="@card.CardImgUrl"
+                        alt="@card.CardPaymentSystemName">
+                    <span class="text-left leading-snug">
+                        <span
+                            class="block text-sm uppercase tracking-[0.25em] opacity-70">@card.CardPaymentSystemName</span>
+                        <span class="block font-mono tabular-nums text-base">xxxx xxxx xxxx @card.CardLastDigits
+                            (@card.PayerDate.Value.ToString("M/yyyy"))</span>
+                    </span>
+                </span>
+
+                <div class="w-full md:w-1/3">
+                    <label class="text-xs uppercase tracking-[0.35em] opacity-70 block mb-2"
+                        for="verify_cvv">CVV (?)</label>
+                    <input type="number" tabindex="1" class="w-full bg-white text-black rounded-md text-lg p-2" id="verify_cvv" required="required"
+                        placeholder="***">
+                    <p class="form_text validation_param_error validation_param_error_margin mt_top0 text-red-400"
+                        id="error_elem" style="display: none"></p>
+                </div>
+            </div>
+
+            <button type="button" class="playerclub-button inline-flex items-center justify-center px-6 py-3"
+                onclick="ProcessCardCharge(this)" style="cursor: pointer">
+                @Umbraco.GetDictionaryValue("Submit payment")
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="/assets/js/myCustomTimer.js"></script>
+<script>
+    document.getElementById("back_button")?.addEventListener("click", function (event) {
+        event.preventDefault();
+        const backHref = '@backHref';
+        window.location.href = backHref;
+    });
+
+    document.querySelector("#verify_cvv").focus();
+
+    async function ProcessCardCharge(callElem) {
+        let textContent = callElem.textContent;
+        callElem.textContent = "";
+        callElem.style.pointerEvents = "none";
+
+        DisplayLoader(callElem);
+        let cvv = document.querySelector("#verify_cvv");
+        let errorElem = document.querySelector("#error_elem");
+
+        if (cvv.value === "") {
+            cvv.classList.add("error");
+            return;
+        } else if (cvv.value.length > 4) {
+            cvv.classList.add("error");
+            cvv.style.marginBottom = "15px";
+            errorElem.style.display = "block";
+            errorElem.textContent = "@Html.Raw(Umbraco.GetDictionaryValue("Cvv number can't be longer than 4 characters"))";
+            return;
+        }
+        cvv.classList.remove("error");
+        errorElem.style.display = "none";
+        errorElem.textContent = "";
+
+
+        let dataObj = {
+            CardNumber: "@Html.Raw(CryptoUtility.EncryptString(card.PayerNumber))",
+            PayerName: "@Html.Raw(CryptoUtility.EncryptString(card.PayerName))",
+            ExpireDate: '@Html.Raw(CryptoUtility.EncryptString(card.PayerDate.Value.ToString("yyyy-MM-dd")))',
+            Cvv: `${cvv.value}`
+        }
+
+        let resp = await fetch("/Identity/VerifyCard", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "ToVerify": "0",
+                'X-Fetch-Indicator': 'true'
+            },
+            body: JSON.stringify(dataObj)
+        });
+
+        CloseLoader(callElem);
+        callElem.style.pointerEvents = "initial";
+        callElem.textContent = textContent;
+        if (resp.ok) {
+            window.location.href = "@Html.Raw($"{langIso}/card-verification-confirm/{card.CardLastDigits}")";
+        } else {
+            errorElem.style.display = "block";
+            errorElem.textContent = await resp.text();
+        }
+    }
+</script>

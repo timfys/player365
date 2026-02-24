@@ -1,0 +1,465 @@
+﻿@using Microsoft.AspNetCore.Http
+@using System.Threading
+@using System.Globalization
+@using System.Text.Json
+@using GoldCasino.ApiModule.Dtos.User
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using SmartWinners.Extensions
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@inject IBusinessApiService businessApiService
+
+@{
+	var aId = 0;
+	var user = WebStorageUtility.GetSignedUser();
+	var httpContext = Context ?? new DefaultHttpContext();
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	if (WebStorageUtility.TryGetString("aID", out var aIdStr))
+	{
+		int.TryParse(aIdStr, out aId);
+	}
+
+
+	var strAgree = Umbraco.GetDictionaryValue("SIP - Agree");
+
+	var phonePrefix = ViewBag.PhonePrefix as int?;
+	var fourDigitCode = ViewBag.FourDigitCode as string;
+	var phone = ViewBag.Phone as string;
+	var countryIso = ViewBag.PhoneCountry as string;
+	var currentPath = httpContext.Request?.Path.Value ?? string.Empty;
+	var isFourDigitCode = ViewBag.IsFourDigitCode is not null ? (bool)ViewBag.IsFourDigitCode :
+	currentPath.Contains("verify", StringComparison.OrdinalIgnoreCase);
+	var sanitizedPhone = phone ?? string.Empty;
+	var whatsappPhone = sanitizedPhone.StartsWith("0", StringComparison.Ordinal)
+		? sanitizedPhone.ReplaceFirst("0", string.Empty)
+		: sanitizedPhone;
+	var fallbackPhoneDisplay = phonePrefix.HasValue && !string.IsNullOrWhiteSpace(phone)
+		? $"{phonePrefix} {phone}"
+		: sanitizedPhone;
+	var signedUserPhoneDisplay = user is not null && !string.IsNullOrWhiteSpace(user.Mobile)
+		? $"{user.PhonePrefix} {user.Mobile}"
+		: fallbackPhoneDisplay;
+	var returnUrl = UmbracoUtility.GetReturnUrl(httpContext);
+	var _user = Context?.User?.ToUserApiAccess() ?? null;
+
+	var result = _user != null ? await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserDto>.Fields,
+		Filter = new() { { "entityId", $"{_user.EntityId}" } }
+	}) : null;
+
+	var entity = result?.Value?.Entities.FirstOrDefault() ?? null;
+	var __user = entity != null ? EntityMapper.MapTo<UserDto>(entity) : null;
+	var verified = __user != null ? __user.MobileVerified : false;
+	@if (verified)
+	{
+		<script>
+			window.location.href = '@Url.Action("Index", "Home")';
+		</script>
+	}
+	var verifyPhoneErrorMessages = new Dictionary<string, string>
+	{
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.InvalidVerificationCode] = Umbraco.GetDictionaryOrDefault("VPP - Invalid Verification Code", "Invalid verification code"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.InvalidPhoneNumber] = Umbraco.GetDictionaryOrDefault("VPP - Invalid Phone Number", "Invalid phone number"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.PhoneAlreadyRegistered] = Umbraco.GetDictionaryOrDefault("VPP - Phone Already Registered", "Phone already registered"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.Cooldown] = Umbraco.GetDictionaryOrDefault("VPP - Cooldown", "Please wait before requesting another code"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.MobileNotFound] = Umbraco.GetDictionaryOrDefault("VPP - Mobile Not Found", "Mobile number not found"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.MessageNotFound] = Umbraco.GetDictionaryOrDefault("VPP - Message Not Found", "Verification message not found"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.AuthFailed] = Umbraco.GetDictionaryOrDefault("VPP - Auth Failed", "Authentication failed"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.InvalidCredentials] = Umbraco.GetDictionaryOrDefault("VPP - Invalid Credentials", "Invalid credentials"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.UserNotFound] = Umbraco.GetDictionaryOrDefault("VPP - User Not Found", "User not found"),
+		[GoldCasino.ApiModule.Constants.AuthResultCodes.UnexpectedError] = Umbraco.GetDictionaryOrDefault("VPP - Unexpected Error", "Unexpected error"),
+	};
+
+	var verifyPhoneErrorMessagesJson = JsonSerializer.Serialize(verifyPhoneErrorMessages);
+}
+
+<style>
+	.sms-icon {
+		width: 30px;
+		height: 30px;
+	}
+
+	.btn-send-again:hover span {
+		text-decoration: underline;
+	}
+
+	.number_input {
+		height: min-content !important;
+	}
+
+	h1 {
+		color: #333;
+	}
+
+	label {
+		color: #333;
+	}
+
+	.question {
+		margin: 0 auto;
+		max-width: 830px;
+	}
+
+	#change-phone-but {
+		background: 0;
+		border: 0;
+	}
+</style>
+
+<style media="(max-device-width:575px)">
+	.sms-icon {
+		width: 20px;
+		height: 20px;
+	}
+</style>
+
+
+<main class="page">
+	<div class="flex flex-col items-center justify-center h-full w-full max-w-[740px]">
+		<div class="flex justify-between items-center w-full">
+			<p class="str-email w-fit! mb-0! text-2xl md:text-3xl">
+				@Umbraco.GetDictionaryValue($"VPP - Page0")
+			</p>
+			<a target="_blank" href="@Umbraco.GetDictionaryValue("SIP - Page1 Need Help Url")" class="green-link"
+				id="help_link_page1">@Umbraco.GetDictionaryValue("SIP - Need Help")</a>
+		</div>
+		<div id="verification" class="flex! flex-col items-center mt-6!">
+			<p class="text-2xl mb-2!">@Umbraco.GetDictionaryValue("VPP - Page0 - We Send")</p>
+			<div class="mb-10!" id="change_number_but">
+				<div class="text-4xl">+@(isFourDigitCode ? signedUserPhoneDisplay : fallbackPhoneDisplay)</div>
+				<button type="submit" name="command" id="change-phone-but"
+					class="green-link text-base! mt-3 hover:underline hover:cursor-pointer">
+					@Umbraco.GetDictionaryValue("VPP - Page0 - Change Button")</button>
+			</div>
+			<div
+				class="flex flex-col items-center justify-center bg-white rounded-lg p-2 shadow-md border border-gray-300 w-full">
+				<label for="code" class="text-black/50! text-lg">@(isFourDigitCode? Umbraco.GetDictionaryValue("VPP - Page0 - Code") : Umbraco.GetDictionaryValue("VPP-Page01-Code"))</label>
+				@if (!isFourDigitCode)
+				{
+					<input id="verifcode0" type="number" maxlength="6"
+						oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+						placeholder="XXX - XXX" required="required" autofocus
+						value="@Html.Raw("true".Equals(ViewBag.CodeClick) ? ViewBag.CodeQuery.ToString() : "")" tabindex=1
+						class="mt-1 w-40 text-center text-2xl focus:outline-none focus:border-black text-black placeholder-black/50" />
+				}
+				else
+				{
+					<input id="verifcode1" type="number" maxlength="4"
+						oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+						placeholder="XX - XX" required="required" value="@fourDigitCode" tabindex=1
+						class="mt-1 w-40 text-center text-2xl focus:outline-none focus:border-black text-black placeholder-black/50" />
+				}
+			</div>
+
+			<button id="seng_again_button" sendType="0"
+				class="flex justify-center items-center mt-2  green-link hover:underline hover:cursor-pointer">
+				@Umbraco.GetDictionaryOrDefault("VPP - Page0 - Send Again Button")
+			</button>
+
+		</div>
+		<div class="form_text" id="error_result" style="text-align: center; color: #ef0505"></div>
+		<div class="form_text" id="ok_result" style="text-align: center; color: green"></div>
+		<button id="send-but"
+			class="playerclub-button-yellow text-lg/6! py-2 text-black! font-semibold justify-center w-full md:max-w-70 uppercase">
+			@Umbraco.GetDictionaryValue("VPP - Page0 - Continue Button")
+		</button>
+		<div class="send_again_buttons">
+			@if (!isFourDigitCode)
+			{
+				<div class="flex flex-col gap-4 mt-8 mb-12">
+
+					<div id="send_again_whatsapp" class="flex justify-center items-center gap-2 green-link hover:underline hover:cursor-pointer">
+						<img src="/images/contacts/whatsapp.svg" class="h-6" alt="whatsapp_icon" />
+						@Umbraco.GetDictionaryValue("Verify with Whatsapp")
+					</div>
+					<div id="send_again_telegram"
+						class="flex justify-center items-center  gap-2 green-link hover:underline hover:cursor-pointer">
+						<img src="/images/contacts/Telegram.svg" class="h-6" alt="telegram_icon" />
+						@Umbraco.GetDictionaryValue("Verify with Telegram")
+					</div>
+				</div>
+			}
+		</div>
+
+		<p class="agree_text mt-0! tw">
+			@Html.Raw(strAgree)
+		</p>
+
+		<section class="question question_verification mt-30! mb-20!">
+			@await Html.PartialAsync("_PhoneVerificationF.A.Q")
+		</section>
+
+	</div>
+</main>
+
+<script>
+	const isFourDigitCode = @Html.Raw(isFourDigitCode ? "true" : "false");
+	const verifyPhoneErrorMessages = @Html.Raw(verifyPhoneErrorMessagesJson);
+	const phoneE164 = "@Html.Raw($"+{phonePrefix}{phone}")";
+	const returnUrl = "@Html.Raw(Uri.EscapeDataString(returnUrl))";
+	const userEntityId = "@Html.Raw(user?.EntityId)";
+	const COOLDOWN_KEY = "sendAgainCooldown";
+	const COOLDOWN_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+	let requestIsSuccess = false;
+
+	// Modal setup
+	const modal = RenderModal();
+	modal.ModalElem.querySelector(`#close_modal_button_${modal.ModalId}`).remove();
+	const modalMainElem = modal.ModalElem.querySelector(".modal_window_background .modal_window_form_lottery");
+	modalMainElem.style.cssText = "width: fit-content; height: fit-content;";
+	modalMainElem.querySelector(".content_modal").style.width = "fit-content";
+
+	// DOM elements
+	const errorElem = document.querySelector("#error_result");
+	const okElem = document.querySelector("#ok_result");
+	const sendBtn = document.querySelector("#send-but");
+	const sendAgainBtn = document.querySelector("#seng_again_button");
+	const codeInput = document.querySelector(isFourDigitCode ? "#verifcode1" : "#verifcode0");
+
+	// Focus input
+	codeInput?.setAttribute("autofocus", "autofocus");
+	codeInput?.focus();
+
+	// Cooldown utilities
+	function getCooldownExpiry() {
+		const expiry = sessionStorage.getItem(COOLDOWN_KEY);
+		return expiry ? parseInt(expiry, 10) : 0;
+	}
+
+	function setCooldown() {
+		sessionStorage.setItem(COOLDOWN_KEY, Date.now() + COOLDOWN_DURATION_MS);
+	}
+
+	function isOnCooldown() {
+		return Date.now() < getCooldownExpiry();
+	}
+
+	function getRemainingCooldownMinutes() {
+		const remaining = getCooldownExpiry() - Date.now();
+		return remaining > 0 ? Math.ceil(remaining / 60000) : 0;
+	}
+
+	// Utilities
+	function ModalClose() { modal.Close(); }
+
+	function tryParseJson(value) {
+		try { return value ? JSON.parse(value) : null; }
+		catch { return null; }
+	}
+
+	function resolveErrorMessage(errorPayload, fallback = "") {
+		if (errorPayload?.code && verifyPhoneErrorMessages[errorPayload.code]) {
+			return verifyPhoneErrorMessages[errorPayload.code];
+		}
+		return errorPayload?.detail || errorPayload?.title || fallback;
+	}
+
+	function showMessage(isError, message) {
+		errorElem.style.display = isError ? "block" : "none";
+		okElem.style.display = isError ? "none" : "block";
+		(isError ? errorElem : okElem).textContent = message;
+		(isError ? okElem : errorElem).textContent = "";
+	}
+
+	async function postJson(url, body) {
+		return fetch(url, {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "X-Fetch-Indicator": "true" },
+			body: JSON.stringify(body)
+		});
+	}
+
+	// Telegram FAQ click
+	document.querySelectorAll(".telegram_faq_click").forEach(el =>
+		el.addEventListener("click", e => {
+			e.stopImmediatePropagation();
+			document.querySelector("#send_again_telegram")?.click();
+		})
+	);
+
+	document.addEventListener("DOMContentLoaded", function () {
+		// WhatsApp send again
+		document.querySelector("#send_again_whatsapp")?.addEventListener("click", async function (e) {
+			e.stopImmediatePropagation();
+			this.style.pointerEvents = "none";
+			DisplayLoadingScreen();
+
+			try {
+				const resp = await fetch(`@Url.Action("SendAgainWhatsapp", "NormalVerifyPhone")?p=@Html.Raw(whatsappPhone)&i=@Html.Raw(countryIso ?? string.Empty)&pr=@Html.Raw(phonePrefix?.ToString() ?? string.Empty)`, {
+					method: "POST",
+					headers: { "X-Fetch-Indicator": "true" }
+				});
+				const data = await resp.json();
+				errorElem.style.color = resp.ok ? "green" : "red";
+				errorElem.textContent = data.resultMessage;
+				errorElem.style.display = "block";
+			} finally {
+				this.style.pointerEvents = "initial";
+				CloseLoadingScreen();
+			}
+		});
+
+		// Telegram modal
+		document.querySelector("#send_again_telegram")?.addEventListener("click", function (e) {
+			e.stopImmediatePropagation();
+			modal.InsertData(`<div class="telegram_modal">
+				<div class="telegram_modal_header">
+					<b class="telegram_modal_header_text">@Html.Raw(Umbraco.GetDictionaryValue("Chat with us"))</b>
+					<button class="close_btn" onclick="ModalClose()">×</button>
+				</div>
+				<div class="telegram_modal_body">
+					<img class="telegram_qr_code" src="/images/contacts/TGQR.svg" alt="telegram_qr_code"/>
+					<p class="telegram_modal_text telegram_modal_body_elem">@Html.Raw(Umbraco.GetDictionaryValue("Scan the QR code with your phone's camera, then tap the link to start a new chat"))</p>
+					<b class="telegram_modal_text telegram_modal_body_elem">@Html.Raw(Umbraco.GetDictionaryValue("OR"))</b>
+					<a class="telegram_bot_link_button telegram_modal_body_elem" target="_blank" href="https://t.me/Club_Verification_bot?start=playerclub365">
+						<img class="telegram_modal_icon" src="/images/contacts/TGQR.svg" alt="telegram_icon"/>
+						<p>@Html.Raw(Umbraco.GetDictionaryValue("Open Telegram"))</p>
+					</a>
+				</div>
+			</div>`);
+			modal.Open();
+		});
+
+		// Enter key submit
+		document.addEventListener("keydown", e => {
+			if (e.key === "Enter") sendBtn.click();
+		});
+
+		// Code input validation & auto-submit
+		const maxLength = isFourDigitCode ? 4 : 6;
+		codeInput?.addEventListener("input", function () {
+			if (this.value.length > maxLength) {
+				this.value = this.value.slice(0, maxLength);
+			}
+			if (this.value.length === maxLength && sendBtn.style.pointerEvents !== "none") {
+				sendBtn.click();
+			}
+		});
+
+		// Verify code submit
+		sendBtn.addEventListener("click", async function (e) {
+			e.stopImmediatePropagation();
+			if (requestIsSuccess) return;
+
+			const code = codeInput.value;
+			if (code.length < maxLength) {
+				codeInput.classList.add("error_b");
+				return;
+			}
+			codeInput.classList.remove("error_b");
+
+			this.style.pointerEvents = "none";
+			DisplayLoader(this);
+
+			try {
+				let resp;
+				if (isFourDigitCode) {
+					resp = await fetch(`/Process/Verify4Digit?eId=${userEntityId}&c=${code}&r=${returnUrl}`, {
+						method: "POST",
+						headers: { "X-Fetch-Indicator": "true" }
+					});
+				} else {
+					resp = await postJson(`/api/Auth/verify-phone?r=${returnUrl}`, { Phone: phoneE164, Code: code });
+				}
+
+				CloseLoader(this);
+
+				if (resp.ok) {
+					errorElem.style.display = "none";
+					requestIsSuccess = true;
+					const data = await resp.json();
+					await fetch(`/api/Auth/login?lid=${data.lid}`, {
+						method: "GET",
+						headers: { "Content-Type": "application/json", "X-Fetch-Indicator": "true" }
+					});
+					window.location.href = decodeURIComponent(resp.headers.get("Redirect"));
+				} else {
+					const errorText = await resp.text();
+					const parsed = tryParseJson(errorText);
+					showMessage(true, resolveErrorMessage(parsed, errorText));
+				}
+			} finally {
+				this.style.pointerEvents = "initial";
+			}
+		});
+
+		// Send again button
+		document.querySelectorAll("#seng_again_button").forEach(btn =>
+			btn.addEventListener("click", async function (e) {
+				e.stopImmediatePropagation();
+				await sendAgainCode();
+			})
+		);
+
+		async function sendAgainCode() {
+			// Check client-side cooldown (30 min protection)
+			if (isOnCooldown()) {
+				const mins = getRemainingCooldownMinutes();
+				showMessage(true, `@Umbraco.GetDictionaryOrDefault("VPP - Cooldown", "Please wait before requesting another code")` + ` (${mins} @Umbraco.GetDictionaryOrDefault("VPP - Minutes Left", "min left"))`);
+				return;
+			}
+
+			let resp;
+			if (isFourDigitCode) {
+				resp = await fetch(`/Process/SendAgain4Digit?eId=${userEntityId}`, {
+					method: "POST",
+					headers: { "X-Fetch-Indicator": "true" }
+				});
+				const result = await resp.text();
+				showMessage(!resp.ok, result.replace("{0}", "@Html.Raw(phonePrefix + "" + phone)"));
+			} else {
+				resp = await postJson("/api/Auth/phone", {
+					phone: phoneE164,
+					affiliateEntityId: @aId,
+					iso: "@Html.Raw(countryIso ?? string.Empty)",
+					prefix: "@Html.Raw(phonePrefix?.ToString() ?? string.Empty)"
+				});
+
+				if (resp.ok) {
+					const data = await resp.json();
+					
+					// Handle cooldown from server response
+					if (data.cooldown) {
+						setCooldown();
+						showMessage(true, data.message || "@Umbraco.GetDictionaryOrDefault("VPP - Cooldown", "Please wait before requesting another code")");
+					} else {
+						showMessage(false, "@Umbraco.GetDictionaryOrDefault("VPP - Code Sent", "Verification code sent")");
+					}
+				} else {
+					const errorText = await resp.text();
+					const parsed = tryParseJson(errorText);
+					
+					// Check if server returned cooldown error
+					if (parsed?.cooldown || parsed?.code === "@GoldCasino.ApiModule.Constants.AuthResultCodes.Cooldown") {
+						setCooldown();
+					}
+					
+					showMessage(true, resolveErrorMessage(parsed, errorText));
+				}
+			}
+		}
+
+		@if ("true".Equals(ViewBag.CodeClick) && ViewBag.OKResult is null)
+		{
+			@Html.Raw("sendBtn.click();")
+		}
+
+		document.querySelector("#change-phone-but")?.addEventListener("click", async function () {
+			await SetString("@Html.Raw(WebStorageUtility.SignInPageIndex)", "@Html.Raw(CryptoUtility.EncryptString("0"))");
+			window.location.href = "@Html.Raw($"{langIso}/sign-in?r={returnUrl}")";
+		});
+	});
+</script>
+
+@if (isFourDigitCode && fourDigitCode?.Length == 4)
+{
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			document.querySelector("#send-but").click();
+		})
+	</script>
+}

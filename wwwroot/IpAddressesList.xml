@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root xmlns="http://jetbrains.com/rider/schemas/resx">
+  <whiteListedAddresses>
+    <!--    <ip allowedUrls="/umbraco">49.13.68.27</ip>-->
+    <ip allowedUrls="*">89.23.5.24</ip>
+    <!--    <ip allowedUrls="*">84.228.83.186</ip>-->
+  </whiteListedAddresses>
+  <blackListedAddresses>
+    <!--    <ip blockedUntil="2051-05-30" restrictedUrls="*" xmlns="">71.6.232.26</ip>
+            <ip blockedUntil="2051-05-30" restrictedUrls="*" xmlns="">109.195.121.68</ip>
+            <ip blockedUntil="2051-05-30" restrictedUrls="*" xmlns="">107.170.244.23</ip>
+            <ip blockedUntil="2051-05-30" restrictedUrls="/umbraco,/wordpress" xmlns="">109.195.121.70</ip>-->
+    <!--    <ip blockedUntil="2024-02-09" restrictedUrls="*" xmlns="">207.180.197.101</ip>
+    <ip blockedUntil="2024-02-14" restrictedUrls="*" xmlns="">47.251.11.3</ip>
+    <ip blockedUntil="2024-02-19" restrictedUrls="*" xmlns="">45.128.232.40</ip>
+    <ip blockedUntil="2024-02-20" restrictedUrls="*" xmlns="">61.244.206.142</ip>
+    <ip blockedUntil="2024-02-29" restrictedUrls="*" xmlns="">154.7.253.200</ip>
+    <ip blockedUntil="2024-03-08" restrictedUrls="*" xmlns="">91.92.254.23</ip>
+    <ip blockedUntil="2024-03-18" restrictedUrls="*" xmlns="">103.69.86.216</ip>
+    <ip blockedUntil="2024-04-01" restrictedUrls="*" xmlns="">163.172.133.129</ip>
+    <ip blockedUntil="2024-04-16" restrictedUrls="*" xmlns="">118.123.105.93</ip>
+    <ip blockedUntil="2024-04-16" restrictedUrls="*" xmlns="">104.219.238.217</ip>
+    <ip blockedUntil="2024-04-17" restrictedUrls="*" xmlns="">103.67.163.199</ip>
+    <ip blockedUntil="2024-05-02" restrictedUrls="*" xmlns="">89.190.156.243</ip>
+    <ip blockedUntil="2024-05-06" restrictedUrls="*" xmlns="">137.184.166.224</ip>
+    <ip blockedUntil="2024-07-24" restrictedUrls="*" xmlns="">51.158.234.221</ip>
+    <ip blockedUntil="2024-07-24" restrictedUrls="*" xmlns="">78.153.140.179</ip>
+    <ip blockedUntil="2024-07-26" restrictedUrls="*" xmlns="">45.156.128.101</ip>
+    <ip blockedUntil="2024-08-12" restrictedUrls="*" xmlns="">51.159.153.147</ip>-->
+    <!--    <ip blockedUntil="2024-08-19" restrictedUrls="*" xmlns="">51.159.177.6</ip>-->
+    <!--    <ip blockedUntil="2024-09-02" restrictedUrls="*" xmlns="">51.159.148.219</ip>
+    <ip blockedUntil="2024-09-02" restrictedUrls="*" xmlns="">89.23.5.24</ip>-->
+    <ip blockedUntil="2024-09-04" restrictedUrls="*" xmlns="">94.156.68.104</ip>
+    <ip blockedUntil="2024-11-04" restrictedUrls="*" xmlns="">179.43.168.146</ip>
+    <ip blockedUntil="2025-05-26" restrictedUrls="*" xmlns="">104.234.115.47</ip>
+    <ip blockedUntil="2025-06-18" restrictedUrls="*" xmlns="">196.251.71.232</ip>
+    <ip blockedUntil="2025-06-18" restrictedUrls="*" xmlns="">87.255.194.135</ip>
+    <ip blockedUntil="2025-06-18" restrictedUrls="*" xmlns="">144.172.117.46</ip>
+    <ip blockedUntil="2025-06-19" restrictedUrls="*" xmlns="">196.251.85.66</ip>
+    <ip blockedUntil="2025-06-19" restrictedUrls="*" xmlns="">160.250.180.19</ip>
+    <ip blockedUntil="2025-06-19" restrictedUrls="*" xmlns="">134.209.145.100</ip>
+    <ip blockedUntil="2025-06-19" restrictedUrls="*" xmlns="">196.251.85.193</ip>
+    <ip blockedUntil="2025-06-23" restrictedUrls="*" xmlns="">45.156.87.115</ip>
+    <ip blockedUntil="2025-06-23" restrictedUrls="*" xmlns="">170.64.209.76</ip>
+    <ip blockedUntil="2025-07-02" restrictedUrls="*" xmlns="">185.194.204.246</ip>
+    <ip blockedUntil="2025-07-02" restrictedUrls="*" xmlns="">45.55.56.233</ip>
+    <ip blockedUntil="2025-07-07" restrictedUrls="*" xmlns="">137.184.1.13</ip>
+    <ip blockedUntil="2025-07-07" restrictedUrls="*" xmlns="">79.124.58.198</ip>
+  </blackListedAddresses>
+  <listsConfig>
+    <banTime>168</banTime>
+    <!--Time configured in hours-->
+    <banForSpecificUrl>false</banForSpecificUrl>
+    <!--If true then will ban user for accessing the whole domain. If not then only the accessed url-->
+    <restirectedUrls>
+      <restrictedUrl isUrlPart="true">
+        <!--If isUrlPart="true" then it will look for parts of this url in request. If not then it will ban if requested url equals to restricted url-->
+                /wp-content
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /.well-known
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /wordpress
+            </restrictedUrl>
+      <!--      <restrictedUrl isUrlPart="false">
+                /umbraco
+            </restrictedUrl>-->
+      <restrictedUrl isUrlPart="true">
+                /admin
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="false">
+                /ads.txt
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /config
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                //wp-includes
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="false">
+                /wp-login.php
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /wp-admin
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /wp-includes
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /Controls
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /editor
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="false">
+                /index.php
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="false">
+                /.env
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="false">
+                /.env
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+            ApiConfig.json
+        </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+            ApiConfig-Live.json
+        </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/41/uk/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/41/es/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/41/ru/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/41/fr/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/41/he/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/42/uk/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/42/es/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/42/ru/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/42/fr/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number/42/he/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/41/uk/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/41/es/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/41/ru/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/41/fr/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/41/he/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/42/uk/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/42/es/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/42/ru/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/42/fr/ssia
+            </restrictedUrl>
+      <restrictedUrl isUrlPart="true">
+                /lottery-number-draws/42/he/ssia
+            </restrictedUrl>
+    </restirectedUrls>
+  </listsConfig>
+</root>

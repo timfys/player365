@@ -1,0 +1,8 @@
+@model string?
+
+<div id="loading-screen" class="fixed hidden justify-center items-center bg-white/20 w-full h-full top-0">
+  <div id="loader-box" class="flex w-fit py-2 px-7 border-[#05191c] border rounded-sm bg-[#022b32] color-[#16DB2A]">
+    <p>@(!string.IsNullOrWhiteSpace(Model) ? Model : "Please wait...")</p>
+    <img src="/images/Double Ring-1s-200px.svg" alt="loader" style="width: 20px;">
+  </div>
+</div>

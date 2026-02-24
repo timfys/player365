@@ -1,0 +1,308 @@
+@using GoldCasino.ApiModule.Dtos.Providers
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.PlayerClub365Api
+@using GoldCasino.ApiModule.Services.PlayerClub365Api.Models
+@using SmartWinners.Models
+@using SmartWinners.Services
+@using System.Threading
+@using System.Text.Json
+@model GamesListModel
+@inject GameCategoriesService gameCategoriesService
+@inject IPlayerClub365ApiService playerClub365ApiService
+
+@{
+	Layout = "/Views/MasterPage.cshtml";
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+
+	GameCategoryWithSEO category = null;
+	Provider studio = null;
+
+	if (!Model.StudioGameList)
+	{
+		var categories = await gameCategoriesService.GetCategoriesWithSEOAsync(langIso, Model.CategoryID);
+		category = categories?.FirstOrDefault();
+
+		var h1 = category?.H1Title ?? "";
+		Model.Title = h1;
+	}
+	else
+	{
+		var studios = await playerClub365ApiService.ProvidersGetAsync(new ProvidersGetRequest
+		{
+			LangCode = langIso,
+			Filter = new Dictionary<string, string>
+			{
+				{ "p.provider_id", Model.ProviderId.ToString() }
+			},
+			Fields = FieldHelper<ProviderDetailedDto>.Fields
+		});
+		studio = studios.IsSuccess ? studios.Value?.Providers?.FirstOrDefault() : null;
+
+		Model.Title = studio?.H1Title ?? "Studio Games";
+	}
+
+	var actionUrl = Url.Action("Index", "Games", new
+	{
+		langIso = langIso,
+		categoryId = Model.CategoryID,
+		categoryName = (string?)null
+	});
+
+	var seoViewModel = new SEOViewModel();
+
+	if (!Model.StudioGameList)
+	{
+		seoViewModel = new SEOViewModel()
+		{
+			H1Title = category?.H1Title,
+			Title = category?.Title,
+			Description = category?.Description,
+			Keywords = category?.Keywords,
+			Slug = category?.Slug,
+			OgTitle = category?.OgTitle,
+			OgDescription = category?.OgDescription,
+			OgImage = category?.OgImage,
+			TwitterTitle = category?.TwitterTitle,
+			TwitterDescription = category?.TwitterDescription,
+			TwitterImage = category?.TwitterImage,
+			MetaRobots = category is null ? "noindex, nofollow" : category.MetaRobots
+		};
+	}
+	else
+	{
+		seoViewModel = new SEOViewModel()
+		{
+			H1Title = studio?.H1Title,
+			Title = studio?.Title,
+			Description = studio?.Description,
+			Keywords = studio?.Keywords,
+			OgTitle = studio?.OgTitle,
+			OgDescription = studio?.OgDescription,
+			OgImage = string.IsNullOrEmpty(studio?.OgImage) ? $"/images/casino/Studios/png/studio_{studio?.Id}.png" : studio?.OgImage,
+			TwitterTitle = studio?.TwitterTitle,
+			TwitterDescription = studio?.TwitterDescription,
+			TwitterImage = string.IsNullOrEmpty(studio?.TwitterImage) ? $"/images/casino/Studios/png/studio_{studio?.Id}.png" : studio?.TwitterImage,
+			MetaRobots = studio is null ? "noindex, nofollow" : studio.MetaRobots
+		};
+	}
+
+	ViewData["Seo"] = seoViewModel;
+
+	var qDevice = Context?.Request?.Query["device"].ToString();
+	var requestQuery = Context?.Request?.Query;
+	var hasPageSizeQuery = requestQuery?.ContainsKey("pageSize") ?? false;
+	var hasSortQuery = requestQuery?.ContainsKey("sort") ?? false;
+
+	var ua = Context?.Request?.Headers["User-Agent"].ToString() ?? string.Empty;
+	bool uaIsMobile =
+		ua.IndexOf("Mobi", StringComparison.OrdinalIgnoreCase) >= 0 ||
+		ua.IndexOf("Android", StringComparison.OrdinalIgnoreCase) >= 0 ||
+		ua.IndexOf("iPhone", StringComparison.OrdinalIgnoreCase) >= 0 ||
+		ua.IndexOf("iPad", StringComparison.OrdinalIgnoreCase) >= 0 ||
+		ua.IndexOf("iPod", StringComparison.OrdinalIgnoreCase) >= 0;
+	var defaultDevice = !string.IsNullOrWhiteSpace(qDevice)
+		? qDevice.Trim().ToLowerInvariant()
+		: (uaIsMobile ? "mobile" : "desktop");
+
+	var init = JsonSerializer.Serialize(new
+	{
+		q = Model.Query ?? "",
+		sort = Model.SortBy ?? "",
+		dir = Model.SortDir ?? "",
+		page = Model.Page > 0 ? Model.Page : 1,
+		pageSize = Model.PageSize > 0 ? Model.PageSize : 30,
+		device = defaultDevice
+	});
+
+	string BuildPageUrl(int pageNumber)
+	{
+		var baseUrl = Model.StudioGameList ? Model.ViewLink : actionUrl;
+		var parts = new List<string>();
+
+		if (!string.IsNullOrWhiteSpace(Model.Query))
+			parts.Add($"q={System.Uri.EscapeDataString(Model.Query)}");
+
+		parts.Add($"page={pageNumber}");
+
+		if (hasPageSizeQuery && Model.PageSize > 0)
+			parts.Add($"pageSize={Model.PageSize}");
+
+		if (hasSortQuery && !string.IsNullOrWhiteSpace(Model.SortBy))
+			parts.Add($"sort={System.Uri.EscapeDataString(Model.SortBy)}");
+
+		if (!string.IsNullOrWhiteSpace(Model.SortDir))
+			parts.Add($"dir={System.Uri.EscapeDataString(Model.SortDir)}");
+
+		var deviceParam = string.IsNullOrWhiteSpace(qDevice) ? string.Empty : qDevice.Trim().ToLowerInvariant();
+		if (!string.IsNullOrWhiteSpace(deviceParam))
+			parts.Add($"device={System.Uri.EscapeDataString(deviceParam)}");
+
+		var qs = string.Join("&", parts);
+		return string.IsNullOrEmpty(qs) ? baseUrl : $"{baseUrl}?{qs}";
+	}
+
+	var prevPageUrl = Model.Page > 1 ? BuildPageUrl(Model.Page - 1) : null;
+	var nextPageUrl = Model.HasMore ? BuildPageUrl(Model.Page + 1) : null;
+}
+
+@if (category is null && !Model.StudioGameList)
+{
+	<h1 class="text-3xl my-20!"> Category Not Found</h1>
+	return;
+}
+
+<div class="page-wrap game-page-wrap compact" x-data="gamesList()" data-initial='@Html.Raw(init)'>
+	<div class="flex flex-col gap-2 w-full mt-3 md:mt-15">
+		<!-- back -->
+		<div
+			class="flex flex-col md:flex-row justify-between items-center w-full gap-3 md:bg-[#032830] md:h-20 md:p-5 rounded-lg">
+			<div class="flex gap-5 items-center max-md:w-full max-md:justify-between">
+				<a href="/"
+					class="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-md bg-(--c-teal-action) hover:bg-(--c-teal-action-h)">
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24"
+						stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7" />
+					</svg>
+				</a>
+				<!-- title -->
+				<h1 class="mb-0! text-center w-full text-2xl md:text-3xl font-semibold uppercase">@Model.Title</h1>
+				<div class="md:hidden w-8 h-8"></div>
+			</div>
+
+			<!-- SEARCH (no form) -->
+			<div class="flex gap-2 w-full md:flex-1 max-md:mt-6 items-center justify-end">
+				<div
+					class="flex items-center gap-2 w-full h-12 md:h-15 md:max-w-[540px] md:text-xl px-3 rounded-md border border-slate-300 bg-white text-black/90">
+					<input class="w-full outline-none" x-model="q" @@input.debounce.300ms="refresh"
+						placeholder="Search games..." />
+					<button type="button" aria-label="Search" @@click="refresh"
+						class="flex items-center justify-center w-12 h-9 md:w-12 md:h-10 rounded-full bg-black text-white shadow hover:bg-black/85 active:scale-[.98] cursor-pointer">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							class="w-5 h-5">
+							<path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" stroke-width="2"
+								stroke-linecap="round" stroke-linejoin="round" />
+						</svg>
+						<span class="sr-only">Search</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="flex w-full justify-end gap-1">
+			<!-- Sort controls (bound to component) -->
+			<div class="flex w-full justify-between md:justify-end items-center flex-nowrap">
+				<div class="flex items-center gap-2">
+					<!-- Arrow-only direction toggle -->
+					<button type="button" @@click="toggleDir(); refresh()"
+						:aria-label="dir==='' ? 'No direction' : (dir==='asc' ? 'Ascending' : 'Descending')" :aria-pressed="dir!==''"
+						class="h-8 w-8 shrink-0 inline-flex rounded-md items-center justify-center text-white/85 hover:bg-white/15 focus:outline-none cursor-pointer">
+						<!-- default: both -->
+						<svg x-show="dir===''" class="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path d="M7 8l5-5 5 5M7 16l5 5 5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+						</svg>
+						<!-- asc -->
+						<svg x-show="dir==='asc'" class="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path d="M7 14l5-5 5 5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+						</svg>
+						<!-- desc -->
+						<svg x-show="dir==='desc'" class="w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+							<path d="M7 10l5 5 5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+						</svg>
+					</button>
+
+					<!-- Sort dropdown -->
+					<div class="relative">
+						<button type="button" @@click="sortOpen = !sortOpen"
+							class="h-11 md:h-10 px-2 md:px-3 flex items-center gap-1 rounded-md text-white/90 hover:bg-white/15 cursor-pointer whitespace-nowrap">
+							<span class="flex flex-col leading-tight min-w-0 md:hidden">
+								<span class="text-[10px] text-left font-semibold text-white/75">Sort by:</span>
+								<span class="font-semibold text-base truncate" x-text="sortLabel"></span>
+							</span>
+							<span class="hidden md:inline font-semibold text-base">Sort by: <span x-text="sortLabel"></span></span>
+							<svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+							</svg>
+						</button>
+
+						<ul x-show="sortOpen" @@click.away="sortOpen=false"
+							class="absolute right-0 mt-1 bg-white w-40 md:w-44 text-black/90 border border-slate-300 rounded-md shadow-lg py-1 z-10">
+							<li class="px-3 py-2 text-sm md:text-base hover:bg-slate-300 cursor-pointer" @@click="setSort('id')">Newest Added</li>
+							<li class="px-3 py-2 text-sm md:text-base hover:bg-slate-300 cursor-pointer" @@click="setSort('name')">Name</li>
+							<li class="px-3 py-2 text-sm md:text-base hover:bg-slate-300 cursor-pointer" @@click="setSort('provider')">Provider</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Device toggle (single button) -->
+				<button type="button" @@click="toggleDevice()"
+					:aria-label="device==='desktop' ? 'Switch to Mobile' : 'Switch to Desktop'"
+					class="flex items-center gap-1 md:gap-2 ml-1 md:ml-2 h-9 md:h-10 px-2 md:px-3 shrink-0 rounded-md text-white/90 hover:bg-white/15 font-semibold text-xs md:text-base cursor-pointer bg-white/10 whitespace-nowrap"
+					:title="device==='desktop' ? 'Showing Desktop (and Both) — click for Mobile' : 'Showing Mobile (and Both) — click for Desktop'">
+					<!-- reusing the Provider icon -->
+					<svg width="16" height="19" viewBox="0 0 18 21" fill="none" xmlns="http://www.w3.org/2000/svg"
+						class="shrink-0 w-4 h-4 md:w-[18px] md:h-[21px]">
+						<path
+							d="M3.8 12L9 15L14.2 12L10 9.575V13H8V9.575L3.8 12ZM8 7.275V6.85C7.26667 6.63333 6.66667 6.22067 6.2 5.612C5.73333 5.00333 5.5 4.29933 5.5 3.5C5.5 2.53333 5.84167 1.70833 6.525 1.025C7.20833 0.341667 8.03333 0 9 0C9.96667 0 10.7917 0.341667 11.475 1.025C12.1583 1.70833 12.5 2.53333 12.5 3.5C12.5 4.3 12.2667 5.00433 11.8 5.613C11.3333 6.22167 10.7333 6.634 10 6.85V7.275L17 11.3C17.3167 11.4833 17.5627 11.7293 17.738 12.038C17.9133 12.3467 18.0007 12.684 18 13.05V14.95C18 15.3167 17.9127 15.6543 17.738 15.963C17.5633 16.2717 17.3173 16.5173 17 16.7L10 20.725C9.68333 20.9083 9.35 21 9 21C8.65 21 8.31667 20.9083 8 20.725L1 16.7C0.683333 16.5167 0.437667 16.271 0.263 15.963C0.0883333 15.655 0.000666667 15.3173 0 14.95V13.05C0 12.6833 0.0876667 12.346 0.263 12.038C0.438333 11.73 0.684 11.484 1 11.3L8 7.275ZM8 16.725L2 13.275V14.95L9 19L16 14.95V13.275L10 16.725C9.68333 16.9083 9.35 17 9 17C8.65 17 8.31667 16.9083 8 16.725ZM9 5C9.41667 5 9.771 4.85433 10.063 4.563C10.355 4.27167 10.5007 3.91733 10.5 3.5C10.4993 3.08267 10.3537 2.72867 10.063 2.438C9.77233 2.14733 9.418 2.00133 9 2C8.582 1.99867 8.228 2.14467 7.938 2.438C7.648 2.73133 7.502 3.08533 7.5 3.5C7.498 3.91467 7.644 4.269 7.938 4.563C8.232 4.857 8.586 5.00267 9 5Z"
+							fill="white" />
+					</svg>
+					<span x-text="device==='desktop' ? 'Desktop' : 'Mobile'"></span>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="games-grid" class="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-5 lg:grid-cols-7 gap-3 md:gap-5 mt-4">
+		<!-- will be replaced by client render -->
+		<partial name="Partials/HomePage/GamesListItems" model="Model" />
+	</div>
+
+	@if (prevPageUrl is not null || nextPageUrl is not null || Model.HasMore)
+	{
+		<div class="flex items-center justify-center gap-3 mt-6 mb-4">
+			@if (prevPageUrl is not null)
+			{
+				<a href="@prevPageUrl" aria-label="Previous page"
+					class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+						<path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</a>
+			}
+			else
+			{
+				<span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 opacity-30 cursor-not-allowed">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+						<path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</span>
+			}
+
+			@if (Model.HasMore)
+			{
+				<button id="load-more"
+					class="playerclub-button whitespace-nowrap text-sm md:text-base uppercase h-10 px-6 md:px-8 rounded-full font-semibold tracking-wide"
+					data-page="@Model.Page" data-pagesize="@Model.PageSize" @@click="loadMore">
+					Load More
+				</button>
+			}
+
+			@if (nextPageUrl is not null)
+			{
+				<a href="@nextPageUrl" aria-label="Next page"
+					class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+						<path d="M9 6l6 6-6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</a>
+			}
+			else
+			{
+				<span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/5 opacity-30 cursor-not-allowed">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5 text-white">
+						<path d="M9 6l6 6-6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</span>
+			}
+		</div>
+	}
+</div>

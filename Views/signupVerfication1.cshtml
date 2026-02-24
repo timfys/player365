@@ -1,0 +1,31 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+<link rel="stylesheet" href="/assets/shared/css/styles.css">
+<link rel="stylesheet" href="/assets/homepage/css/app-fonts.css">
+<link rel="stylesheet" href="/assets/homepage/css/app.css">
+<link rel="shortcut icon" type="image/png" href="/images/homepage/favicon.png">
+@{
+    Layout = "MasterPage.cshtml";
+}
+
+
+<partial name="@($"VerifyPhonePage/_Page0")"/>
+
+
+
+<style>
+    .button_link {
+        font-size: 24px;
+    }
+
+    @@media(min-width: 575px)
+    {
+        .alert-danger
+        {
+            margin-left: 15px;
+        }
+        .verify-title
+        {
+            margin-left: 15px;
+        }
+    }
+</style>

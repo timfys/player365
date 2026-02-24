@@ -1,0 +1,169 @@
+@using SmartWinners.Models.ViewModels
+@model BonusTicketViewModel
+@{
+ // Helper variables to set CSS classes/styles based on the BannerType
+ string shadowClass = "";
+ string gradientClass = "";
+ string backgroundStyle = "";
+ string imageGlowStyle = ""; // <-- ADDED: Variable for the image glow
+ string buttonBaseClasses = "mt-[clamp(0.1rem,2.04cqw,1.25rem)] mb-[clamp(0.1rem,1.02cqw,0.75rem)] flex items-center justify-center h-[clamp(0.1rem,6.12cqw,3.75rem)] text-[clamp(0.1rem,2.85cqw,1.5rem)] font-semibold w-full";
+ string buttonClass = "playerclub-button-yellow";
+ string buttonText = "COLLECT";
+ bool isButtonDisabled = false;
+ bool useLink = false;
+
+ switch (Model.Type)
+ {
+  case BannerType.Claim:
+   shadowClass = "filter:drop-shadow(0 0 10px rgba(255,235,112,.75)) drop-shadow(0 0 1px rgba(255,235,112,.50)) drop-shadow(0 0 10px rgba(255,235,112,.25));";
+   gradientClass = "gold-gradient-text";
+   backgroundStyle = "radial-gradient(120% 120% at 0% 0%, #07414d 0%, #022b34 60%)";
+      // <-- ADDED: Gold glow for the image
+  	imageGlowStyle = "filter:drop-shadow(0 0 3px rgba(255,235,112,.75)) drop-shadow(0 0 10px rgba(255,235,112,.50));";
+   useLink = true;
+   break;
+
+  case BannerType.Claimed:
+   shadowClass = "platinum-shadow"; // Example: A silver/blue glow
+   gradientClass = "gold-gradient-text";
+   backgroundStyle = "radial-gradient(120% 120% at 0% 0%, #111111 0%, #111111 60%)"; // Example: A dark purple
+      // <-- ADDED: Silver/blue glow for the image
+      //imageGlowStyle = "filter:drop-shadow(0 0 12px rgba(170, 200, 255, 0.6));";
+      imageGlowStyle =" opacity: 0.3; filter: drop-shadow(0 0 8px rgba(170, 200, 255, 0.6));";
+    buttonClass = "relative overflow-hidden rounded-[10px] bg-[#f1f1f1] text-[#6f6f6f] cursor-default gold-ring opacity-50";
+   buttonText = "CLAIMED";
+   isButtonDisabled = true;
+   break;
+
+  case BannerType.Locked:
+  default:
+   shadowClass = "standard-shadow"; // Example: A simple black shadow
+   gradientClass = "gold-gradient-text"; // Example: Plain white text
+   backgroundStyle = "radial-gradient(120% 120% at 0% 0%, #444 0%, #222 60%)"; // Example: A dark gray
+      // <-- ADDED: Subtle shadow and slight fade for the locked image
+      imageGlowStyle = "opacity: 0.6; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));";
+    buttonClass = "relative overflow-hidden rounded-[10px] bg-[#3b3b3b] text-[#b8b8b8] cursor-not-allowed gold-corners-ring";
+   buttonText = "LOCKED";
+   isButtonDisabled = true;
+   break;
+ }
+}
+
+<div class="relative w-full max-w-[980px] aspect-[2.5/1] @@container" style="@shadowClass">
+
+ <svg class="absolute inset-0 w-full h-full pointer-events-none">
+  <defs>
+   <mask id="ticket-mask" maskUnits="userSpaceOnUse">
+    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+    <circle cx="0" cy="50%" r="clamp(0.1rem, 6.15cqw, 3.75rem)" fill="black" />
+    <circle cx="100%" cy="50%" r="clamp(0.1rem, 6.15cqw, 3.75rem)" fill="black" />
+   </mask>
+  </defs>
+ </svg>
+
+ <div
+  class="relative h-full w-full flex flex-col items-center p-[clamp(0.1rem,1.22cqw,0.75rem)] gap-6 rounded-[clamp(0.1rem,0.9cqw,0.5rem)] text-white"
+  style="
+    /* inside look */
+    background: @backgroundStyle;
+    /* real transparent cuts */
+    -webkit-mask: url(#ticket-mask);
+    mask: url(#ticket-mask);
+  ">
+
+  <span class="absolute text-[clamp(0.1rem,4.1cqw,2.5rem)]">@Model.StepText</span>
+
+  <div class="flex flex-row items-center justify-center w-full h-full gap-[min(11.5cqw,7.5rem)]">
+      
+         <img src="@Model.ImageUrl" 
+           alt="bonus-image" 
+           class="h-9/10" 
+           style="@imageGlowStyle" />
+
+   <div class="relative z-10 text-left self-end">
+
+    <span class="text-[clamp(0.1rem,9.1cqw,5.625rem)] font-bold @gradientClass">@Model.BonusPercentageText</span>
+
+    <p class="mt-[clamp(0.1rem,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)]">BUY:
+     <span class="text-white">@Model.MinDepositAmount.ToString()</span> Coins or more</p> 
+
+    <p class="mt-[clamp(0.1rem,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)] font-semibold uppercase">GET
+     @Model.BonusAddOnAmount.ToString()+</span> COINS FREE</p>
+
+    <p class="mt-[clamp(0.1rem,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)] font-semibold uppercase">
+     @Model.PlayWithText <span class="@gradientClass">@Model.TotalPlayText</span></p>
+
+    @if (useLink && !string.IsNullOrEmpty(Model.CollectUrl))
+    {
+     <a
+      href="@Model.CollectUrl"
+      class="@buttonBaseClasses @buttonClass">
+      @buttonText
+     </a>
+    }
+    else
+    {
+     <button
+      type="button"
+      class="@buttonBaseClasses @buttonClass"
+      @(isButtonDisabled ? "disabled aria-disabled=\"true\"" : string.Empty)>
+      @buttonText
+     </button>
+    }
+   </div>
+  </div>
+ </div>
+</div>
+
+@* 
+
+<div class="relative w-full max-w-[980px] aspect-[2.5/1] @@container" style="
+    filter:
+      drop-shadow(0 0 10px rgba(255,235,112,.75))
+      drop-shadow(0 0 24px rgba(255,235,112,.50))
+      drop-shadow(0 0 60px rgba(255,235,112,.25));
+  ">
+	<!-- Mask defs -->
+	<svg class="absolute inset-0 w-full h-full pointer-events-none">
+		<defs>
+			<mask id="ticket-mask" maskUnits="userSpaceOnUse">
+				<rect x="0" y="0" width="100%" height="100%" fill="white" />
+				<circle cx="0" cy="50%" r="clamp(0.1rem, 6.15cqw, 3.75rem)" fill="black" />
+				<circle cx="100%" cy="50%" r="clamp(0.1rem, 6.15cqw, 3.75rem)" fill="black" />
+			</mask>
+		</defs>
+	</svg>
+
+	<!-- Ticket -->
+	<div
+		class="relative h-full w-full flex flex-col items-center p-[clamp(0.1rem,1.22cqw,0.75rem)] gap-6 rounded-[clamp(0.1rem,0.9cqw,0.5rem)] text-white"
+		style="
+      /* inside look */
+      background: radial-gradient(120% 120% at 0% 0%, #07414d 0%, #022b34 60%)
+      /* real transparent cuts */
+      -webkit-mask: url(#ticket-mask);
+      mask: url(#ticket-mask);
+    ">
+		<span class="absolute text-[clamp(0.1rem,4.1cqw,2.5rem)]">Step 1</span>
+
+		<div class="flex flex-row items-center justify-center w-full h-full gap-[min(11.5cqw,7.5rem)]">
+			<!-- coins -->
+			<img src="/images/casino/bonuses/coins.webp" alt="coins" class="h-9/10" />
+
+			<!-- text -->
+			<div class="relative z-10 text-left self-end">
+				<span class="text-[clamp(0.1rem,9.1cqw,5.625rem)] font-bold gold-gradient-text">150%</span>
+				<p class="mt-[clamp(0.1,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)] font-semibold">MIN DEPOSIT:
+					<span class="text-white">$20</span></p>
+				<p class="mt-[clamp(0.1,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)]">Bonus + $30</span></p>
+				<p class="mt-[clamp(0.1,1cqw,0.625rem)] text-[clamp(0.1rem,2.85cqw,1.75rem)] font-semibold">PLAY WITH <span
+						class="gold-gradient-text">$50 TOTAL</span></p>
+
+				<button
+					class="mt-[clamp(0.1rem,2.04cqw,1.25rem)] flex items-center justify-center h-[clamp(0.1rem,6.12cqw,3.75rem)] playerclub-button-yellow text-[clamp(0.1rem,2.85cqw,1.5rem)] font-semibold w-full">
+					CLAIM BONUS
+				</button>
+			</div>
+		</div>
+	</div>
+</div> *@

@@ -1,0 +1,198 @@
+@{
+  var steps = new[]
+  {
+new {
+TitleHtml = "Start<br />at Step 1",
+TitleMobile = "Start at Step 1",
+BodyHtml = "Get 150% Bonus instantly",
+BodyMobile = "Get 150% Bonus instantly",
+IsDanger = false,
+Progress = 0,
+IconUrl = Url.Content("~/images/casino/bonuses/221.svg")
+},
+new {
+TitleHtml = "24 Hours<br />Timer",
+TitleMobile = "24 Hours Timer",
+BodyHtml = "Once you claim Step 1, the timer starts. You have 24 hours to complete the requirement and unlock the next bonus Pack",
+BodyMobile = "Once you claim Step 1, the timer starts. You have 24 hours to complete the requirement and unlock the next voucher",
+IsDanger = false,
+Progress = 25,
+IconUrl = Url.Content("~/images/casino/bonuses/222.svg")
+},
+new {
+TitleHtml = "Claim<br />Reward",
+TitleMobile = "Claim Reward",
+BodyHtml = "Take your bonus to open the next step. Each new bonus pack comes with a fresh 24-hour timer",
+BodyMobile = "Take your bonus to open the next step. Each new voucher comes with a fresh 24-hour timer",
+IsDanger = false,
+Progress = 50,
+IconUrl = Url.Content("~/images/casino/bonuses/223.svg")
+},
+new {
+TitleHtml = "Don’t miss<br />the Timer",
+TitleMobile = "Don’t miss the Timer",
+BodyHtml = "If you fail to claim within 24 hours, the promotion ends",
+BodyMobile = "If you fail to claim within 24 hours, the promotion ends",
+IsDanger = true,
+Progress = 75,
+IconUrl = Url.Content("~/images/casino/bonuses/224.svg")
+},
+new {
+TitleHtml = "Final<br />Goal",
+TitleMobile = "Final Goal",
+BodyHtml = "Reach Step 5 and get the 500% Bonus!",
+BodyMobile = "Reach Step 5 and get the 500% Bonus!",
+IsDanger = false,
+Progress = 100,
+IconUrl = Url.Content("~/images/casino/bonuses/225.svg")
+}
+};
+
+  var isLastIndex = (Func<int, bool>)(i => i == steps.Length - 1);
+}
+
+
+
+<section class="text-slate-100">
+  <div class="mx-auto max-w-7xl pb-14 pt-20 md:pt-30">
+    <h2 class="text-center text-2xl md:text-4xl font-light tracking-wide">
+      How the Signup Ladder Works
+    </h2>
+
+    <!-- ===================== DESKTOP ===================== -->
+    <div class="mt-14 hidden md:block">
+      <div class="overflow-x-auto md:overflow-visible">
+        <!-- timeline row -->
+        <div class="grid items-center grid-cols-[6rem_1fr_6rem_1fr_6rem_1fr_6rem_1fr_6rem_1fr]">
+          @for (var i = 0; i < steps.Length; i++)
+          {
+            var s = steps[i];
+
+            <!-- CIRCLE -->
+            <div class="flex justify-start">
+              <div class="gold-progress flex h-24 w-24 items-center justify-center rounded-full"
+                style="--p:@(s.Progress == 0 ? 0.01 : s.Progress); --t:3px;">
+                <div class="flex h-16 w-16 items-center justify-center rounded-full">
+                  <img src="@s.IconUrl" class="h-12 w-12 object-contain" alt="" />
+                </div>
+              </div>
+            </div>
+
+            <!-- LINE (skip after last) -->
+            if (!isLastIndex(i))
+            {
+              <div class="h-0.5 w-full bg-[#CAC7A6]"></div>
+            }
+            else
+            {
+              <div></div>
+            }
+          }
+        </div>
+
+        <!-- text row -->
+        <div class="mt-10 grid gap-y-10 grid-cols-[6rem_1fr_6rem_1fr_6rem_1fr_6rem_1fr_6rem_1fr]">
+          @for (var i = 0; i < steps.Length; i++)
+          {
+            var s = steps[i];
+            var titleClass = s.IsDanger ? "text-red-500" : "";
+            var isLast = isLastIndex(i);
+
+            <div class="col-start-@(1 + i * 2) col-span-2">
+              <div class="text-2xl lg:text-3xl font-light leading-tight @titleClass">
+                @Html.Raw(s.TitleHtml)
+              </div>
+
+              <p class="mt-6! pr-5 text-xl lg:text-2xl font-light leading-relaxed text-slate-200">
+                @Html.Raw(s.BodyHtml)
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MOBILE ===================== -->
+    <div class="mt-10 md:hidden">
+      <div class="space-y-0">
+        @for (var i = 0; i < steps.Length; i++)
+        {
+          var s = steps[i];
+          var titleClass = s.IsDanger ? "text-red-500" : "";
+          var isLast = isLastIndex(i);
+
+          <div class="group grid grid-cols-[3.5rem_1fr] gap-x-5">
+            <!-- timeline cell -->
+            <div class="relative flex justify-center">
+              @* line (hide on last) *@
+              @if (!isLast)
+              {
+                <div class="absolute left-1/2 top-14 bottom-0 w-px -translate-x-1/2 bg-[#CAC7A6]"></div>
+              }
+
+              <!-- circle -->
+              <div class="gold-progress flex h-14 w-14 items-center justify-center rounded-full"
+                style="--p:@(s.Progress == 0 ? 0.01 : s.Progress); --t:3px;">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full">
+                  <img src="@s.IconUrl" class="h-8 w-8 object-contain" alt="" />
+                </div>
+              </div>
+            </div>
+
+            <!-- text cell -->
+            <div class="pt-1 pb-4 @(isLast ? "pb-0" : "pb-4")">
+              <div class="text-2xl font-light leading-tight @titleClass">
+                @s.TitleMobile
+              </div>
+              <p class="mt-2 text-lg font-light leading-relaxed text-slate-200">
+                @s.BodyMobile
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  /* Base */
+  .gold-progress {
+    position: relative;
+    border-radius: 9999px;
+    --p: 0;
+    /* 0..100 */
+    --t: 2px;
+    /* thickness */
+    --g1: #DEB04C;
+    --g2: #D8AB47;
+    --g3: #fdd172;
+    --g4: #DEB04C;
+  }
+
+  .gold-progress::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--t);
+    box-sizing: border-box;
+
+    /* progress arc uses 4 gold tones; remainder is gray */
+    background: conic-gradient(from 0deg,
+        var(--g1) 0%,
+        var(--g2) calc(var(--p) * 0.10%),
+        var(--g3) calc(var(--p) * 0.40%),
+        var(--g4) calc(var(--p) * 1%),
+        #CAC7A6 0%,
+        #CAC7A6 100%);
+
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+
+    pointer-events: none;
+  }
+</style>

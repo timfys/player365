@@ -1,0 +1,118 @@
+{
+  "BusinessApi": {
+    "EndpointAddress": "http://lease4.mekashron.com:33330/soap/IBusinessAPI",
+    "Timeout": 120,
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "123456",
+    "BusinessId": 1,
+    "paymentId": 9,
+    "employee_entityId": 2639066,
+    "inventoryID": 95,
+    "CategoryID": 18,
+    "campaignID": 144,
+    "tzFieldName": "customfield34",
+    "ChargePayment": true,
+    "MaxBufferSize" : 100000
+  },
+  "SmartWinnersApi": {
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "123456",
+    "EndpointAddress": "http://isapi.mekashron.com/SmartWinners/Smartwinners.dll/soap/ISmartWinners",
+    "Password": "FreeRun86",
+    "Timeout": 120,
+    "MaxBufferSize": 1000
+  },
+  "CasinoGamesApi": {
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "123456",
+    "EndpointAddress": "http://isapi.mekashron.com/SmartWinners/casino365.dll/soap/IPlayerclub365",
+    "Timeout": 120,
+    "MaxBufferSize": 100000
+  },
+  "SiteTools": {
+    "EndpointAddress": "http://tools.mekashron.com/SiteTools.dll/soap/businessapi",
+    "TimeOut": 180
+  },
+  "ErrorReporting": {
+    "SmtpHost": "mail.cubewebmail.com",
+    "SmtpPort": 25,
+    "SmtpUseSsl": false,
+    "SmtpLogin": "website-umbraco@smart-winners.com",
+    "SmtpPassword": "cf4Xn45&",
+    "Subject": "Website error",
+    "FromName": "SmartWinners new",
+    "FromAddress": "website-umbraco@smart-winners.com",
+    "ToName": "admin",
+    "ToAddress": "website-umbraco@playerclub365.com",
+    "ToAddressTest": "artuninp@gmail.com"
+  },
+  "Telegram": {
+    "TelegramId": "1339306452",
+    "TelegramSaleId": "706625780",
+    "TelegramErrorsId": ["522750318", "1339306452", "810579603"],
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "smart221134",
+    "EndpointAddress": "http://isapi.smartwinners.co.uk/telegram_bot.dll/soap/businessapi",
+    "Timeout": 60
+  },
+  "PaymentConfiguration": {
+    "PaymentId": 12,
+    "CurrencyIso": "USD"
+  },
+  "Urls": {
+    "PayAhoraSale": "https://sandbox.payahora.tech/paynet/api/v2/sale/group/2411",
+    "PayAhoraStatus": "https://sandbox.payahora.tech/paynet/api/v2/status/group/2411"
+  },
+  "SeoConfiguration" : {
+    "CacheControlExpireTime" : 0,
+    "CacheControlPath" : ["/assets", "/images"],
+    "RamCacheTime" : 0
+  },
+  "GamesConfiguration": {
+    "Timeout": 120,
+    "MaxBufferSize" : 10000,
+    "EndpointAddress" : "http://isapi.mekashron.com/SmartWinners/player1.dll/soap/IPlayer1"
+  },
+  "VerifoneConfiguration": {
+    "Host": "https://emea.gsc.verifone.cloud",
+    "UserId": "ff883b97-358d-455e-9772-891f07046e02",
+    "ApiKey": "tfcjAqWlPcPFtQcgNtVbmExhEsiLIxVvrgbV",
+    "EntityId": "36bb4181-67aa-4ad6-bdbe-9e8e2ff38097",
+    "PaymentContractId": "07e8553f-3482-48f3-9333-df29bade5a87",
+    "ThreedsContractId": "c36ec207-c076-4dcf-ae9c-cef01c19b9ce",
+    "TokenScope": "cd16ee17-5bb7-49b2-9be3-0d35fed449e8",
+    "PublicKeyAlias": "K1571",
+    "SupportedCurrencies": [
+      "USD",
+      "ILS",
+      "EUR"
+    ],
+    "Use3DS": false,
+    "ThemeId": ""
+  },
+  "WhatsAppConfiguration" : {
+    "ol_EntityId": 4,
+    "ol_UserName": "441111122222",
+    "ol_Password": "sdgn249t5h",
+    "EndpointAddress": "http://isapi.smart-winners.com/whatsapp.dll/soap/IWhatsApp",
+    "Timeout": 120
+  },
+  "LimitedTimeOfferConfig" : {
+    "Days" : 1,
+    "MinDepositAmount" : 100,
+    "PercentageBonus" : 100
+  },
+  "TournamentConfiguration" : {
+    "StartDate" : "2025-02-09T00:00:00",
+    "ProductId" : 40
+  },
+  "StripeConfiguration": {
+    "PublicKey": "pk_test_51PuWjqP4lH5vg9yJH40lQ32rq0fqQWcgYy4FwAjHKLHOOT8egxXrdS3AM0ZHhqKaoU5LY9tFSJjJ2xco7vaN8T7300nbQ5so2i",
+    "SecretKey": "sk_test_51PuWjqP4lH5vg9yJTyr95s3c6RnqYyVhpdChYHXzdJFjvkf3rly3oakn7qg0Grpi9jmqHQ3CdfkpXScqq1FAAr3g00gZQk6ltu",
+    "WebhookSecret": "whsec_4BeAHytvMfOu2qIOhoyUc2j2MKt6qdlz"
+  }
+}

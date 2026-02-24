@@ -1,0 +1,102 @@
+﻿@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading
+@using System.Globalization
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Extensions
+@using SmartWinners.Helpers
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@inject IBusinessApiService businessApiService
+
+@{
+	Layout = "MasterPage.cshtml";
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+	var amount = (string)ViewBag.Amount;
+	var currency = ViewBag.Currency as CurrencyDetails;
+	var type = (int)ViewBag.Type;
+	@* ViewBag.ForceGiftCheck = true; *@
+
+var isAuthorized = User.Identity?.IsAuthenticated ?? false;
+var user = isAuthorized ? Context?.User.ToUserApiAccess() : null;
+
+	if (isAuthorized)
+	{
+		// PaymentHelper.RecalculateUserBalance(out var response);
+	}
+}
+
+
+<div class="page-wrap succesfull-deposit-wrap">
+	<div class="wraper">
+		<div class="payment_wraper_item">
+			<p class="payment_description green">@Umbraco.GetDictionaryValue("Congratulations!")</p>
+			<p class="payment_description green">@(type == 1 ? Umbraco.GetDictionaryValue("You have successfully withdraw") :
+								Umbraco.GetDictionaryValue("You have successfully deposited")) <b>@(type == 2 ? (string) ViewBag.Symbol :
+										currency.Symbol) @amount</b></p>
+		</div>
+		@if (type == 1)
+		{
+			<a href="@langIso/" style="width: 320px" class="playerclub-button">@Umbraco.GetDictionaryValue("Done")</a>
+		}
+		else if (type == 2)
+		{
+			<a href="@langIso/" class="playerclub-button">@Umbraco.GetDictionaryValue("Pick a game to play")</a>
+		}
+	</div>
+
+</div>
+<style>
+	.payment_button {
+		width: fit-content;
+		padding: 0 20px;
+	}
+</style>
+
+@{
+	int? affiliateId = null;
+	int? entityIdForOrder = null;
+
+	// Check if eId query param exists - get affiliate from that entity
+	if (Context?.Request.Query.TryGetValue("eId", out var entityIdStr) == true && int.TryParse(entityIdStr, out var eId))
+	{
+		var entityResult = await businessApiService.EntityFindAsync(new()
+		{
+			Fields = ["affiliateID"],
+			Filter = new() { { "entityId", $"{eId}" } }
+		}, user);
+		affiliateId = entityResult.Value?.Entities.FirstOrDefault()?.AffiliateID;
+		entityIdForOrder = eId;
+	}
+	// Otherwise use logged in user's affiliate
+	else if (user is not null && user.AffiliateId > 0 && WebStorageUtility.TryGetString(WebStorageUtility.AfterPaymentFlag, out _))
+	{
+		affiliateId = user.AffiliateId;
+		entityIdForOrder = user.EntityId;
+	}
+
+	if (affiliateId is > 0)
+	{
+		var affiliateResult = await businessApiService.EntityFindAsync(new()
+		{
+			Fields = ["customfield38"],
+			Filter = new() { { "entityId", $"{affiliateId}" } }
+		});
+		var script = affiliateResult.Value?.Entities.FirstOrDefault()?.PaymentAffiliateScript;
+
+		if (!string.IsNullOrEmpty(script))
+		{
+			var isFree = Context?.Request.Query.ContainsKey("f") == true;
+			var paymentValue = isFree ? "0" : (amount ?? "0");
+
+			script = script.Replace("{%orderID%}", $"{entityIdForOrder}")
+						   .Replace("{%entityID%}", $"{affiliateId}")
+						   .Replace("{%OrderTotal%}", paymentValue);
+
+			@Html.Raw(script)
+			<script>
+				document.cookie = "@Html.Raw(WebStorageUtility.AfterPaymentFlag)=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+			</script>
+		}
+	}
+}

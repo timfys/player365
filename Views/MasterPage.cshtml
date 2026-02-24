@@ -1,0 +1,339 @@
+﻿@using System.Dynamic
+@using System.Globalization
+@using System.Threading
+@using ContentModels = Umbraco.Cms.Web.Common.PublishedModels;
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Helpers
+@using Microsoft.AspNetCore.Localization
+@using SmartWinners.Middleware
+@using System.Linq
+@using Microsoft.AspNetCore.Http
+@using SmartWinners.Models
+@using SmartWinners.Extensions
+
+@inject IBusinessApiService businessApiService
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<dynamic>
+
+
+@{
+	Layout = null;
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	var langPrefix = langIso == "en" ? "" : $"/{langIso}";
+
+	var supportedLangs = new[] { "en", "fr", "he", "ru", "uk", "es", "pt", "th", "vi" };
+	var defaultLang = "en";
+
+	var scheme = "https";
+	var host = Context?.Request?.Host.Value ?? "playerclub365.com";
+	var baseUrl = $"{scheme}://{host}";
+
+	var rawPath = (Context?.Request?.Path.Value ?? "/").TrimEnd('/');
+	var path = rawPath;
+	if (string.IsNullOrEmpty(rawPath)) rawPath = "/";
+
+	var currentLang = supportedLangs.FirstOrDefault(l =>
+	rawPath.StartsWith($"/{l}", StringComparison.OrdinalIgnoreCase));
+
+	var cleanPath = currentLang is null
+	? rawPath
+	: rawPath.Substring($"/{currentLang}".Length);
+
+	if (string.IsNullOrWhiteSpace(cleanPath)) cleanPath = "/";
+
+	string Normalize(string p) => p.StartsWith("/") ? p : "/" + p;
+
+	string UrlFor(string lang)
+	{
+		var path = Normalize(cleanPath);
+		return lang.Equals(defaultLang, StringComparison.OrdinalIgnoreCase)
+		? $"{baseUrl}{path}"
+		: $"{baseUrl}/{lang}{path}";
+	}
+
+	var canonical = (currentLang is null || currentLang == defaultLang)
+	? UrlFor(defaultLang)
+	: UrlFor(currentLang);
+
+	var rtl = langIso is "he" ? "direction: rtl" : "";
+	WebStorageUtility.SetString(WebStorageUtility.CurrencyCultureId, $"{Thread.CurrentThread.CurrentCulture.LCID}");
+
+	var seoModel = ViewData["Seo"] as SEOViewModel;
+
+	if (seoModel != null)
+	{
+		if (!string.IsNullOrEmpty(host) && host.Contains("beta", StringComparison.OrdinalIgnoreCase))
+		{
+			seoModel.MetaRobots = "noindex, nofollow";
+		}
+	}
+
+	var isAuthorized = Context?.User?.Identity?.IsAuthenticated ?? false;
+		var user = isAuthorized ? Context?.User.ToUserApiAccess() : null;
+
+	if (!(Context?.User?.Identity?.IsAuthenticated ?? false))
+	{
+		var currentPath = $"{Context?.Request?.Host}{Context?.Request?.Path}{Context?.Request?.QueryString}";
+		Context?.SetBeforeSignUpVisitedPages(currentPath);
+	}
+@* 
+	businessApiService.EntityLogTrafficAsync(new(){
+		Url = Context?.Request.Path + Context?.Request.QueryString,
+		IpAddress = Context?.Connection.RemoteIpAddress?.ToString(),
+
+		
+	}) *@
+	_ = TrafficLogHelper.LogTrafficAsync(Context, businessApiService);
+}
+
+@functions
+{
+	static bool DoesPropertyExist(dynamic settings, string name)
+	{
+		if (settings is ExpandoObject)
+			return ((IDictionary<string, object>)settings).ContainsKey(name);
+
+		return settings.GetType().GetProperty(name) != null;
+	}
+
+	public static string GetUserLangIsoFromUrl(HttpContext context)
+	{
+		var langIsoSplit = context.Request.Path.Value.Split("/");
+
+		return context.Request.Path.Value.Length > 3 ? langIsoSplit[1] : langIsoSplit[0];
+	}
+
+}
+
+<!DOCTYPE html>
+<html lang="@langIso">
+
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+	<meta charset="UTF-8">
+	@{
+		var iconPath = "/favicon.ico";
+	}
+
+	<seo model="seoModel"></seo>
+	@if (seoModel == null)
+	{
+		if (!string.IsNullOrEmpty(host) && host.Contains("beta", StringComparison.OrdinalIgnoreCase))
+		{
+			<meta name="robots" content="noindex, nofollow">
+		}
+	}
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@shoelace-style/shoelace@2.20.1/cdn/themes/dark.css" />
+
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+	<link rel="icon" href="/favicon.ico" sizes="any">
+
+	<link rel="stylesheet" href="/assets/homepage/css/app.css">
+	<link rel="stylesheet" href="/assets/css/main.css">
+	<link rel="stylesheet" href="/assets/css/style.css">
+	<link rel="stylesheet" href="/assets/css/output.css" />
+	<style> 
+		[x-cloak] {
+			display: none !important;
+		}
+	</style>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+		rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+		rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
+
+	<environment include="Development">
+		<script type="module" src="http://localhost:5173/src/main.js"></script>
+	</environment>
+	<environment exclude="Development">
+		<script type="module" src="/assets/js/main.js" asp-append-version="true"></script>
+	</environment>
+
+	<link rel="canonical" href="@canonical" />
+
+	@foreach (var lang in supportedLangs)
+	{
+		<link rel="alternate" hreflang="@lang" href="@UrlFor(lang)" />
+	}
+
+	<link rel="alternate" hreflang="x-default" href="@UrlFor(defaultLang)" />
+
+	@if (!string.IsNullOrEmpty(rtl))
+	{
+		<link rel="stylesheet" href="/assets/css/playerclubRtl.css">
+	}
+	<link rel="stylesheet" href="/assets/css/playerclub.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+	@* PopperJS *@
+	@* <environment include="Development">
+		<script src="/assets/lib/popperjs-1.16.1/popper.min.js"></script>
+	</environment>
+	<environment exclude="Development">
+		<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+			asp-fallback-href="/assets/lib/popperjs-1.16.1/popper.min.js" asp-fallback-test-class="visually-hidden"
+			asp-fallback-test-property="position" asp-fallback-test-value="absolute"
+			integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+			crossorigin="anonymous"></script>
+	</environment> *@
+
+	@RenderSection("Head", required: false)
+</head>
+
+<body style="overflow-y: overlay; @Html.Raw(rtl); position: relative">
+	<partial name="Partials/_Header" />
+
+	<script type="text/javascript" src="/assets/js/ElemsScripts.js"></script>
+	<div class="drawer-main-wrap mt-4">
+		<main class="px-4">
+			@RenderBody()
+		</main>
+	</div>
+
+	<partial name="Partials/_Footer" />
+	@RenderSection("BalacnceScript", false)
+
+	<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+	<script src="/assets/js/phone-number.umd.js"></script>
+	<script type="module"
+		src="https://cdn.jsdelivr.net/npm/@@shoelace-style/shoelace@2.20.1/cdn/shoelace-autoloader.js"></script>
+
+	<script type="text/javascript" src="/assets/js/script.js"></script>
+	<script src="/assets/homepage/js/app.js"></script>
+	<script type="text/javascript" src="/assets/js/Loader.js"></script>
+	<script type="text/javascript" src="/assets/js/Storage.js"></script>
+	@{
+		var haveScript = WebStorageUtility.TryGetString(WebStorageUtility.AffiliateScriptControl, out var affiliateScript);
+		var haveAffiliateScript = false;
+	}
+
+@if (user is not null && user.AffiliateId > 0 && WebStorageUtility.TryGetString(WebStorageUtility.AfterSignUpFlag, out var flag))
+{
+    var affiliateResult = await businessApiService.EntityFindAsync(new()
+    {
+        Fields = ["customfield85"],
+        Filter = new() { { "entityId", $"{user.AffiliateId}" } }
+    });
+    var script = affiliateResult.Value?.Entities.FirstOrDefault()?.SignUpAffiliateScript;
+    @Html.Raw(script)
+    <script>
+      document.cookie = "@Html.Raw(WebStorageUtility.AfterSignUpFlag)=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    </script>
+}
+
+@if (Context.Request.Query.TryGetValue("aid", out var aid) && int.TryParse(aid, out var aidInt))
+{
+    var aidResult = await businessApiService.EntityFindAsync(new()
+    {
+        Fields = ["customfield165"],
+        Filter = new() { { "entityId", $"{aidInt}" } }
+    });
+    affiliateScript = aidResult.Value?.Entities.FirstOrDefault()?.AffiliateScript;
+
+    if (!string.IsNullOrEmpty(affiliateScript))
+    {
+        Context.Response.Cookies.Append(WebStorageUtility.AffiliateScriptControl, affiliateScript);
+
+        haveAffiliateScript = !string.IsNullOrEmpty(affiliateScript);
+    }
+}
+
+	<script defer data-domain="playerclub365.com"
+		src="https://analytics.mekashron.com/js/script.file-downloads.hash.outbound-links.pageview-props.revenue.tagged-events.js"></script>
+	<script>window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+	<script>
+			(function (d, t) {
+				var BASE_URL = "https://cwp2.profichat.net";
+				var g = d.createElement(t), s = d.getElementsByTagName(t)[0];
+				g.src = BASE_URL + "/packs/js/sdk.js";
+				g.async = true;
+				s.parentNode.insertBefore(g, s);
+				g.onload = function () {
+					window.chatwootSDK.run({
+						websiteToken: 'bTbPb9G9SezHVjY1cC2dFJM2',
+						baseUrl: BASE_URL
+					})
+				}
+			})(document, "script");
+	</script>
+
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-LJ2TVPW0MV"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+
+		gtag('config', 'G-LJ2TVPW0MV');
+	</script>
+
+	<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+	@if (!Context.Request.Path.Value.Contains("lottery-number-lines") &&
+		!Context.Request.Path.Value.Contains("lottery-number") &&
+		!Context.Request.Path.Value.Contains("lottery-number-draws") &&
+		!Context.Request.Path.Value.Contains("lottery-number-payment"))
+	{
+		WebStorageUtility.RemoveValue(WebStorageUtility.SelectedVoucherId);
+	}
+	<script>
+
+		document.addEventListener("DOMContentLoaded", function () {
+
+			Array.from(document.querySelectorAll("input")).filter(x => x.type === "number" || x.classList.contains("phone_input")).forEach(x => {
+				x.setAttribute("inputmode", "numeric");
+				x.setAttribute("pattern", "[0-9]*");
+			});
+		})
+		Promise.all([
+			customElements.whenDefined('sl-drawer'),
+			customElements.whenDefined('sl-dialog'),
+			customElements.whenDefined('sl-button')
+		]).then(() => {
+			document.body.style.opacity = '1';
+		});
+
+	</script>
+
+	<script src="https://cdn.websitepolicies.io/lib/cconsent/cconsent.min.js" defer></script>
+	@if (!WebStorageUtility.TryGetString(WebStorageUtility.AffiliateScriptControl, out var v) && !haveAffiliateScript)
+	{
+		<script>
+			let script = sessionStorage.getItem("@Html.Raw(WebStorageUtility.AffiliateScriptControl)");
+			if (script !== null) {
+				let elem = document.createElement("div");
+				script = script.replaceAll("<s!", `<` + `/script>`)
+				elem.innerHTML = script;
+				document.querySelector("body").appendChild(elem);
+			}
+		</script>
+	}
+	else if (haveAffiliateScript)
+	{
+		@Html.Raw(affiliateScript)
+	}
+	else
+	{
+		@Html.Raw(v)
+	}
+	@if (!Context.Request.Path.Value.Contains("credit-card") && !Context.Request.Path.Value.Contains("deposit"))
+	{
+		@if (!Context.Request.Cookies.ContainsKey("CookieAgree"))
+		{
+			Html.RenderPartial("/Views/Partials/_CookiesContainerMessage.cshtml");
+		}
+	}
+
+	<div class="contents!">
+		<partial name="_LoadingScreen" model="@Umbraco.GetDictionaryValue("Please wait")" />
+	</div>
+	<partial name="Partials/Common/AgeGate21" />
+
+	@RenderSection("Scripts", required: false)
+</body>
+
+</html>

@@ -1,0 +1,37 @@
+@using System.Threading
+@using Umbraco.Cms.Web.Common
+@model SmartWinners.Models.GamesListModel
+@inject UmbracoHelper _helper
+
+@{
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName.Contains("en") ? "" : $"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
+}
+
+<div class="games-list-wrap compact">
+
+	<div class="games-title-nav-buttons">
+		<div class="text-2xl font-medium  items-center">
+			@* 			<img class="h-6" src="~/images/game_category_icons/@Html.Raw(Model.CategoryID.ToString() + ".png")" />
+			<h2>@Html.Raw(Model.Title)</h2> *@
+
+			@if (!Model.StudioGameList)
+			{
+				<img class="h-6 mr-2" src="~/images/game_category_icons/@Html.Raw(Model.CategoryID.ToString() + ".png")" alt="@Html.Raw(Model.Title)" />
+			}
+
+			<h2> @Html.Raw(Model.Title)</h2>
+		</div>
+	</div>
+
+	<div class="games-wrap games-regular-list-wrap">
+		@foreach (var game in Model.List)
+		{
+			<a href="@Html.Raw($"{langIso}/game/{game.Id}/{game.Name.Replace(' ', '-')}")"
+				 class="game-wrap">
+				<div style="background-image: url('@Html.Raw(game.ImageUrl)')"></div>
+				@* @Html.Raw(game.GetGameCardBanner(_helper)) *@
+			</a>
+		}
+	</div>
+
+</div>

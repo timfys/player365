@@ -1,0 +1,246 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using GoldCasino.ApiModule.Dtos.Bonuses
+@using GoldCasino.ApiModule.Extensions
+@using GoldCasino.ApiModule.Mapping
+@using GoldCasino.ApiModule.Services.BusinessApi
+@using GoldCasino.ApiModule.Services.BusinessApi.Models
+@using GoldCasino.ApiModule.Services.PlayerClub365Api
+@using GoldCasino.ApiModule.Services.PlayerClub365Api.Models
+@using Microsoft.Extensions.Options
+@using SmartWinners.Configuration
+@using SmartWinners.Models.ViewModels
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage;
+@inject IBusinessApiService businessApiService
+@inject IPlayerClub365ApiService playerClub365ApiService
+@inject IOptions<LadderBonusOptions> ladderBonusOptions
+@{
+	Layout = "MasterPage.cshtml";
+
+	var bonuses = Enumerable.Empty<EntityBonus>();
+	if (Context.User?.Identity?.IsAuthenticated ?? false)
+	{
+		var access = Context.User.ToUserApiAccess();
+		var bonusResult = await businessApiService.EntityBonusesGetAsync(new()
+		{
+			Fields = FieldHelper<EntityBonusDto>.Fields,
+			Filter = new Dictionary<string, string>
+			{
+				["isDeleted"] = "=0",
+				["CustomField201"] = "=12",
+				["ORDER BY"] = "CreatedDate desc"
+			},
+			LimitFrom = 0,
+			LimitCount = 50
+		}, access);
+
+		if (bonusResult.IsSuccess && bonusResult.Value?.Data is { } fetched)
+			bonuses = fetched;
+	}
+
+	var nowUtc = DateTime.UtcNow;
+	string FormatTimer(DateTime expiry, DateTime now) =>
+		(expiry - now) switch
+		{
+			{ TotalSeconds: < 0 } => "00:00:00",
+			var remaining => $"{(int)remaining.TotalHours:00}:{remaining.Minutes:00}:{remaining.Seconds:00}"
+		};
+
+	var ladderSteps = ladderBonusOptions.Value.Steps;
+
+	var ladderBonuses = bonuses
+		.Where(b => b.Type == BonusType.Ladder && b.Serial.HasValue)
+		.GroupBy(b => Convert.ToInt32(Math.Round(b.Serial!.Value)))
+		.ToDictionary(g => g.Key, g => g
+			.OrderByDescending(x => x.CreatedDateCustom ?? x.CreatedDate ?? DateTime.MinValue)
+			.First());
+
+	// Collected steps are those that exist in DB
+	var collectedSerials = ladderBonuses.Keys.ToHashSet();
+	var collectedCount = collectedSerials.Count;
+
+	// Build list of tickets to display (only uncollected ones)
+	var ladderTickets = new List<BonusTicketViewModel>();
+	DateTime? timerExpires = null;
+
+	// Find the latest created date from collected bonuses for timer
+	var latestUsedCreated = bonuses
+		.Where(b => b.Type == BonusType.Ladder && b.CreatedDateCustom.HasValue)
+		.Select(b => b.CreatedDateCustom!.Value)
+		.OrderByDescending(x => x)
+		.FirstOrDefault();
+
+	// If all 5 steps are collected, show only step 5 as Claimed
+	if (collectedCount >= ladderSteps.Count)
+	{
+		var lastStep = ladderSteps.Last();
+		ladderTickets.Add(new BonusTicketViewModel
+		{
+			Type = BannerType.Claimed,
+			StepText = lastStep.StepText,
+			BonusAddOnAmount = lastStep.BonusAddOnAmount,
+			MinDepositAmount = lastStep.MinDepositAmount,
+			BonusPercentageText = lastStep.BonusPercentageText,
+			PlayWithText = "Play With",
+			TotalPlayText = lastStep.TotalPlayText,
+			ImageUrl = lastStep.ImageUrl,
+			RecordId = 0,
+			Serial = lastStep.Serial,
+			CollectUrl = string.Empty
+		});
+	}
+	else
+	{
+		// Filter to only uncollected steps
+		var unclaimedSteps = ladderSteps.Where(s => !collectedSerials.Contains(s.Serial)).ToList();
+		var isFirstUnclaimed = true;
+
+		foreach (var step in unclaimedSteps)
+		{
+			var status = isFirstUnclaimed ? BannerType.Claim : BannerType.Locked;
+			var collectUrl = isFirstUnclaimed
+				? (step.Serial == 0 ? "/purchase-coins?bonus=welcome_ladder" : "/purchase-coins?bonus=ladder")
+				: string.Empty;
+
+			ladderTickets.Add(new BonusTicketViewModel
+			{
+				Type = status,
+				StepText = step.StepText,
+				BonusAddOnAmount = step.BonusAddOnAmount,
+				MinDepositAmount = step.MinDepositAmount,
+				BonusPercentageText = step.BonusPercentageText,
+				PlayWithText = "Play With",
+				TotalPlayText = step.TotalPlayText,
+				ImageUrl = step.ImageUrl,
+				RecordId = 0,
+				Serial = step.Serial,
+				CollectUrl = collectUrl
+			});
+
+			isFirstUnclaimed = false;
+		}
+	}
+
+	if (latestUsedCreated != default)
+		timerExpires = latestUsedCreated.AddHours(24);
+
+	var timerText = timerExpires.HasValue ? FormatTimer(timerExpires.Value, nowUtc) : "00:00:00";
+	var timerViewModel = new BonusTimerViewModel
+	{
+		DisplayText = timerText,
+		ExpirationUtc = timerExpires
+	};
+
+	var progressViewModel = new ProgressBarViewModel
+	{
+		Steps = ladderSteps.Count,
+		Value = Math.Min(collectedCount, ladderSteps.Count)
+	};
+}
+
+<div class="">
+
+	<div
+		class="absolute flex max-sm:justify-center top-14 lg:top-16 w-full overflow-hidden max-w-[1920px] aspect-[11/9] sm:aspect-[192/85] @@container">
+		<img src="/images/casino/bonuses/bonus-banner-wide.webp" alt="Casino Bonus Banner"
+				 class="max-sm:h-full max-sm:max-w-none object-cover blur-[2px] brightness-70" />
+		<div class="absolute flex flex-col h-full items-center w-full">
+			<div
+				class="flex flex-col gap-[min(1.04cqw,1.25rem)] items-center justify-center max-w-[clamp(365px,45cqw,880px)] mt-[12.5cqw] sm:mt-[6.25cqw]">
+				<p class="text-[clamp(1.5rem,3.1cqw,3.75rem)] font-semibold text-2">
+					Climb the SIGNUP LADDER Unlock Up to
+					<span class="gold-gradient-text">500% Bonus</span>!
+				</p>
+				<p class="text-[clamp(1.125rem,1.88cqw,2.25rem)] font-medium">
+					Start your journey with a 150% deposit bonus and climb step by step.
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div class="max-sm:mt-[calc(100vw*1/2)] max-[1920px]:mt-[calc(100vw*7/25)] min-[1920px]:mt-[calc(1920px*7/25)] h-full w-full max-w-[1920px] flex justify-center items-center">
+		@if (ladderTickets.Count > 0)
+		{
+			<div class="h-full w-full sm:w-[min(51cqw,980px)]">
+				<partial name="Bonus/TicketClaim" model="ladderTickets[0]" />
+			</div>
+		}
+	</div>
+
+	<div class="h-full w-full sm:w-[min(51cqw,980px)]">
+		<partial name="Bonus/BonusTimer" model="timerViewModel" />
+	</div>
+
+	<div class="h-full w-full sm:w-[min(51cqw,980px)]">
+		<partial name="Bonus/ProgressBar" model="progressViewModel" />
+	</div>
+
+	<div class="flex flex-col gap-3 md:gap-5 mt-8 lg:mt-15 w-full max-w-[1920px] items-center">
+		@for (var i = 1; i < ladderTickets.Count; i++)
+		{
+			<div class="h-full w-full sm:w-[min(51cqw,980px)]">
+				<partial name="Bonus/TicketClaim" model="ladderTickets[i]" />
+			</div>
+		}
+	</div>
+
+	<partial name="Bonus/HowLadderWorks" />
+</div>
+
+@section Scripts {
+	@* Commented out - now using redirect links instead of JS collect
+	<script>
+				(() => {
+					const buttons = document.querySelectorAll('.js-ladder-bonus-collect[data-bonus-action="collect"]');
+					if (!buttons.length) return;
+
+					const endpoint = '/api/ladder-bonus/collect';
+
+					const toggleLoading = (btn, isLoading) => {
+						btn.dataset.loading = isLoading ? '1' : '0';
+						btn.classList.toggle('opacity-60', isLoading);
+						btn.disabled = isLoading ? true : false;
+					};
+
+					buttons.forEach((btn) => {
+						if (btn.disabled) return;
+
+						btn.addEventListener('click', async () => {
+							const recordId = Number(btn.dataset.recordId || '0');
+							if (!recordId) return;
+
+							toggleLoading(btn, true);
+							try {
+								const response = await fetch(endpoint, {
+									method: 'POST',
+									headers: { 'Content-Type': 'application/json' },
+									body: JSON.stringify({ recordId })
+								});
+
+								if (!response.ok) {
+									let message = 'Unable to collect bonus right now. Please try again.';
+									try {
+										const problem = await response.json();
+										if (problem?.message) message = problem.message;
+									}
+									catch { /* ignored */ }
+									throw new Error(message);
+								}
+
+								await response.json().catch(() => ({}));
+								window.location.reload();
+							}
+							catch (err) {
+								console.error(err);
+								alert(err?.message ?? 'Unable to collect bonus right now. Please try again.');
+							}
+							finally {
+								toggleLoading(btn, false);
+							}
+						});
+					});
+				})();
+	</script>
+	*@
+}

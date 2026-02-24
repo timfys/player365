@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Error Report</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
+</head>
+<body>
+    <h2>Error Report</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Level</th>
+                <th>Message</th>
+                <th>Exception</th>
+                <th>IP</th>
+                <th>User</th>
+                <th>Url</th>
+                <th>DomainIp</th>
+                <th>StackTrace</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{LogEvents}}
+        </tbody>
+    </table>
+</body>
+</html>

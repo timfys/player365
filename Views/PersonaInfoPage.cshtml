@@ -1,0 +1,771 @@
+﻿@using System.Text.Json
+@using GoldCasino.ApiModule.Auth;
+@using GoldCasino.ApiModule.Extensions;
+@using GoldCasino.ApiModule.Services.BusinessApi;
+@using Umbraco.Cms.Web.Common.PublishedModels;
+@using System.Threading;
+@using Microsoft.AspNetCore.Http;
+@using Newtonsoft.Json;
+@using System.Globalization;
+@using SmartWinners.Models;
+@using SmartWinners.Helpers;
+@using GoldCasino.ApiModule.Mapping;
+@using GoldCasino.ApiModule.Dtos.User;
+@inject IBusinessApiService businessApiService
+
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+
+@{
+	Layout = "MasterPage.cshtml";
+	var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
+
+	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
+	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
+
+	if (!isAuthenticated)
+	{
+		Context.Response.Redirect($"{langIso}/sign-in?r={langIso}/personal-info");
+		return;
+	}
+		var identityUser = Context.User.ToUserApiAccess();
+
+	var result = await businessApiService.EntityFindAsync(new()
+	{
+		Fields = FieldHelper<UserDto>.Fields,
+		Filter = new() { { "entityId", $"{identityUser?.EntityId}" } }
+	}, identityUser);
+
+	var entity = result.Value?.Entities.FirstOrDefault();
+	var user = EntityMapper.MapTo<UserDto>(entity);
+}
+
+@{
+	var modelFirstName = user.FirstName;
+	var modelLastName = user.LastName;
+	var modelBirthday = user.Birthday;
+	var modelPhoneNumber = user.PhoneNumber;
+	var modelEmail = user.Email;
+	var modelStreet = user.Address;
+	var modelCity = user.City;
+	var modelZipCode = user.ZipCode;
+	var modelState = user.State;
+	var modelCountry = user.CountryIso;
+	var modelUserName = user.Username;
+	var modelPassword = identityUser?.Password;
+
+	var modelMobileVerified = user.MobileVerified;
+	var modelEmailVerified = user.EmailVerified;
+
+	int birthDayDay = 0;
+	int birthDayMonth = 0;
+	int birthDayYear = 0;
+
+	if (modelBirthday.HasValue)
+	{
+		birthDayDay = modelBirthday.Value.Day;
+		birthDayMonth = modelBirthday.Value.Month;
+		birthDayYear = modelBirthday.Value.Year;
+	}
+
+	var firstYear = 1900;
+	var todayYear = DateTime.Now.Year;
+	var lastYear = todayYear - 18;
+
+	var categories = new[]
+	{
+new { Id = "personal_information", Key = "Personal information" },
+new { Id = "address_information", Key = "Address information" },
+new { Id = "login_information", Key = "Login information" },
+@* new { Id = "card_information", Key = "Saved Credit cards" } *@
+};
+	var activeId = "personal_information";
+
+	// Map query string parameter `t` (0-based tab index) to tab id
+	if (int.TryParse(Context.Request.Query["t"].FirstOrDefault(), out var tabIndex))
+	{
+		// Ensure index is within range of defined categories
+		if (tabIndex >= 0 && tabIndex < categories.Length)
+		{
+			activeId = categories[tabIndex].Id;
+		}
+	}
+
+	var cfg = new
+	{
+		userEndpoint = Url.Content("~/api/user"),
+		authPhoneEndpoint = Url.Content("~/api/Auth/phone"),
+		// initial phone + country from server:
+		initCountry = (modelCountry ?? string.Empty).ToLowerInvariant(),
+		initPhone = modelPhoneNumber ?? string.Empty,
+		// localized texts:
+		changedText = Umbraco.GetDictionaryValue("Changed"),
+		savedText = Umbraco.GetDictionaryValue("Saved"),
+		invalidPhoneText = Umbraco.GetDictionaryValue("Invalid phone number"),
+		updateFailedText = Umbraco.GetDictionaryValue("Update failed"),
+		// default tab:
+		activeId = activeId
+	};
+	var cfgJson = System.Text.Json.JsonSerializer.Serialize(cfg);
+
+	/*var ipDetails = SiteTools.GetIPInfo(IdentityHelper.GetUserIp());*/
+}
+
+<script src="https://cdn.jsdelivr.net/npm/libphonenumber-js@1.11.8/bundle/libphonenumber-js.min.js"></script>
+
+<div class="md:max-w-[1330px] mt-4 mb-8 gap-10">
+	<!-- Header with back button -->
+	<div class="flex w-full gap-5 items-center">
+		<button id="back_button_from_personal_info"
+			class="flex items-center justify-center w-8 h-8  rounded-md bg-(--c-teal-action) hover:bg-(--c-teal-action-h) hover:cursor-pointer">
+			<svg xmlns="http://www.w3.org/2000/svg" class="text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 12H5m0 0l7-7m-7 7l7 7">
+				</path>
+			</svg>
+		</button>
+		<!-- title -->
+		<span class="mb-0! text-center text-xl md:text-2xl uppercase">@Umbraco.GetDictionaryValue("Back")</span>
+	</div>
+
+	<div class="flex flex-col md:flex-row gap-10 w-full" x-data="accountSettings()" data-config='@Html.Raw(cfgJson)'
+		data-active-id="@activeId">
+		<!-- Left Menu -->
+		<div class="flex flex-col gap-2 md:gap-3" role="tablist" aria-orientation="vertical">
+			@{ var menuIndex = 0; }
+			@foreach (var c in categories)
+			{
+				<button type="button" id="@c.Id" data-tab-index="@menuIndex" role="tab"
+					:aria-selected="activeId === '@c.Id'" @@click="changeTab('@c.Id', @menuIndex)"
+					:class="{ 'bg-(--c-teal-strong)': activeId === '@c.Id' }"
+					class="border-b rounded-t-lg  hover:bg-(--c-teal-strong) hover:cursor-pointer p-3 text-left">
+					<p class="text-lg md:text-2xl font-medium uppercase">
+						@Umbraco.GetDictionaryValue(c.Key)</p>
+				</button>
+				{ menuIndex++; }
+			}
+		</div>
+
+		<div class="border-white border-r"></div>
+
+		<!-- Right Side -->
+		<div class="flex-1 space-y-10">
+			<!-- PERSONAL -->
+			<section class="flex flex-col gap-4 items-center" x-cloak x-show="activeId==='personal_information'">
+				<div class="self-stretch">
+					<input type="hidden" id="changed_button_text" value='@Umbraco.GetDictionaryValue("Changed")' />
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Name"):
+					</p>
+					<input type="text" maxlength="50"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_name" required placeholder="" value="@modelFirstName">
+					<strong class="personal_error" id="name_error" style="display: none"></strong>
+				</div>
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Last Name"):</p>
+					<input type="text" maxlength="50"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_last_name" required placeholder="" value="@modelLastName">
+					<strong class="personal_error" id="lastname_error" style="display: none"></strong>
+				</div>
+
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Birthday"):</p>
+					<input type="date" maxlength="50"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_birthday" required placeholder=""
+						value="@(modelBirthday.HasValue? modelBirthday.Value.ToString("yyyy-MM-dd") : null)">
+					<strong class="personal_error" id="birthday_error" style="display: none"></strong>
+				</div>
+
+				<div class="self-stretch">
+					<div class="flex_box mobil_row">
+						<p class="text-base md:text-2xl font-semibold md:font-normal box_text">
+							@Umbraco.GetDictionaryValue("Phone number"):</p>
+						<input type="hidden" value="@modelMobileVerified.ToString()" id="card_information_text_phone_number" />
+						@{
+							var styleVerified = (@modelMobileVerified ? "display: block;" : "display: none;");
+							var styleNotVerified = (@modelMobileVerified ? "display: none;" : "display: block;");
+						}
+						<p style="@styleVerified" id="phone_number_verified" class="text-base md:text-lg verified">
+							@Umbraco.GetDictionaryValue("Verified")</p>
+						<button type="button" style="@styleNotVerified" id="phone_number_not_verified"
+							class="text-base md:text-lg not_verified" title="@Umbraco.GetDictionaryValue("Not Verified")">
+							@Umbraco.GetDictionaryValue("Not Verified")
+						</button>
+					</div>
+
+					<div class="h-12 md:h-16">
+						<phone-number-input id="phoneInputPersonal" x-init="$el.showLabel = false"
+							class="block w-full h-full  rounded-lg font-medium">
+						</phone-number-input>
+					</div>
+					<strong class="personal_error" id="phone_number_login_error" style="display: none"></strong>
+				</div>
+
+				<div class="self-stretch">
+					<div class="flex_box mobil_row">
+						<p class="text-base md:text-2xl font-semibold md:font-normal box_text">
+							@Umbraco.GetDictionaryValue("E-mail"):</p>
+						@if (modelEmailVerified)
+						{
+							<p class="text-base md:text-lg verified">
+								@Umbraco.GetDictionaryValue("Verified")</p>
+						}
+						else
+						{
+							<a href="@langIso/email-verification@(string.IsNullOrEmpty(modelEmail) ? "?change=1" : "")"
+								id="personal_email_go_to_verify">
+								<p class="text-base md:text-lg not_verified">
+									@Umbraco.GetDictionaryValue("Not Verified")</p>
+							</a>
+						}
+					</div>
+
+					<input type="email" maxlength="50"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_email" required placeholder="" value="@modelEmail">
+					<strong class="personal_error" id="email_error" style="display: none"></strong>
+				</div>
+
+				<button type="button"
+					class="playerclub-button-yellow rounded-md px-4 py-2 transition-colors text-black! text-sm font-medium md:text-base no-underline! w-full md:w-[300px] mt-2 md:mt-4"
+					id="personal_change">
+					<p class="button_link font-semibold!">
+						@Umbraco.GetDictionaryValue("Change")</p>
+				</button>
+				<div id="form-valid" class="text-base md:text-2xl font-semibold md:font-normal"
+					style="display: none; text-align: center; margin-top: 1rem;"></div>
+			</section>
+
+			<!-- ADDRESS -->
+			<section class="flex flex-col gap-4 items-center" x-cloak x-show="activeId==='address_information'">
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Street"):</p>
+					<input maxlength="50" type="text"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_street" required placeholder="" value="@modelStreet">
+					<strong class="personal_error" id="street_error" style="display: none"></strong>
+				</div>
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">@Umbraco.GetDictionaryValue("City"):
+					</p>
+					<input maxlength="50" type="text"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_city" required placeholder="" value="@modelCity">
+					<strong class="personal_error" id="city_error" style="display: none"></strong>
+				</div>
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("ZIP/Post Code"):</p>
+					<input type="text" maxlength="15"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_post_code" required placeholder="" value="@modelZipCode">
+					<strong class="personal_error" id="zip_error" style="display: none"></strong>
+				</div>
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("State"):</p>
+					<input maxlength="50" type="text"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_state" required placeholder="" value="@modelState">
+					<strong class="personal_error" id="state_error" style="display: none"></strong>
+				</div>
+
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Country"):</p>
+					<input id="model_country" type="hidden" value="@modelCountry" />
+					<select name="country"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_country">
+						<option value="country" disabled selected="@(string.IsNullOrWhiteSpace(modelCountry) ? "selected" : null)">
+							@Umbraco.GetDictionaryValue("Country")</option>
+						@{
+							var selectedAlpha2 = (modelCountry ?? string.Empty).Trim();
+							@foreach (var c in CountryUtility.Countries)
+							{
+								if (string.Equals(c.Alpha2, "empty", StringComparison.OrdinalIgnoreCase)) { continue; }
+								var value = c.Alpha2?.ToLowerInvariant();
+								var isSelected = string.Equals(c.Alpha2, selectedAlpha2, StringComparison.OrdinalIgnoreCase);
+								<option value="@value" data-dial="@c.Code" selected="@(isSelected ? "selected" : null)">@c.Name
+								</option>
+							}
+						}
+					</select>
+				</div>
+
+				<button type="button"
+					class="playerclub-button-yellow rounded-md px-4 py-2 transition-colors text-black! text-sm font-medium md:text-base no-underline! w-full md:w-[300px] mt-2 md:mt-4"
+					id="address_change">
+					<p class="button_link">@Umbraco.GetDictionaryValue("Change")</p>
+				</button>
+				<div id="form-valid-address" class="text-base md:text-2xl font-semibold md:font-normal"
+					style="display: none; text-align: center; margin-top: 1rem;"></div>
+			</section>
+
+			<!-- LOGIN -->
+			<section class="flex flex-col gap-4 items-center" x-cloak x-show="activeId==='login_information'">
+				<div class="self-stretch">
+					<div class="flex_box mobil_row">
+						<p class="text-base md:text-2xl font-semibold md:font-normal login_text">
+							@Umbraco.GetDictionaryValue("Phone number"):</p>
+						<input type="hidden" value="@modelMobileVerified.ToString()"
+							id="card_information_text_phone_number_login" />
+						@{
+							var styleVerifiedLogin = (@modelMobileVerified ? "display: block;" : "display: none;");
+							var styleNotVerifiedLogin = (@modelMobileVerified ? "display: none;" : "display: block;");
+						}
+						<p style="@styleVerifiedLogin" id="phone_number_verified_login" class="text-base md:text-lg verified">
+							@Umbraco.GetDictionaryValue("Verified")</p>
+						<button type="button" style="@styleNotVerifiedLogin" id="phone_number_not_verified_login"
+							class="text-base md:text-lg not_verified" title="@Umbraco.GetDictionaryValue("Not Verified")">
+							@Umbraco.GetDictionaryValue("Not Verified")
+						</button>
+					</div>
+					<div class="h-12 md:h-16">
+						<phone-number-input id="phoneInputLogin" x-init="$el.showLabel = false"
+							class="block w-full h-full md:h-16 rounded-lg font-medium">
+						</phone-number-input>
+					</div>
+					<strong class="personal_error" id="phone_number_login_error" style="display: none"></strong>
+				</div>
+
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Password"):</p>
+					<input maxlength="50" type="password"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_password" required placeholder="********" value="@modelPassword">
+					<p class="text-base">@Umbraco.GetDictionaryValue("Passwords must be at least 6 characters")</p>
+				</div>
+				<div class="self-stretch">
+					<p class="text-base md:text-2xl font-semibold md:font-normal">
+						@Umbraco.GetDictionaryValue("Re-enter password"):</p>
+					<input maxlength="50" type="password"
+						class="w-full px-6 h-12 md:h-16 rounded-lg bg-white/90 text-black/90 text-base md:text-2xl font-medium"
+						id="personal_re-enter_password" required placeholder="" value="@modelPassword">
+					<strong class="personal_error" id="password_error" style="display: none"></strong>
+				</div>
+
+				<button type="button"
+					class="playerclub-button-yellow rounded-md px-4 py-2 transition-colors text-black! text-sm font-medium md:text-base no-underline! w-full md:w-[300px] mt-2 md:mt-4"
+					id="login_change">
+					<p class="button_link">@Umbraco.GetDictionaryValue("Change")</p>
+				</button>
+				<div id="form-valid-login" class="text-base md:text-2xl font-semibold md:font-normal"
+					style="display: none; text-align: center; margin-top: 1rem;"></div>
+			</section>
+
+			<!-- CARDS -->
+			@*
+			<section x-cloak x-show="activeId==='card_information'">
+				<div class="">
+					<div class="w-full">
+						<table class="cards-table bg-(--c-teal-strong) rounded-lg">
+							<thead>
+								<tr>
+									<th>@Html.Raw(Umbraco.GetDictionaryValue("Card Number"))</th>
+									<th>@Html.Raw(Umbraco.GetDictionaryValue("Valid until"))</th>
+								</tr>
+							</thead>
+							<tbody>
+								@{
+									var cards = await PaymentHelper.GetUserPaymentCards(user.Id);
+								}
+								@if (cards != null && cards.Any())
+								{
+									@foreach (var card in cards)
+									{
+										<tr>
+											<td>**** @Html.Raw(card.CardLastDigits)</td>
+											<td>@Html.Raw($"{card.PayerDate:dd MMM yyyy}")</td>
+										</tr>
+									}
+								}
+								@try
+								{
+									@foreach (var card in PaymentHelper.GetStripeUsedCards())
+									{
+										<tr>
+											<td>**** @Html.Raw(card.PayerNumber)</td>
+											<td>@Html.Raw($"{card.PayerDate:dd MMM yyyy}")</td>
+										</tr>
+									}
+								}
+								catch { }
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</section>*@
+		</div>
+	</div>
+</div>
+
+<style>
+	[x-cloak] {
+		display: none !important
+	}
+</style>
+
+<script>
+	// Focus the first-name field when the page is ready
+	(function () {
+		function focusFirstName() {
+			var input = document.getElementById('personal_name');
+			if (input && typeof input.focus === 'function') {
+				input.focus();
+			}
+		}
+
+	if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', focusFirstName);
+	} else {
+		focusFirstName();
+	}
+	})();
+</script>
+
+
+@* <script type="module">
+	// ky (ESM) — works without bundlers
+	import ky from 'https://esm.sh/ky@@^1.7.0';
+
+	// Reusable ky instance
+	const api = ky.create({
+		credentials: 'same-origin',                // change to 'include' if calling cross-origin and need cookies
+		headers: () => {
+			// Try to attach CSRF/anti-forgery if present
+			const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+				|| document.querySelector('meta[name="csrf-token"]')?.content;
+			return token ? { 'RequestVerificationToken': token, 'Accept': 'application/json' } : { 'Accept': 'application/json' };
+		}
+	});
+
+	const $ = (id) => document.getElementById(id);
+
+	function showStatus(id, text, ok = true) {
+		const el = $(id);
+		if (!el) return;
+		el.textContent = text;
+		el.style.display = 'block';
+		el.style.color = ok ? 'var(--c-green,#16a34a)' : 'var(--c-red,#dc2626)';
+		clearTimeout(el._t);
+		el._t = setTimeout(() => { el.style.display = 'none'; }, 4000);
+	}
+
+	async function patchUser(payload, { btnId, statusId }) {
+		const btn = $(btnId);
+		const btnLabel = btn?.querySelector('.button_link');
+		const originalText = btnLabel?.textContent?.trim();
+		try {
+			if (btn) { btn.disabled = true; btn.classList.add('opacity-70'); if (btnLabel) btnLabel.textContent = '...'; }
+			const res = await api.patch('api/user', { json: payload });
+			const data = await res.json().catch(() => ({}));
+			const changedText = $('changed_button_text')?.value || 'Changed';
+			if (btnLabel) btnLabel.textContent = changedText;
+			showStatus(statusId, 'Saved', true);
+			// Emit a hook if other widgets need to react
+			window.dispatchEvent(new CustomEvent('user:updated', { detail: data }));
+			return data;
+		} catch (err) {
+			let msg = 'Update failed';
+			if (err?.response) {
+				try {
+					const j = await err.response.json();
+					msg = j?.message || j?.error || JSON.stringify(j);
+				} catch {
+					msg = await err.response.text().catch(() => msg);
+				}
+			} else if (err?.message) {
+				msg = err.message;
+			}
+			if (btnLabel && originalText) btnLabel.textContent = originalText;
+			showStatus(statusId, msg, false);
+			console.error('PATCH /api/user error:', err);
+		} finally {
+			if (btn) { btn.disabled = false; btn.classList.remove('opacity-70'); }
+		}
+	}
+	// ----- PHONE HELPERS (drop-in) -----------------------------------
+	const phoneElPersonal = document.getElementById('phoneInputPersonal');
+	const phoneElLogin = document.getElementById('phoneInputLogin');
+
+	const phoneState = {
+		personal: { raw: '', country: null, normalized: null },
+		login: { raw: '', country: null, normalized: null }
+	};
+
+	// Initial values from server (user profile)
+	const INIT_COUNTRY = @Html.Raw(JsonConvert.SerializeObject(modelCountry?.ToLowerInvariant()));
+	const INIT_PHONE = @Html.Raw(JsonConvert.SerializeObject(modelPhoneNumber));
+
+	const getDetail = (e) => Array.isArray(e.detail) ? e.detail[0] : e.detail;
+	const digitsOnly = (s) => (s || '').replace(/\D+/g, '');
+	const hasLib = !!(window.libphonenumber && window.libphonenumber.parsePhoneNumber);
+	const getIso2 = (c) => (c && typeof c === 'object' ? c.iso2 : (typeof c === 'string' ? c : ''));
+	const getDial = (c) => (c && typeof c === 'object' ? c.dialCode : '');
+
+	function buildUsernameFromE164(e164, dialCode) {
+		const d0 = digitsOnly(e164);
+		if (!d0) return '';
+		const d = d0.startsWith('00') ? d0.slice(2) : d0; // 00380... -> 380...
+		const cc = (dialCode || '');
+		let rest = d.startsWith(cc) ? d.slice(cc.length) : d;
+		if (rest.startsWith('0')) rest = rest.slice(1);
+		return cc + rest;
+	}
+
+	function toE164(raw, ctry) {
+		const cleaned = (raw || '').trim();
+		if (!cleaned) return '';
+		if (cleaned.startsWith('+')) return '+' + digitsOnly(cleaned);
+		const cc = getDial(ctry);
+		const local = digitsOnly(cleaned);
+		return cc ? `+${cc}${local}` : '';
+	}
+
+	function normalizePhoneSafe(raw, ctry) {
+		const candidate = toE164(raw, ctry);
+		if (!candidate) return { valid: false, reason: 'NO_COUNTRY_CODE' };
+
+		if (hasLib) {
+			try {
+				const p = window.libphonenumber.parsePhoneNumber(candidate);
+				if (!p || !p.isValid()) return { valid: false, reason: 'INVALID_LIB' };
+				return {
+					valid: true,
+					e164: p.format('E.164'),
+					username: `${p.countryCallingCode}${p.nationalNumber}`,
+					region: (p.country || getIso2(ctry) || '').toUpperCase()
+				};
+			} catch {
+				return { valid: false, reason: 'PARSE_ERROR' };
+			}
+		}
+
+		// Fallback w/o lib: not 100% strict, but usable
+		const cc = getDial(ctry);
+		if (!cc) return { valid: false, reason: 'NO_COUNTRY_CODE' };
+		const e164 = candidate;
+		const username = buildUsernameFromE164(e164, cc);
+		return { valid: true, e164, username, region: (getIso2(ctry) || '').toUpperCase() };
+	}
+
+	function wirePhone(el, key /* 'personal' | 'login' */) {
+		if (!el) return;
+
+		el.addEventListener('update:modelValue', (e) => {
+			phoneState[key].raw = (getDetail(e) || '').toString().replace(/\s+/g, '');
+			el.setAttribute('model-value', phoneState[key].raw);
+			phoneState[key].normalized = null; // reset cache
+		});
+
+		el.addEventListener('update:country', (e) => {
+			phoneState[key].country = getDetail(e) || null; // { name, iso2, dialCode } | null
+			phoneState[key].normalized = null;
+		});
+	}
+
+	// Attach
+	wirePhone(phoneElPersonal, 'personal');
+	wirePhone(phoneElLogin, 'login');
+
+	// Set initial values into the component and our local state
+	function setInitialPhone(el, key, initCountry, initPhone) {
+		if (!el) return;
+
+		// 1) Set country first so we can resolve dialCode for normalization
+		if (initCountry) {
+			try { el.country = initCountry; } catch { }
+			try { el.setAttribute('country', initCountry); } catch { }
+		}
+
+		// 2) After microtask, read resolved country and set phone as E.164 if provided
+		setTimeout(() => {
+			const resolvedCountry = el.country || initCountry || null;
+			if (resolvedCountry) phoneState[key].country = resolvedCountry;
+
+			if (initPhone) {
+				let rawIn = String(initPhone).trim();
+				let e164 = '';
+
+				if (rawIn.startsWith('+')) {
+					e164 = '+' + digitsOnly(rawIn);
+				} else if (rawIn.startsWith('00')) {
+					e164 = '+' + digitsOnly(rawIn.slice(2));
+				} else {
+					// No explicit country code — try to normalize using resolved country
+					const n = normalizePhoneSafe(rawIn, resolvedCountry);
+					if (n && n.valid && n.e164) {
+						e164 = n.e164;
+					} else {
+						const local = digitsOnly(rawIn);
+						const cc = getDial(resolvedCountry);
+						e164 = cc ? `+${cc}${local}` : (local ? `+${local}` : '');
+					}
+				}
+
+				if (e164) {
+					try { el.modelValue = e164; } catch { }
+					try { el.setAttribute('model-value', e164); } catch { }
+					phoneState[key].raw = e164;
+					phoneState[key].normalized = null;
+				}
+			}
+		}, 0);
+	}
+
+	// Apply for both personal and login sections
+	setInitialPhone(phoneElPersonal, 'personal', INIT_COUNTRY, INIT_PHONE);
+	setInitialPhone(phoneElLogin, 'login', INIT_COUNTRY, INIT_PHONE);
+
+	// Provide a getter that lazily normalizes (and caches) the phone
+	function getNormalized(key) {
+		const s = phoneState[key];
+		if (!s) return null;
+		if (!s.normalized) s.normalized = normalizePhoneSafe(s.raw, s.country);
+		return s.normalized;
+	}
+	// -----------------------------------------------------------------
+	// ----- PHONE VERIFICATION TRIGGER BUTTONS -----
+	const verifyBtnPersonal = document.getElementById('phone_number_not_verified');
+	const verifyBtnLogin = document.getElementById('phone_number_not_verified_login');
+
+	async function startPhoneVerification(from /* 'personal' | 'login' */) {
+		// Prefer normalized phone from the corresponding section
+		const n = getNormalized(from);
+		let phonePayload = '';
+		if (n?.valid) {
+			// API expects Phone as digits including country code (username style)
+			phonePayload = n.username;
+		} else {
+			// Fallback to server-provided phone if exists
+			phonePayload = @Html.Raw(JsonConvert.SerializeObject(modelPhoneNumber ?? string.Empty));
+		}
+
+		if (!phonePayload) {
+			showStatus(from === 'personal' ? 'form-valid' : 'form-valid-login', '@Umbraco.GetDictionaryValue("Invalid phone number")', false);
+			return;
+		}
+
+		// Ensure leading '+' for API compatibility
+		phonePayload = ('' + phonePayload).trim();
+		if (phonePayload && !phonePayload.startsWith('+')) {
+			phonePayload = '+' + phonePayload;
+		}
+
+		try {
+			const res = await api.post('api/Auth/phone', {
+				json: { phone: phonePayload }
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				const code = data?.code || data?.Extensions?.code;
+				const msg = code === 'INVALID_PHONE_NUMBER' ? (data?.detail || 'Invalid phone number') : (data?.detail || 'Unknown error');
+				showStatus(from === 'personal' ? 'form-valid' : 'form-valid-login', msg, false);
+				return;
+			}
+
+			const data = await res.json().catch(() => ({}));
+			let redirectUrl = '';
+			if (data?.verify === true) {
+				redirectUrl = data.redirectUrl;
+				redirectUrl += '&r=' + encodeURIComponent(window.location.href);
+			} else {
+				const currentUrl = new URL(window.location.href);
+				currentUrl.searchParams.set('page', '1');
+				currentUrl.searchParams.set('min', 'false');
+				redirectUrl = currentUrl.toString();
+			}
+
+			window.top.location.href = redirectUrl;
+		} catch (err) {
+			let msg = 'Unknown error';
+			if (err?.response) {
+				try { const j = await err.response.json(); msg = j?.detail || j?.message || msg; } catch { msg = await err.response.text().catch(() => msg); }
+			} else if (err?.message) { msg = err.message; }
+			showStatus(from === 'personal' ? 'form-valid' : 'form-valid-login', msg, false);
+		}
+	}
+
+	verifyBtnPersonal?.addEventListener('click', () => startPhoneVerification('personal'));
+	verifyBtnLogin?.addEventListener('click', () => startPhoneVerification('login'));
+
+	// ---------- PERSONAL ----------
+	$('personal_change')?.addEventListener('click', async () => {
+		const payload = {
+			firstName: $('personal_name')?.value?.trim() || undefined,
+			lastName: $('personal_last_name')?.value?.trim() || undefined,
+			email: $('personal_email')?.value?.trim() || undefined,
+		};
+
+		// Birthday from the <input type="date">, already in yyyy-MM-dd
+		const bd = $('personal_birthday')?.value?.trim();
+		if (bd) {
+			payload.birthday = bd;               // your camelCase API (if supported)
+			payload['CustomField62'] = bd;       // for DTOs expecting this exact name
+		}
+
+		// Mobile phone from the Vue component (personal section)
+		const n = getNormalized('personal');
+		if (n?.valid) {
+			// Send both "friendly" and "strict" keys to match various DTO setups
+			payload.phoneNumber = n.username;    // camelCase
+			payload.mobile = n.username;         // camelCase alias
+			payload['Mobile'] = n.username;      // exact JsonPropertyName("Mobile")
+			payload.phoneE164 = n.e164;          // optional: useful for server-side logging
+			payload.countryIso = n.region || undefined;
+			payload['Country'] = n.region || undefined; // if DTO uses "Country"
+		} else if (phoneState.personal.raw || phoneState.personal.country) {
+			showStatus('form-valid', 'Invalid phone number', false);
+			return;
+		}
+
+		await patchUser(payload, { btnId: 'personal_change', statusId: 'form-valid' });
+	});
+
+	// ---------- ADDRESS ---------- 
+	$('address_change')?.addEventListener('click', async () => {
+		const payload = {
+			address: $('personal_street')?.value?.trim() || undefined,
+			city: $('personal_city')?.value?.trim() || undefined,
+			zipCode: $('personal_post_code')?.value?.trim() || undefined,
+			state: $('personal_state')?.value?.trim() || undefined,
+			countryIso: $('personal_country')?.value || $('model_country')?.value || undefined,
+		};
+		await patchUser(payload, { btnId: 'address_change', statusId: 'form-valid-address' });
+	});
+
+	// ---------- LOGIN ----------
+	$('login_change')?.addEventListener('click', async () => {
+		const pass1 = $('personal_password')?.value || '';
+		const pass2 = $('personal_re-enter_password')?.value || '';
+		if (pass1 !== pass2) {
+			const e = $('password_error');
+			if (e) { e.textContent = 'Passwords do not match'; e.style.display = 'block'; }
+			return;
+		}
+
+		const payload = {};
+		const n = getNormalized('login');
+		if (n?.valid) {
+			// Prefer username-style for auth (digits-only with country code)
+			payload.username = n.username;
+			// If your API allows updating mobile through the same endpoint, include aliases:
+			payload.mobile = n.username;
+			payload['Mobile'] = n.username;
+			payload.phoneE164 = n.e164;
+		} else if (phoneState.login.raw || phoneState.login.country) {
+			showStatus('form-valid-login', 'Invalid phone number', false);
+			return;
+		}
+
+		if (pass1) payload.password = pass1;
+
+		await patchUser(payload, { btnId: 'login_change', statusId: 'form-valid-login' });
+	});
+</script> *@

@@ -1,0 +1,146 @@
+@model SmartWinners.Models.ViewModels.ProgressBarViewModel
+
+<div id="progress1" class="js-progress" data-steps="@Model.Steps" data-value="@Model.Value"></div>
+
+@* <div class="mt-6 flex flex-wrap items-center gap-3">
+  <label for="demo" class="text-sm text-neutral-300">Progress:</label>
+  <input id="demo" type="range" min="0" max="5" value="0" class="w-64" />
+  <span id="demoVal" class="text-sm text-neutral-300">0</span>
+</div> *@
+
+<script>
+  const GOLD_BAR =
+    "linear-gradient(90deg,#b77c12 0%,#f7e08b 35%,#d49b25 65%,#f7e08b 100%)";
+  const GOLD_NODE =
+    "linear-gradient(180deg,#f7e08b 0%,#d49b25 100%)";
+
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+
+  function buildProgress(el) {
+    const steps = clamp(parseInt(el.dataset.steps || "5", 10), 2, 20);
+    let value = clamp(parseInt(el.dataset.value || "0", 10), 0, steps);
+
+    el.innerHTML = `
+      <div class="relative h-10">
+        <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-3 rounded-full bg-[#7A8789] overflow-hidden">
+          <div class="h-full rounded-full js-fill"></div>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-between js-nodes"></div>
+      </div>
+    `;
+
+    const fill = el.querySelector(".js-fill");
+    const nodesWrap = el.querySelector(".js-nodes");
+
+    // create nodes once, then resize them via layout()
+    nodesWrap.innerHTML = Array.from({ length: steps }, () => {
+      return `
+        <div class="js-node grid place-items-center rounded-full border shadow-[0_0_0_1px_rgba(0,0,0,.25)]" aria-hidden="true"></div>
+      `;
+    }).join("");
+
+    const nodes = Array.from(el.querySelectorAll(".js-node"));
+
+    // config
+    const maxNodePx = 32;
+    const tailRightPct = 0.05; // 5% of bar width
+    const tailLeftMultiplier = 2; // left tail = 2x right tail
+
+    let leftTail = 0;
+    let rightTail = 0;
+    let nodeSize = maxNodePx;
+
+    function renderChecksAndColors() {
+      nodes.forEach((node, i) => {
+        const idx = i + 1;
+        const checked = idx <= value;
+
+        node.style.background = checked ? GOLD_NODE : "#7A8789";
+        node.style.borderColor = checked ? "rgba(250,204,21,.55)" : "rgba(250,204,21,.35)";
+        node.innerHTML = checked
+          ? `<svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
+               <path d="M20 6L9 17l-5-5" fill="none" stroke="#111827" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+             </svg>`
+          : "";
+      });
+    }
+
+    function applyFill(w) {
+      const target = Math.min(value + 1, steps);
+
+      // node centers from edges (asymmetric tails)
+      const leftCenterInset = leftTail + nodeSize / 2;
+      const rightCenterInset = rightTail + nodeSize / 2;
+
+      let fillWidthPx;
+      if (value >= steps) {
+        fillWidthPx = w; // full bar
+      } else {
+        const span = Math.max(0, w - (leftCenterInset + rightCenterInset));
+        const ratio = (target - 1) / (steps - 1);
+        fillWidthPx = leftCenterInset + ratio * span;
+      }
+
+      fill.style.background = GOLD_BAR;
+      fill.style.width = Math.max(0, Math.min(w, fillWidthPx)) + "px";
+    }
+
+    function layout() {
+      const w = el.getBoundingClientRect().width;
+
+      // tails depend on width
+      rightTail = w * tailRightPct;
+      leftTail = rightTail * tailLeftMultiplier;
+
+      // node size depends on remaining width (cap at maxNodePx)
+      const available = Math.max(0, w - leftTail - rightTail);
+      const maxThatFits = available / steps; // you can use / (steps) because nodes are "space-between" within padded area
+      nodeSize = Math.max(16, Math.min(maxNodePx, maxThatFits)); // keep a sensible min
+
+      // apply padding
+      nodesWrap.style.paddingLeft = leftTail + "px";
+      nodesWrap.style.paddingRight = rightTail + "px";
+
+      // resize nodes
+      nodes.forEach((node) => {
+        node.style.width = nodeSize + "px";
+        node.style.height = nodeSize + "px";
+      });
+
+      // update fill
+      applyFill(w);
+    }
+
+    // public setter
+    el.setProgress = (nextValue) => {
+      value = clamp(parseInt(nextValue, 10), 0, steps);
+      el.dataset.value = String(value);
+      renderChecksAndColors();
+      layout(); // recompute fill with same value
+    };
+
+    // init
+    renderChecksAndColors();
+    layout();
+
+    // resize observers (no rebuild)
+    const ro = new ResizeObserver(layout);
+    ro.observe(el);
+
+    // keep reference so you could clean up later if needed
+    el._destroyProgress = () => ro.disconnect();
+  }
+
+  const bar = document.getElementById("progress1");
+  if (bar) {
+    buildProgress(bar);
+  }
+
+  @* const demo = document.getElementById("demo");
+  const demoVal = document.getElementById("demoVal");
+
+  demo.addEventListener("input", (e) => {
+    demoVal.textContent = e.target.value;
+    bar.setProgress(e.target.value);
+  }); *@
+</script>

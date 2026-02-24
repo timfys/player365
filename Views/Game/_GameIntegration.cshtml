@@ -1,0 +1,766 @@
+@using System.Globalization
+@using GoldCasino.ApiModule.Services.PlayerClub365Api.Models
+@using GoldCasino.ApiModule.Extensions
+@model Game
+
+@inject GoldCasino.ApiModule.Services.PlayerClub365Api.IPlayerClub365ApiService playerClub365ApiService
+
+@{
+	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
+	var bal = WebStorageUtility.GetUserBalance(Context);
+	
+	// Get bonus balance for authorized users
+	decimal bonusBalance = 0;
+	if (isAuthorized)
+	{
+		var cachedBonus = WebStorageUtility.GetUserBonusBalance(Context);
+		if (cachedBonus.HasValue)
+		{
+			bonusBalance = cachedBonus.Value;
+		}
+		else
+		{
+			var identityUser = Context.User.ToUserApiAccess();
+			var bonusResult = await playerClub365ApiService.EntityBonusesGetAsync(identityUser);
+			if (bonusResult.IsSuccess)
+			{
+				bonusBalance = bonusResult.Value.BonusBalance;
+				PaymentHelper.CacheUserBonusBalance(Context, bonusBalance);
+			}
+		}
+	}
+	var totalBalance = (bal?.BalanceUSD ?? 0) + bonusBalance;
+	
+	var backgroundImage = string.IsNullOrWhiteSpace(Model.ImageUrl) ? Model.OgImage : Model.ImageUrl;
+	var showRecordedVideo = string.Equals(Model.VideoRecorded, "Ready", StringComparison.OrdinalIgnoreCase);
+	var hasBackgroundImage = !string.IsNullOrWhiteSpace(backgroundImage);
+	var useBackgroundImage = hasBackgroundImage && !showRecordedVideo;
+	var shouldShowBackgroundVideo = showRecordedVideo || !useBackgroundImage;
+	var backgroundVideoMuted = !showRecordedVideo; // Only enable audio when recorded video is ready
+	var backgroundStyle = useBackgroundImage ? $"--game-frame-background: url('{backgroundImage}');" : string.Empty;
+	var gameFrameBgClass = shouldShowBackgroundVideo ? "game-frame--video" : "game-frame--blurred-bg";
+	var backgroundVideoUrl = $"https://www.playerclub365.com/images/video/{Model.Id}.mp4";
+	var isRtl = CultureInfo.CurrentCulture.TextInfo.IsRightToLeft;
+	var dirAttribute = isRtl ? "rtl" : "ltr";
+}
+<style>
+	.icon-button[dir="rtl"] .icon {
+		transform: scaleX(-1);
+	}
+</style>
+<div class="game-container" id="game-container" allow="fullscreen" allowfullscreen>
+
+	<div id="fs-top-toolbar" class="fs-top-toolbar hidden">
+		<div class="fs-toolbar-title">@Model.Name</div>
+		<button id="fsCloseBtn" class="fs-close-button" type="button" aria-label="Exit Fullscreen">
+			<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+				stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<line x1="18" y1="6" x2="6" y2="18"></line>
+				<line x1="6" y1="6" x2="18" y2="18"></line>
+			</svg>
+		</button>
+	</div>
+	@if (!isAuthorized)
+	{
+
+		<div class="game-frame max-md:hidden! @gameFrameBgClass" style="@backgroundStyle">
+			@if (shouldShowBackgroundVideo)
+			{
+				<video class="game-frame__bg-video" autoplay @(backgroundVideoMuted ? "muted" : string.Empty) loop playsinline preload="auto" poster="">
+					<source src="@backgroundVideoUrl" type="video/mp4" />
+				</video>
+			}
+			<div class="login-overlay ">
+				<div class="flex flex-col justify-center items-center gap-4 w-full h-[95%] md:w-[818px] md:h-[494px]">
+					<iframe class="rounded-lg w-full h-full" src="/sign-in?r=@HttpUtility.UrlEncode(Context.Request.Path)&min=true">
+					</iframe>
+				</div>
+			</div>
+		</div>
+
+		<div class="md:hidden">
+			<div class="flex flex-col justify-center items-center gap-4 w-full h-[410px]">
+				<iframe class="rounded-lg w-full h-full" src="/sign-in?r=@HttpUtility.UrlEncode(Context.Request.Path)&min=true">
+				</iframe>
+			</div>
+		</div>
+	}
+	else if (isAuthorized && totalBalance <= 0)
+	{
+
+		<div class="game-frame max-md:hidden! @gameFrameBgClass" style="@backgroundStyle">
+			@if (shouldShowBackgroundVideo)
+			{
+				<video class="game-frame__bg-video" autoplay @(backgroundVideoMuted ? "muted" : string.Empty) loop playsinline preload="auto" poster="">
+					<source src="@backgroundVideoUrl" type="video/mp4" />
+				</video>
+			}
+			<div class="login-overlay ">
+				<div class="flex flex-col justify-center items-center gap-4 w-[424px] h-[410px] md:w-[496px] md:h-[460px]">
+					<iframe class="rounded-lg w-full h-full" src="/purchase-coins?r=@HttpUtility.UrlEncode(Context.Request.Path)&min=true">
+					</iframe>
+				</div>
+			</div>
+		</div>
+
+		<div class="md:hidden">
+			<div class="flex flex-col justify-center items-center gap-4 w-full h-[410px]">
+				<iframe class="rounded-lg w-full h-full" src="/purchase-coins?r=@HttpUtility.UrlEncode(Context.Request.Path)&min=true">
+				</iframe>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="game-frame @gameFrameBgClass" style="@backgroundStyle">
+			@if (shouldShowBackgroundVideo)
+			{
+				<video class="game-frame__bg-video" autoplay muted loop playsinline poster="">
+					<source src="@backgroundVideoUrl" type="video/mp4" />
+				</video>
+			}
+			<div class="game-loading" id="game_loading" role="status" aria-live="polite">
+				<div class="game-loading__spinner" aria-hidden="true"></div>
+				<span>Loading game…</span>
+			</div>
+			<iframe class="w-full h-full outline-none" style="display: none;" id="game-frame" tabindex="-1" sandbox="allow-scripts allow-forms allow-popups allow-same-origin"  referrerpolicy="no-referrer">
+			</iframe>
+			<div class="login-overlay" style="display: none;" id="error_overlay">
+				<div class="flex flex-col justify-center items-center gap-4 w-[90%]">
+					<span class="text-3xl text-center">Unfortunately, @Model.H1Title is not available in your country</span>
+				</div>
+			</div>
+			<div class="login-overlay" style="display: none;" id="game_closed_overlay">
+				<div class="flex flex-col justify-center items-center gap-4 w-[90%]">
+					<span class="text-3xl text-center">Game temporarily closed</span>
+				</div>
+			</div>
+			<p id="script_errors" class="script-errors" style="display:none;" aria-live="polite"></p>
+		</div>
+	}
+
+
+	<div class="game-toolbar w-full" id="game-toolbar">
+		<button class="icon-button" onclick="location.href='@ViewBag.back'" title="Back" dir="@dirAttribute">
+			<svg xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+			</svg>
+		</button>
+
+		<div class="toolbar-title">
+			@Model.Name
+		</div>
+
+		<div class="toolbar-actions">
+			<button id="fsBtn" class="icon-button" title="Fullscreen">
+				<svg id="fsIconEnter" xmlns="http://www.w3.org/2000/svg" class="icon" viewBox="0 0 24 24" fill="none"
+					stroke="currentColor" stroke-width="2">
+					<path d="M4 4h6M4 4v6M20 4h-6M20 4v6M4 20h6M4 20v-6M20 20h-6M20 20v-6" />
+				</svg>
+				<svg id="fsIconExit" xmlns="http://www.w3.org/2000/svg" class="icon hidden" viewBox="0 0 24 24" fill="none"
+					stroke="currentColor" stroke-width="2">
+					<path d="M9 9H4V4M15 9h5V4M9 15H4v5M15 15h5v5" />
+				</svg>
+			</button>
+		</div>
+	</div>
+</div>
+
+<script>
+	(() => {
+		// DOM Elements
+		const gameContainer = document.getElementById('game-container');
+		const iframeEl = document.getElementById('game-frame');
+		const btn = document.getElementById('fsBtn'); // Bottom toggle button
+		const closeBtn = document.getElementById('fsCloseBtn'); // Top Close X
+		const fsTopToolbar = document.getElementById('fs-top-toolbar');
+		const bottomToolbar = document.getElementById('game-toolbar');
+		const fsIconEnter = document.getElementById('fsIconEnter');
+		const fsIconExit = document.getElementById('fsIconExit');
+
+		if (!gameContainer || !btn) return;
+
+		// --- Config ---
+		// We request fullscreen on the CONTAINER, not the iframe, so the custom toolbar stays visible.
+		const canUseFullscreenApi = Boolean(document.fullscreenEnabled && gameContainer.requestFullscreen);
+		const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+		let fallbackFsActive = false;
+		let lastOrientation = window.matchMedia("(orientation: landscape)").matches ? 'landscape' : 'portrait';
+
+		// --- UI State Helper ---
+		const updateUiState = (isFs) => {
+			// Toggle Icons on bottom bar
+			if (fsIconEnter) fsIconEnter.classList.toggle('hidden', isFs);
+			if (fsIconExit) fsIconExit.classList.toggle('hidden', !isFs);
+
+			// Toggle visibility of Top Toolbar
+			if (fsTopToolbar) fsTopToolbar.classList.toggle('hidden', !isFs);
+
+			// Hide Bottom Toolbar if in fullscreen (optional, cleaner look)
+			if (bottomToolbar) {
+				if (isFs) bottomToolbar.classList.add('mobile-fullscreen-hidden');
+				else bottomToolbar.classList.remove('mobile-fullscreen-hidden');
+			}
+
+			// Add class to container for CSS adjustments
+			gameContainer.classList.toggle('is-fullscreen', isFs);
+		};
+
+		// --- CSS Fallback (iOS / Android Force) ---
+		const enterFallbackFullscreen = () => {
+			if (fallbackFsActive) return;
+			fallbackFsActive = true;
+
+			gameContainer.classList.add('mobile-fullscreen');
+			document.body.classList.add('mobile-fullscreen-lock');
+
+			updateUiState(true);
+
+			// Hack to prompt iOS UI to settle
+			setTimeout(() => window.scrollTo(0, 1), 100);
+		};
+
+		const exitFallbackFullscreen = () => {
+			if (!fallbackFsActive) return;
+			fallbackFsActive = false;
+
+			gameContainer.classList.remove('mobile-fullscreen');
+			document.body.classList.remove('mobile-fullscreen-lock');
+
+			updateUiState(false);
+		};
+
+		// --- Logic: Enter ---
+		const requestEnterFs = async () => {
+			if (!canUseFullscreenApi || isIosDevice) {
+				enterFallbackFullscreen();
+				return;
+			}
+			try {
+				// Request on CONTAINER so overlay is visible
+				await gameContainer.requestFullscreen({ navigationUI: 'hide' });
+			} catch (e) {
+				console.warn("Native FS failed, using fallback");
+				enterFallbackFullscreen();
+			}
+		};
+
+		// --- Logic: Exit ---
+		const requestExitFs = async () => {
+			if (document.fullscreenElement) {
+				try { await document.exitFullscreen(); } catch (e) { }
+			}
+			exitFallbackFullscreen();
+		};
+
+		// --- User Actions ---
+
+		// 1. Toggle Button (Bottom)
+		btn.addEventListener('click', () => {
+			btn.blur();
+			const isNativeFs = document.fullscreenElement === gameContainer;
+			if (isNativeFs || fallbackFsActive) requestExitFs();
+			else requestEnterFs();
+		});
+
+		// 2. Close Button (Top Toolbar)
+		if (closeBtn) {
+			closeBtn.addEventListener('click', (e) => {
+				e.stopPropagation(); // Prevent bubbling issues
+				requestExitFs();
+			});
+		}
+
+		// --- Orientation Logic (Stable) ---
+		const checkOrientation = () => {
+			const currentOrientation = window.matchMedia("(orientation: landscape)").matches ? 'landscape' : 'portrait';
+
+			// Only act if orientation CHANGED
+			if (currentOrientation === lastOrientation) return;
+
+			lastOrientation = currentOrientation;
+
+			if (currentOrientation === 'landscape') {
+				requestEnterFs();
+			} else {
+				requestExitFs();
+			}
+		};
+
+		// --- Listeners ---
+
+		// Native Fullscreen Change
+		document.addEventListener('fullscreenchange', () => {
+			const isFs = document.fullscreenElement === gameContainer;
+			updateUiState(isFs);
+			if (!isFs) exitFallbackFullscreen(); // Ensure Sync
+		});
+
+		// Orientation / Resize
+		window.addEventListener('resize', () => {
+			clearTimeout(window.resizeTimer);
+			window.resizeTimer = setTimeout(checkOrientation, 100);
+		});
+
+		if (screen.orientation) {
+			screen.orientation.addEventListener("change", checkOrientation);
+		} else {
+			window.addEventListener("orientationchange", checkOrientation);
+		}
+
+	})();
+</script>
+
+<script>
+	// Attempt to enable background video audio; browsers may require a user gesture
+	document.addEventListener("DOMContentLoaded", () => {
+		const targetVolume = 0.2; // 20%
+		const videos = document.querySelectorAll(".game-frame__bg-video");
+
+		const tryPlay = (video) => {
+			try {
+				video.play();
+			} catch {
+				// Autoplay with sound might be blocked until user interaction
+			}
+		};
+
+		const enableAudioOnGesture = (video) => {
+			const handler = () => {
+				video.muted = false;
+				video.volume = targetVolume;
+				tryPlay(video);
+				document.removeEventListener("click", handler);
+				document.removeEventListener("touchend", handler);
+			};
+			document.addEventListener("click", handler, { once: true });
+			document.addEventListener("touchend", handler, { once: true });
+		};
+
+		videos.forEach((video) => {
+			if (!video) return;
+			video.volume = targetVolume;
+			if (!video.muted) {
+				tryPlay(video);
+				enableAudioOnGesture(video);
+			}
+		});
+	});
+</script>
+
+<script>
+	document.addEventListener("DOMContentLoaded", async () => {
+		const iframe = document.getElementById("game-frame");
+		const errorOverlay = document.getElementById("error_overlay");
+		const gameClosedOverlay = document.getElementById("game_closed_overlay");
+		const scriptErrors = document.getElementById("script_errors");
+		const loader = document.getElementById("game_loading");
+		const apiUrl = `/play/@Model.IntegratoreId/@Model.StudioId/@Model.GameCode`;
+
+		if (!iframe || !errorOverlay) {
+			return;
+		}
+
+		const showLoader = () => {
+			if (loader) {
+				loader.style.display = "flex";
+			}
+		};
+
+		const showGameClosedState = () => {
+			iframe.style.display = "none";
+			errorOverlay.style.display = "none";
+			if (gameClosedOverlay) gameClosedOverlay.style.display = "flex";
+			hideLoader();
+		};
+
+		const showErrorState = (message) => {
+			iframe.style.display = "none";
+			if (gameClosedOverlay) gameClosedOverlay.style.display = "none";
+			errorOverlay.style.display = "flex";
+			if (scriptErrors) {
+				scriptErrors.innerText = message ?? "";
+				scriptErrors.style.display = message ? "block" : "none";
+			}
+			hideLoader();
+		};
+
+		const hideLoader = () => {
+			if (loader) {
+				loader.style.display = "none";
+			}
+		};
+
+		const focusIframe = () => {
+			if (!iframe) {
+				return;
+			}
+			requestAnimationFrame(() => {
+				try {
+					iframe.focus({ preventScroll: true });
+					iframe.contentWindow?.focus();
+				} catch {
+					// Ignore focus errors from cross-origin iframes
+				}
+			});
+		};
+
+		iframe.addEventListener("load", () => {
+			hideLoader();
+			iframe.style.display = "flex";
+			focusIframe();
+		});
+
+		showLoader();
+
+		// Hide overlays and script errors by default
+		errorOverlay.style.display = "none";
+		if (gameClosedOverlay) gameClosedOverlay.style.display = "none";
+		if (scriptErrors) {
+			scriptErrors.style.display = "none";
+			scriptErrors.innerText = "";
+		}
+
+		try {
+			const res = await fetch(apiUrl);
+			if (!res.ok) {
+				let serviceErrorMessage = "";
+				try {
+					const errorPayload = await res.clone().json();
+					serviceErrorMessage = typeof errorPayload === "string" ? errorPayload : JSON.stringify(errorPayload);
+				} catch {
+					try {
+						serviceErrorMessage = await res.text();
+					} catch {
+						serviceErrorMessage = `HTTP ${res.status}`;
+					}
+				}
+				showErrorState(serviceErrorMessage);
+				return;
+			}
+			const data = await res.json();
+
+			if (data && data.redirectUrl) {
+				// Redirect found → show iframe, hide error overlay and errors box
+				iframe.src = data.redirectUrl;
+				iframe.style.display = "none";
+				errorOverlay.style.display = "none";
+				if (gameClosedOverlay) gameClosedOverlay.style.display = "none";
+				if (scriptErrors) {
+					scriptErrors.style.display = "none";
+					scriptErrors.innerText = "";
+				}
+			} else if (data && (data.errorCode === "game_closed" || data.ErrorCode === "game_closed")) {
+				// Game is temporarily closed
+				showGameClosedState();
+			} else {
+				// No redirect → show error overlay, hide iframe and show any message
+				showErrorState(JSON.stringify(data));
+			}
+		} catch (err) {
+			console.error("Error resolving game URL:", err);
+			// On error → show error overlay, hide iframe, and show error details
+			const errMessage = (err && err.message) ? err.message : String(err);
+			showErrorState(errMessage);
+		}
+	});
+</script>
+
+<style>
+	.game-container {
+		width: 100%;
+		position: relative;
+	}
+
+	.game-frame {
+		width: 100%;
+		aspect-ratio: 14/9;
+		border: none;
+		display: block;
+		background-color: #000;
+		position: relative;
+	}
+
+	.game-frame--blurred-bg {
+		overflow: hidden;
+	}
+
+	.game-frame--blurred-bg::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: var(--game-frame-background, #000) center/cover no-repeat;
+		filter: blur(18px);
+		transform: scale(1.1);
+		z-index: 0;
+	}
+
+	.game-frame--blurred-bg>* {
+		position: relative;
+		z-index: 1;
+	}
+
+	.game-frame--video {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.game-frame--video>* {
+		position: relative;
+		z-index: 1;
+	}
+
+	.game-frame__bg-video {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		z-index: 0;
+	}
+
+	.game-loading {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		color: #fff;
+		font-size: 1rem;
+		letter-spacing: 0.02em;
+		background: rgba(0, 0, 0, 0.45);
+		backdrop-filter: blur(8px);
+		z-index: 1;
+	}
+
+	.game-loading__spinner {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		border: 3px solid rgba(255, 255, 255, 0.3);
+		border-top-color: #38ffd7;
+		animation: game-loading-spin 1s linear infinite;
+	}
+
+	@@keyframes game-loading-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	/* --- New Top Toolbar Styles --- */
+	.fs-top-toolbar {
+		position: absolute;
+		/* CHANGED: sits in the flow, pushes game down */
+		height: 50px;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 1rem;
+		z-index: 10;
+		width: 100%;
+		flex-shrink: 0;
+		/* Prevent toolbar from squishing */
+	}
+
+	.fs-top-toolbar.hidden {
+		display: none !important;
+	}
+
+	.fs-toolbar-title {
+		color: #fff;
+		font-weight: 600;
+		font-size: 0.9rem;
+	}
+
+	.fs-close-button {
+		background: #034445;
+		border: none;
+		border-radius:  6px;
+		width: 36px;
+		height: 36px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		color: #fff;
+	}
+
+	/* Toolbar */
+	.game-toolbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		background-color: #022d2f;
+		color: #fff;
+		font-size: 0.9rem;
+		border-radius: 0 0 0.5rem 0.5rem;
+	}
+
+	.toolbar-title {
+		flex: 1;
+		margin: 0 1rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.toolbar-actions {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.toolbar-toggle {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		cursor: pointer;
+	}
+
+	.toolbar-toggle input {
+		accent-color: #1abc9c;
+	}
+
+	.toolbar-fs {}
+
+	.game-container.is-fullscreen {
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+		height: 100%;
+	}
+
+	.game-container.is-fullscreen .game-frame {
+		width: 100%;
+		height: 100%;
+		/* full height */
+		aspect-ratio: auto;
+		/* disable fixed ratio */
+	}
+
+	.icon-button {
+		background: #034445;
+		color: #fff;
+		border: none;
+		border-radius: 0.5rem;
+		padding: 0.5rem 0.5rem;
+		cursor: pointer;
+		font-size: 1.2rem;
+	}
+
+	.icon {
+		width: 20px;
+		height: 20px;
+		stroke: #fff;
+	}
+
+	.login-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.55);
+		backdrop-filter: blur(6px);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1;
+	}
+
+	.overlay-content {
+		text-align: center;
+		color: #fff;
+		padding: 2rem;
+		border-radius: 0.75rem;
+		max-width: 400px;
+	}
+
+	.overlay-btn {
+		display: inline-block;
+		margin-top: 1rem;
+		padding: 0.5rem 1rem;
+		background: #1abc9c;
+		color: #fff;
+		border-radius: 0.5rem;
+		text-decoration: none;
+		font-weight: bold;
+	}
+
+	.overlay-btn:hover {
+		background: #16a085;
+	}
+
+	/* Script error output styling */
+	.script-errors {
+		white-space: pre-wrap;
+		color: #fff;
+		background: rgba(176, 0, 32, 0.9);
+		/* dark red */
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.5rem;
+		position: absolute;
+		bottom: 1rem;
+		left: 1rem;
+		right: 1rem;
+		z-index: 2;
+		max-height: 30%;
+		overflow: auto;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+		font-size: 0.9rem;
+	}
+
+	body.mobile-fullscreen-lock {
+		overflow: hidden;
+	}
+
+/* --- Mobile / CSS Fullscreen Overrides --- */
+
+/* 1. iOS/Fallback Fullscreen Wrapper */
+.game-container.mobile-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important; /* iOS address bar fix */
+  z-index: 99999 !important;
+  background: #000;
+  padding: 0 !important;
+  margin: 0 !important;
+  
+  /* Flex Layout: Stacks Toolbar + Game */
+  display: flex !important;
+  flex-direction: column !important; 
+}
+
+/* 2. Native Fullscreen Wrapper */
+.game-container.is-fullscreen {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  height: 100%;
+  background: #000; 
+}
+
+/* 3. The Game Iframe (Fills remaining space) */
+.game-container.is-fullscreen .game-frame,
+.game-container.mobile-fullscreen .game-frame {
+  width: 100% !important;
+  height: auto !important; /* Let Flex calculate height */
+  flex: 1 !important;      /* Grow to fill space */
+  aspect-ratio: auto !important;
+}
+
+/* 4. Hide bottom toolbar in fullscreen */
+.game-toolbar.mobile-fullscreen-hidden {
+  display: none !important;
+}
+</style>
