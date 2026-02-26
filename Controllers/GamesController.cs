@@ -59,7 +59,6 @@ public class GamesController(GamesService gamesService, StudiosService studiosSe
 				.Replace("#", "")
 				.Replace("\"", "")
 				.Replace("'", "") : game.Slug;
-
 			return View("/Views/Game/Index.cshtml", new PlayGameModel(provider, game));
 		}
 

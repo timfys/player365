@@ -67,7 +67,7 @@
   var currency = WebStorageUtility.GetUserCurrencyDetails();
   var grouped = await gameCategoriesService.GetGroupedCategoriesAsync(langIso);
   var bal = WebStorageUtility.GetUserBalance(Context);
-  if (bal is null && isAuthorized)
+  if (bal != null && isAuthorized)
   {
     bal = await PaymentHelper.GetUserBalance(user, true);
   }

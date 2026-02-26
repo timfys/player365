@@ -8,7 +8,12 @@
 @{
 	var isAuthorized = Context.User.Identity?.IsAuthenticated ?? false;
 	var bal = WebStorageUtility.GetUserBalance(Context);
-	
+	var user = isAuthorized ? Context.User.ToUserApiAccess() : null;
+
+	if (bal != null && isAuthorized) //checking user balance, not from cache) this is very important!
+	{
+		bal = await PaymentHelper.GetUserBalance(user, true);
+	}
 	// Get bonus balance for authorized users
 	decimal bonusBalance = 0;
 	if (isAuthorized)

@@ -186,6 +186,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseExceptionHandler("/Error/Handler");
+app.UseStatusCodePagesWithReExecute("/Error/NotFound");
 if (app.Environment.IsDevelopment())
 {
 	//app.UseDeveloperExceptionPage();

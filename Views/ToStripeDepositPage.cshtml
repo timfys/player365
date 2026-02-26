@@ -25,7 +25,6 @@
 	var lid = Context.User.FindFirst("Lid")?.Value ?? "";
 	var me = await userService.GetMeAsync(identity);
 	var (user, balance) = me.Value;
-
 	var langIso = Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName;
 	langIso = langIso.Contains("en") ? "" : $"/{langIso}";
 
@@ -91,7 +90,7 @@
 	var amount = ((decimal?)ViewBag.Amount).Value;
 	var domainType = (DomainType)ViewBag.DomainType;
 
-	<div class="flex flex-col items-center justify-center min-h-screen w-full overflow-hidden" style="max-width: 100vw; max-height: 90vh;">
+	<div class="flex flex-col items-center justify-center h-full w-full overflow-hidden" style="max-width: 100vw; max-height: 100vh;">
 		@if (!isMin)
 		{
 			<div class="flex flex-col items-center justify-center h-full w-full max-w-[740px] mt-12">
@@ -318,10 +317,10 @@
 			</div>
 		</div>
 
-		<div class="w-full flex justify-center mt-8 md:mt-10">
+		@*<div class="w-full flex justify-center mt-8 md:mt-10">
 			<a target="_blank" href="@Umbraco.GetDictionaryOrDefault("SIP - Page1 Need Help Url")" class="green-link text-center"
 			   id="help_link_page1">@Umbraco.GetDictionaryOrDefault("SIP - Need Help")</a>
-		</div>
+		</div>*@
 	</div>
 
 	<script>
