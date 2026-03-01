@@ -23,3 +23,16 @@ C:\Users\timofey\RiderProjects\_player365\GoldCasino.ApiModule\obj\Release\net8.
 C:\Users\timofey\RiderProjects\_player365\GoldCasino.ApiModule\obj\Release\net8.0\refint\GoldCasino.ApiModule.dll
 C:\Users\timofey\RiderProjects\_player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.pdb
 C:\Users\timofey\RiderProjects\_player365\GoldCasino.ApiModule\obj\Release\net8.0\ref\GoldCasino.ApiModule.dll
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\bin\Release\net8.0\GoldCasino.ApiModule.deps.json
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\bin\Release\net8.0\GoldCasino.ApiModule.dll
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\bin\Release\net8.0\GoldCasino.ApiModule.pdb
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.csproj.AssemblyReference.cache
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.AssemblyInfoInputs.cache
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.AssemblyInfo.cs
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.csproj.CoreCompileInputs.cache
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.sourcelink.json
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.dll
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\refint\GoldCasino.ApiModule.dll
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\GoldCasino.ApiModule.pdb
+C:\Users\timofey\RiderProjects\player365\GoldCasino.ApiModule\obj\Release\net8.0\ref\GoldCasino.ApiModule.dll

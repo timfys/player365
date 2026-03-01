@@ -492,6 +492,14 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 						Timestamp = DateTimeOffset.UtcNow,
 					});
 				}
+				if (resultA?.Error?.Contains("games_off") ?? false)
+				{
+					await playerClub365ApiService.GamesUpdateAsync(new GamesUpdateRequest
+					{
+						GameId = game?.Id ?? 0,
+						Enabled = 0
+					});
+				}
 
 				return new GameLaunchResult(false, null, resultA?.Status ?? "lvslot_error", resultA?.Error ?? "Unable to resolve game session.", true);
 			}
