@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ZUqEFvpwgJg=",
+  "dgSpecHash": "wClSGDmQ5z4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+  "projectFilePath": "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\timofey\\.nuget\\packages\\bouncycastle.cryptography\\2.5.1\\bouncycastle.cryptography.2.5.1.nupkg.sha512",
     "C:\\Users\\timofey\\.nuget\\packages\\fluentvalidation\\12.1.0\\fluentvalidation.12.1.0.nupkg.sha512",
@@ -24,10 +24,7 @@
     "C:\\Users\\timofey\\.nuget\\packages\\system.servicemodel.http\\8.1.2\\system.servicemodel.http.8.1.2.nupkg.sha512",
     "C:\\Users\\timofey\\.nuget\\packages\\system.servicemodel.netframingbase\\8.1.2\\system.servicemodel.netframingbase.8.1.2.nupkg.sha512",
     "C:\\Users\\timofey\\.nuget\\packages\\system.servicemodel.nettcp\\8.1.2\\system.servicemodel.nettcp.8.1.2.nupkg.sha512",
-    "C:\\Users\\timofey\\.nuget\\packages\\system.servicemodel.primitives\\8.1.2\\system.servicemodel.primitives.8.1.2.nupkg.sha512",
-    "C:\\Users\\timofey\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\8.0.22\\microsoft.netcore.app.runtime.win-x64.8.0.22.nupkg.sha512",
-    "C:\\Users\\timofey\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\8.0.22\\microsoft.windowsdesktop.app.runtime.win-x64.8.0.22.nupkg.sha512",
-    "C:\\Users\\timofey\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\8.0.22\\microsoft.aspnetcore.app.runtime.win-x64.8.0.22.nupkg.sha512"
+    "C:\\Users\\timofey\\.nuget\\packages\\system.servicemodel.primitives\\8.1.2\\system.servicemodel.primitives.8.1.2.nupkg.sha512"
   ],
   "logs": []
 }

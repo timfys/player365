@@ -17,12 +17,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using GoldCasino.ApiModule.Mapping;
 using static SmartWinners.Controllers.GamesQueryHelper;
 
 namespace SmartWinners.Controllers;
 
 [Route("")]
-public class GamesController(GamesService gamesService, StudiosService studiosService, IGoldslotService goldslotService, IGoldSlotApiClient goldslotApiClient, LvslotApiClient lvslotApiClient, AuthService authService, IBusinessApiService businessApiService, IPlayerClub365ApiService playerClub365ApiService) : Controller
+public class GamesController(GamesService gamesService, IPlayerClub365ApiService client, StudiosService studiosService, IGoldslotService goldslotService, IGoldSlotApiClient goldslotApiClient, LvslotApiClient lvslotApiClient, AuthService authService, IBusinessApiService businessApiService, IPlayerClub365ApiService playerClub365ApiService) : Controller
 {
 	[Route("/game/{gameId}")]
 	[Route("/game/{gameId}/{gameName}")]
@@ -445,6 +446,22 @@ public class GamesController(GamesService gamesService, StudiosService studiosSe
 	{
 		if (string.IsNullOrWhiteSpace(gameId))
 			return new GameLaunchResult(false, null, "invalid_game", "Game ID must be a non-empty string.", true);
+		var filter = new Dictionary<string, string>(){
+			{"pg.launch_enable", "1"},
+			{"pg.game_code", gameId.ToString()},
+		};
+
+		var req = new GamesGetRequest()
+		{
+			LangCode = "en",
+			Fields = FieldHelper<GameDetailedDto>.Fields,
+			Filter = filter,
+			LimitFrom = 0,
+			LimitCount = 1
+		};
+		var games = await client.GamesGetAsync(req);
+
+		var game = games.Value?.Games?.FirstOrDefault();
 
 		//TODO: move to config
 		if (integratoreId == 3)
@@ -463,7 +480,7 @@ public class GamesController(GamesService gamesService, StudiosService studiosSe
 			{
 				if (resultA?.Error?.Contains("hall_balance_less_100") ?? false)
 				{
-					await SetHallBalanceToZeroAsync(gameId);
+					await SetHallBalanceToZeroAsync(game?.Id.ToString() ?? "");
 					await businessApiService.OutgoingAddAsync(new()
 					{
 						EntityId = user.EntityId,
