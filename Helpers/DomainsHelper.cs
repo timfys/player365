@@ -22,6 +22,11 @@ public class DomainsHelper
             _ => DomainType.PlayerClub365Test,
         };
     }
+    
+    public string TransformOutbound(object value)
+    {
+        return value?.ToString()?.ToLowerInvariant();
+    }
 }
 
 public enum DomainType

@@ -67,7 +67,7 @@
 				.Replace("\"", "")
 				.Replace("'", "");
 
-				<a href="@Html.Raw($"{langPrefix}/games/s/{studio.Id}/{slug}")"
+				<a href="@Html.Raw($"{langPrefix}/games/s/{studio.Id}/{slug.ToLower()}")"
 					class="flex rounded-lg no-underline! bg-white/5 studio-card">
 					@* <div
 						class="bg-size-[65%]! transition-[background-size] duration-100 ease-linear hover:bg-size-[75%]!  w-full h-full bg-center bg-no-repeat"

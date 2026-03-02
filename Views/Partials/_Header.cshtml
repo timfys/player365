@@ -440,7 +440,7 @@
           }
 
           var id = $"m-{cat.CategoryID}";
-          var href = $"{langPrefix}/games/{cat.CategoryID}/{cat.CategoryName.Replace(' ', '-')}";
+          var href = $"{langPrefix}/games/{cat.CategoryID}/{cat.CategoryName.Replace(' ', '-').ToLower()}";
 
           <li class="pb-2 border-b border-white/20">
             <input id="@id" type="checkbox" class="peer sr-only" />
@@ -508,7 +508,9 @@
   document.addEventListener("DOMContentLoaded", () => {
     const buyButtons = document.querySelectorAll("[data-confetti-buy]");
     const colors = ["#FFD700", "#FFCC33", "#FFB703", "#F7C948", "#E0AA3E", "#FFE39F"];
-
+    document.querySelectorAll('a[href]').forEach(link => {
+      link.href = link.href.toLowerCase();
+    });
     const burstConfetti = (anchor) => {
       const rect = anchor.getBoundingClientRect();
       const originX = rect.left + rect.width / 2;

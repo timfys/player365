@@ -129,7 +129,7 @@ $"/{Thread.CurrentThread.CurrentCulture.TwoLetterISOLanguageName}";
 			var slugSource = !string.IsNullOrWhiteSpace(category?.CategoryName) ? category.CategoryName : "Category";
 			var slug = slugSource.Replace(' ', '-');
 
-			<a href="@Html.Raw($"{langIso}/games/{categoryId}/{slug}")"
+			<a href="@Html.Raw($"{langIso}/games/{categoryId}/{slug.ToLower()}")"
 				 class="playerclub-button main-banner-bottom-option teal-ring">
 				@displayName
 			</a>

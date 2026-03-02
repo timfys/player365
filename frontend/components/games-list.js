@@ -103,15 +103,15 @@ export default function gamesList() {
 
     _endpoint() {
       if (ctx.mode === 'studio')
-        return `/api/games/studios/${ctx.id}/${ctx.slug || ''}`.replace(/\/{2,}/g, '/');
-      return `/api/games/categories/${ctx.id}/${ctx.slug || ''}`.replace(/\/{2,}/g, '/');
+        return `/api/games/studios/${ctx.id}/${ctx.slug || ''}`.toLowerCase().replace(/\/{2,}/g, '/');
+      return `/api/games/categories/${ctx.id}/${ctx.slug || ''}`.toLowerCase().replace(/\/{2,}/g, '/');
     },
 
     _endpointWithLang() {
       const lang = ctx.langPrefix;
       if (ctx.mode === 'studio')
-        return `${lang}/api/games/studios/${ctx.id}/${ctx.slug || ''}`.replace(/\/{2,}/g, '/');
-      return `${lang}/api/games/categories/${ctx.id}/${ctx.slug || ''}`.replace(/\/{2,}/g, '/');
+        return `${lang}/api/games/studios/${ctx.id}/${ctx.slug || ''}`.toLowerCase().replace(/\/{2,}/g, '/');
+      return `${lang}/api/games/categories/${ctx.id}/${ctx.slug || ''}`.toLowerCase().replace(/\/{2,}/g, '/');
     },
 
 
