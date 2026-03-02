@@ -143,7 +143,7 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		// 	pairs.Add("ol_password", $"{p.Password}");
 		// }
 
-		if (p.SortDir is not null && p.SortBy is not null)
+		if (p.SortBy is not null)
 		{
 			var orderBy = BuildOrderClause(p);
 			pairs.Add("ORDER BY", orderBy);

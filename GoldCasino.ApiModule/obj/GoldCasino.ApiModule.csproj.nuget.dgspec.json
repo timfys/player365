@@ -115,16 +115,6 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.101/PortableRuntimeIdentifierGraph.json"
-    "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {}
-    "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {
-        "projectUniqueName": "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
-        "projectPath": "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
-        "packagesPath": "C:\\Users\\timofey\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\timofey\\RiderProjects\\player365\\GoldCasino.ApiModule\\obj\\",
-          "C:\\Users\\timofey\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files\\dotnet\\library-packs": {},
-        "SdkAnalysisLevel": "9.0.300"
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.308/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
