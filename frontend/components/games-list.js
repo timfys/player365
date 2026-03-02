@@ -116,7 +116,7 @@ export default function gamesList() {
 
 
     _qs() {
-      const qs = { q: this.q || '', page: this.page, pageSize: this.pageSize, sort: this.sort || 'id' };
+      const qs = { q: this.q || '', page: this.page, pageSize: this.pageSize, sort: new URLSearchParams(window.location.search).get('sort') || 'id' };
       if (this.dir) qs.dir = this.dir;
       if (this.device) qs.device = this.device;
       return qs;
