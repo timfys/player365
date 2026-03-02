@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {}
+    "C:\\Users\\timfy\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {}
   },
   "projects": {
-    "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {
+    "C:\\Users\\timfy\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+        "projectUniqueName": "C:\\Users\\timfy\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
         "projectName": "GoldCasino.ApiModule",
-        "projectPath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
-        "packagesPath": "C:\\Users\\timofey\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\obj\\",
+        "projectPath": "C:\\Users\\timfy\\RiderProjects\\player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+        "packagesPath": "C:\\Users\\timfy\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\timfy\\RiderProjects\\player365\\GoldCasino.ApiModule\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\timofey\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\timfy\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
