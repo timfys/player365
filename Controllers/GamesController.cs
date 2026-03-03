@@ -408,6 +408,12 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 			var query = HttpUtility.ParseQueryString(uriBuilder.Query);
 			if (query.AllKeys.Contains("closeurl"))
 				query["closeurl"] = "";
+			if (query.AllKeys.Contains("exit"))
+				query["exit"] = "";
+			if (query.AllKeys.Contains("exit_url"))
+				query["exit_url"] = "";
+			if (query.AllKeys.Contains("exiturl"))
+				query["exiturl"] = "";
 			uriBuilder.Query = query.ToString();
 
 			finalUrl = uriBuilder.ToString();
