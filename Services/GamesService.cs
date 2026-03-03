@@ -46,12 +46,12 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		if (parameters.CategoryId is 1 or 2)
 			return await FetchAndShape<T>(parameters);
 
-		var cacheKey = BuildCacheKey(parameters);
-		if (cache.TryGetValue(cacheKey, out GamesListModel cached))
-			return cached;
+		//var cacheKey = BuildCacheKey(parameters);
+		//if (cache.TryGetValue(cacheKey, out GamesListModel cached))
+		//	return cached;
 
 		var result = await FetchAndShape<T>(parameters);
-		cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+		//cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
 		return result;
 	}
 
@@ -80,9 +80,9 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 			"provider" => "pg.provider_id",
 			_ => "pg.gameID"
 		};
-		var dir = p.SortDir == "desc" ? "DESC" : "ASC";
+		var dir = p.SortDir == "desc" ? "DESC" : "";
 		var secondary = col == "pg.gameID" ? "" : ", pg.gameID ASC";
-		return $"{col} {dir}{secondary}";
+		return $"{col} {dir}";
 	}
 
 	private static string BuildCacheKey(GamesListParameters p)
@@ -93,11 +93,11 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		var pairs = new List<KeyValuePair<string, string>>();
 		if (p.Filters is not null) pairs.AddRange(p.Filters);
 
-		if (p.SortDir is not null && p.SortBy is not null)
-		{
-			var orderBy = BuildOrderClause(p);
-			pairs.Add(new("ORDER BY", orderBy));
-		}
+		// if (p.SortDir is not null && p.SortBy is not null)
+		// {
+		// 	var orderBy = BuildOrderClause(p);
+		// 	pairs.Add(new("ORDER BY", orderBy));
+		// }
 		// build stable string
 		var filterKey = string.Join("|", pairs.Select(kv => $"{kv.Key}={kv.Value}"));
 
@@ -121,6 +121,7 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		// preserve insertion order; don’t rely on Dictionary ordering
 		var pairs = new Dictionary<string, string>
 		{
+			{ p.SortBy is not null ? "order by":"", p.SortBy is not null ? BuildOrderClause(p):"" },
 			{ "pg.launch_enable", "1" },
 			{"countryISO", IdentityHelper.GetUserIsoFromCloudFlare(httpContextAccessor.HttpContext)?.ToLowerInvariant() ?? 
 			               await ipCountryResolver.GetCountryIsoAsync(IdentityHelper.GetUserIp(httpContextAccessor.HttpContext)) ?? 
@@ -143,11 +144,11 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		// 	pairs.Add("ol_password", $"{p.Password}");
 		// }
 
-		if (p.SortBy is not null)
-		{
-			var orderBy = BuildOrderClause(p);
-			pairs.Add("ORDER BY", orderBy);
-		}
+		// if (p.SortBy is not null)
+		// {
+		// 	var orderBy = BuildOrderClause(p);
+		// 	pairs.Add("ORDER BY", orderBy);
+		// }
 
 		var apiResp = await client.GamesGetAsync(new()
 		{
