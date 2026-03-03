@@ -383,6 +383,24 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 
 		try
 		{
+			var startUrl = url;
+			var startUriBuilder = new UriBuilder(startUrl);
+			var startQuery = HttpUtility.ParseQueryString(startUriBuilder.Query);
+			if (startQuery.AllKeys.Contains("closeurl"))
+				startQuery["closeurl"] = "";
+			if (startQuery.AllKeys.Contains("exit"))
+				startQuery["exit"] = "";
+			if (startQuery.AllKeys.Contains("exit_url"))
+				startQuery["exit_url"] = "";
+			if (startQuery.AllKeys.Contains("exiturl"))
+				startQuery["exiturl"] = "";
+			if (startQuery.AllKeys.Contains("lobbyurl"))
+				startQuery["lobbyurl"] = "";
+			if (startQuery.AllKeys.Contains("home_url"))
+				startQuery["home_url"] = "";
+			startUriBuilder.Query = startQuery.ToString();
+			startUrl = startUriBuilder.ToString();
+
 			// Кодируем URL, чтобы избежать проблем с символами
 			var encodedUrl = HttpUtility.UrlDecode(url);
 
