@@ -75,12 +75,12 @@ public class GamesApiController(GamesService gamesService, StudiosService studio
 			return Unauthorized();
 
 		var model = await gamesService.GetList<GameSimpleDto>(parameters).ConfigureAwait(false);
-		if(sort == "id" && dir != "desc")model.List = model.List.OrderBy(x => x.Id).ToList();
-		if(sort == "id" && dir == "desc")model.List = model.List.OrderByDescending(x => x.Id).ToList();
-		if(sort == "name" && dir != "desc")model.List = model.List.OrderBy(x => x.Name).ToList();
-		if(sort == "name" && dir == "desc")model.List = model.List.OrderByDescending(x => x.Name).ToList();
-		if(sort == "provider" && dir != "desc")model.List = model.List.OrderBy(x => x.StudioId).ToList();
-		if(sort == "provider" && dir == "desc")model.List = model.List.OrderByDescending(x => x.StudioId).ToList();
+		// if(sort == "id" && dir != "desc")model.List = model.List.OrderBy(x => x.Id).ToList();
+		// if(sort == "id" && dir == "desc")model.List = model.List.OrderByDescending(x => x.Id).ToList();
+		// if(sort == "name" && dir != "desc")model.List = model.List.OrderBy(x => x.Name).ToList();
+		// if(sort == "name" && dir == "desc")model.List = model.List.OrderByDescending(x => x.Name).ToList();
+		// if(sort == "provider" && dir != "desc")model.List = model.List.OrderBy(x => x.StudioId).ToList();
+		// if(sort == "provider" && dir == "desc")model.List = model.List.OrderByDescending(x => x.StudioId).ToList();
 		return Ok(model);
 	}
 
