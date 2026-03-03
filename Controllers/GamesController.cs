@@ -414,6 +414,8 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 				query["exit_url"] = "";
 			if (query.AllKeys.Contains("exiturl"))
 				query["exiturl"] = "";
+			if (query.AllKeys.Contains("lobbyurl"))
+				query["lobbyurl"] = "";
 			uriBuilder.Query = query.ToString();
 
 			finalUrl = uriBuilder.ToString();
