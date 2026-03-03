@@ -402,7 +402,7 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 			startUrl = startUriBuilder.ToString();
 
 			// Кодируем URL, чтобы избежать проблем с символами
-			var encodedUrl = HttpUtility.UrlDecode(url);
+			var encodedUrl = HttpUtility.UrlDecode(startUrl);
 
 			await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
 			{
