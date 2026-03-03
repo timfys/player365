@@ -19,6 +19,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using PuppeteerSharp;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Extensions;
@@ -124,7 +125,8 @@ builder.Services.PostConfigureAll<Microsoft.AspNetCore.Authentication.Authentica
 	o.DefaultChallengeScheme = "Combined";
 	o.DefaultSignInScheme = "Combined";
 });
-
+var browserFetcher = new BrowserFetcher();
+await browserFetcher.DownloadAsync(); // Автоматически использует последнюю версию Chromium
 WebApplication app = builder.Build();
 
 await app.BootUmbracoAsync();

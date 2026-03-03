@@ -448,20 +448,21 @@
 
 			if (data && data.redirectUrl) {
 				// Redirect found → show iframe, hide error overlay and errors box
-				@if (Model.GameCode == "4243")
-				{
-					<text>
-						const urlParams = new URLSearchParams(new URL(data.redirectUrl).search);
-						const sessionKey = urlParams.get('session');
-						const closeUrl = '';
-				        const newUrl = `https://static.cdneu-stat.com/resources/slg/egt/desktop/?sessionKey=${sessionKey}&language=en&gameIdentificationNumber=861&balanceInCredit=true&closeurl=${closeUrl}&gameName=neondice&protokol=wss&server=wsu3.swssproto.net&port=443&socket=9919`;
-						iframe.src = newUrl;
-					</text>
+				async function getFinalUrl(url) {
+					try {
+						const response = await fetch(`/get-final-url?url=${encodeURIComponent(url)}`);
+						const data = await response.json();
+						return data.finalUrl;
+					} catch (error) {
+						console.error('Ошибка при получении финального URL:', error);
+						return url; // Возвращаем исходный URL в случае ошибки
+					}
 				}
-				else
-				{
-					<text>iframe.src = data.redirectUrl;</text>
-				}
+
+				// Использование:
+				getFinalUrl(data.redirectUrl).then(finalUrl => {
+						iframe.src=finalUrl;
+				});
 				iframe.style.display = "none";
 				errorOverlay.style.display = "none";
 				if (gameClosedOverlay) gameClosedOverlay.style.display = "none";

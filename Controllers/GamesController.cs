@@ -17,8 +17,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using GoldCasino.ApiModule.Mapping;
 using static SmartWinners.Controllers.GamesQueryHelper;
+using PuppeteerSharp;
 
 namespace SmartWinners.Controllers;
 
@@ -372,6 +374,50 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 		}
 
 		return Ok(new { redirectUrl = launchResult.RedirectUrl });
+	}
+	[HttpGet("get-final-url")]
+	public async Task<IActionResult> GetFinalUrl([FromQuery] string url)
+	{
+		if (string.IsNullOrEmpty(url))
+			return BadRequest("URL не указан.");
+
+		try
+		{
+			// Кодируем URL, чтобы избежать проблем с символами
+			var encodedUrl = HttpUtility.UrlDecode(url);
+
+			await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+			{
+				Headless = true,
+				Args = new[] { "--no-sandbox", "--disable-setuid-sandbox" }
+			});
+
+			await using var page = await browser.NewPageAsync();
+
+			// Переходим по закодированному URL
+			await page.GoToAsync(encodedUrl, new NavigationOptions
+			{
+				WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+			});
+
+			// Получаем финальный URL
+			var finalUrl = page.Url;
+
+			// Удаляем параметр closeurl, если он есть
+			var uriBuilder = new UriBuilder(finalUrl);
+			var query = HttpUtility.ParseQueryString(uriBuilder.Query);
+			if (query.AllKeys.Contains("closeurl"))
+				query["closeurl"] = "";
+			uriBuilder.Query = query.ToString();
+
+			finalUrl = uriBuilder.ToString();
+
+			return Ok(new { finalUrl });
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, new { error = ex.Message });
+		}
 	}
 
 	[HttpGet("/game-fullscreen/{gameId:int}/{gameSlug?}")]
