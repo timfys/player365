@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GoldCasino.ApiModule")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ac29132de77d1a8ca912dbdec80ad48ee3f01047")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+feeca2f12403ad7e6a8f55959cf2458d27bfc6f9")]
 [assembly: System.Reflection.AssemblyProductAttribute("GoldCasino.ApiModule")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GoldCasino.ApiModule")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
