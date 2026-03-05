@@ -18,6 +18,7 @@ public class GameTransaction
   [JsonPropertyName("transaction_Type")] public int TransactionType { get; set; }
   [JsonPropertyName("integratorID")] public string IntegratorID { get; set; }
   [JsonPropertyName("gameID")] public int GameID { get; set; }
+  [JsonPropertyName("game_name")] public string Name { get; set; }
   [JsonPropertyName("entityID")] public int EntityId { get; set; }
   [JsonPropertyName("game_image")] public string GameImage { get; set; }
   [JsonPropertyName("amountUSD")] public decimal AmountUSD { get; set; }

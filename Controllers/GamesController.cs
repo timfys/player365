@@ -546,7 +546,7 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 				Language = langIso ?? "en",
 				Login = user.EntityId.ToString(),
 				Domain = "https://www.playerclub365.com",
-				ExitUrl = $"https://{HttpContext.Request.Host}",
+				ExitUrl = "#",
 				Demo = "0"
 			});
 

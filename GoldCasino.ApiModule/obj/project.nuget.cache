@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "ZUqEFvpwgJg=",
+  "dgSpecHash": "WuoB4/4S76w=",
   "success": true,
-  "projectFilePath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+  "projectFilePath": "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\timofey\\.nuget\\packages\\bouncycastle.cryptography\\2.5.1\\bouncycastle.cryptography.2.5.1.nupkg.sha512",
     "C:\\Users\\timofey\\.nuget\\packages\\fluentvalidation\\12.1.0\\fluentvalidation.12.1.0.nupkg.sha512",

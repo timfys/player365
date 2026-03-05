@@ -29,10 +29,11 @@ export default function gamesList() {
     dir: '',
 
     device: '',
-
+    
     toggleDir() {
-      if (this.dir === '') { this.dir = 'asc'; return; }
-      if (this.dir === 'asc') { this.dir = 'desc'; return; }
+      if (this.dir === '') { this.dir = 'desc'; return; }
+      if (this.dir === 'asc') { this.dir = ''; return; }
+      if (this.dir === 'desc') { this.dir = 'asc'; return; }
       this.dir = '';
     },
 

@@ -10,7 +10,7 @@
 	var bal = WebStorageUtility.GetUserBalance(Context);
 	var user = isAuthorized ? Context.User.ToUserApiAccess() : null;
 
-	if (bal != null && isAuthorized) //checking user balance, not from cache) this is very important!
+	if (isAuthorized) //checking user balance, not from cache) this is very important!
 	{
 		bal = await PaymentHelper.GetUserBalance(user, true);
 	}
@@ -460,9 +460,10 @@
 				}
 
 				// Использование:
-				getFinalUrl(data.redirectUrl).then(finalUrl => {
-						iframe.src=finalUrl;
-				});
+				//getFinalUrl(data.redirectUrl).then(finalUrl => {
+				//		iframe.src=finalUrl;
+				//});
+				iframe.src=data.redirectUrl.replace('http://', 'https://');
 				iframe.style.display = "none";
 				errorOverlay.style.display = "none";
 				if (gameClosedOverlay) gameClosedOverlay.style.display = "none";

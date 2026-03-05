@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {}
+    "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {}
   },
   "projects": {
-    "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {
+    "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+        "projectUniqueName": "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
         "projectName": "GoldCasino.ApiModule",
-        "projectPath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
+        "projectPath": "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\GoldCasino.ApiModule.csproj",
         "packagesPath": "C:\\Users\\timofey\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\timofey\\RiderProjects\\_player365\\GoldCasino.ApiModule\\obj\\",
+        "outputPath": "C:\\Users\\timofey\\RiderProjects\\365svn\\GoldCasino.ApiModule\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
