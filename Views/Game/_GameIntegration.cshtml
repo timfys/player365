@@ -460,9 +460,10 @@
 				}
 
 				// Использование:
-				getFinalUrl(data.redirectUrl).then(finalUrl => {
-						iframe.src=finalUrl;
-				});
+				//getFinalUrl(data.redirectUrl).then(finalUrl => {
+				//		iframe.src=finalUrl;
+				//});
+				iframe.src=data.redirectUrl.replace('http://', 'https://');
 				iframe.style.display = "none";
 				errorOverlay.style.display = "none";
 				if (gameClosedOverlay) gameClosedOverlay.style.display = "none";

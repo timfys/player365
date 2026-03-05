@@ -30,7 +30,7 @@ var isAuthenticated = Context.User.Identity?.IsAuthenticated ?? false;
 	var identityUser = contextUser.ToUserApiAccess();
 	var lid = contextUser.FindFirst("Lid");
 
-	await smartWinnersApiService.EntityBalanceCalcAsync(identityUser);
+	//await smartWinnersApiService.EntityBalanceCalcAsync(identityUser);
 
 	var result = await businessApiService.EntityFindAsync(new()
 	{
