@@ -35,7 +35,7 @@
 		Fields = FieldHelper<GameTransactionDto>.Fields,
 		Filter = new Dictionary<string, string>
 		{
-			["gt.entityID"] = $"{40839}",
+			["gt.entityID"] = $"{user.EntityId}",
 			["transaction_Type"] = "in (1,3)",
 			["ORDER BY"] = $"gt.sync_modified_date desc",
 			["amountUSD"] = "> 0"
