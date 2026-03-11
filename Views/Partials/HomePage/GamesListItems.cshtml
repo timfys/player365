@@ -32,10 +32,10 @@
     .Replace("'", "") : g.Slug;
 
   <a data-game-item data-game-id="@g.Id" href="@Html.Raw($"{langIso}/game/{g.Id}/{g.Slug}")"
-    class="block rounded-xl shadow-sm hover:shadow transition overflow-hidden bg-white/25">
+    class="block rounded-xl shadow-sm hover:shadow transition overflow-hidden bg-transparent">
     <div class="aspect-[3/4]">
       <img src="@g.ImageUrl" alt="@g.Name" class="w-full h-full object-fill" loading="lazy" />
-
+      <p style="color: white; text-align: center;margin: 0;padding: 0;">@g.Name</p>
       <style>
         img:not([src]) {
           visibility: hidden;

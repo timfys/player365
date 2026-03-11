@@ -220,7 +220,11 @@ RegexOptions.Singleline |
 						</div>
 						<div class="badge" title="Responsible Gaming">
 							<img class="h-8" src="/images/casino/Responsible-Gaming-Icon_Redone-1-300x300.webp"
-									 alt="Responsible Gaming" />
+							     alt="Responsible Gaming" />
+						</div>
+						<div class="badge" title="Quora">
+							<a target="_blank" href="https://www.quora.com/profile/PlayerClub365"><img class="h-8" src="/images/quora.png"
+							     alt="Quora" /></a>
 						</div>
 						<div class="badge" title="ASA">
 							<img class="h-4" src="https://www.gambleaware.org/media/mr2d3rnl/logo-orange.png?format=webp"
@@ -385,79 +389,4 @@ RegexOptions.Singleline |
 		</div>
 	</div>
 </footer>
-<script>
-	function toggleDisclaimer() {
-		const details = document.querySelector('.disclaimer details');
-		if (window.innerWidth >= 600) {
-			details.setAttribute('open', '');   // На десктопе открыть
-		} else {
-			details.removeAttribute('open');    // На мобилке закрыть
-		}
-	}
-
-	// Запускаем при загрузке
-	toggleDisclaimer();
-
-	// И при изменении размера экрана
-	window.addEventListener('resize', toggleDisclaimer);
-</script>
-<script>
-	const track = document.querySelector('.track');
-	const prevBtn = document.querySelector('.nav.prev');
-	const nextBtn = document.querySelector('.nav.next');
-
-	// Calculate how much to scroll (one slide width + gap)
-	function getScrollDistance() {
-		const slideGap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--slide-gap'));
-
-		// Convert clamp values to actual pixels
-		const slideElement = document.querySelector('.slide');
-		const actualSlideWidth = slideElement ? slideElement.offsetWidth : 200;
-		const actualGap = slideGap || 16;
-
-		return actualSlideWidth + actualGap;
-	}
-
-	// Smooth scroll function that temporarily enables smooth behavior
-	function smoothScrollBy(distance) {
-		const originalBehavior = track.style.scrollBehavior;
-		track.style.scrollBehavior = 'smooth';
-
-		track.scrollBy({
-			left: distance,
-			behavior: 'smooth'
-		});
-
-		// Reset to auto after animation completes
-		setTimeout(() => {
-			track.style.scrollBehavior = originalBehavior || 'auto';
-		}, 300);
-	}
-
-	// Previous button click handler
-	prevBtn.addEventListener('click', () => {
-		const scrollDistance = getScrollDistance();
-		smoothScrollBy(-scrollDistance);
-	});
-
-	// Next button click handler
-	nextBtn.addEventListener('click', () => {
-		const scrollDistance = getScrollDistance();
-		smoothScrollBy(scrollDistance);
-	});
-
-	// Optional: Hide/show buttons based on scroll position
-	function updateButtonVisibility() {
-		const isAtStart = track.scrollLeft <= 10;
-		const isAtEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 10;
-
-		prevBtn.disabled = isAtStart;
-		nextBtn.disabled = isAtEnd;
-	}
-
-	// Update button visibility on scroll
-	track.addEventListener('scroll', updateButtonVisibility);
-
-	// Initial button state
-	updateButtonVisibility();
-</script>
+<script src="assets/js/footer.js"></script>

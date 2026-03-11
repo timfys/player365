@@ -28,7 +28,40 @@
     "ol_EntityId": 27827,
     "ol_UserName": "442033973506",
     "ol_Password": "123456",
-    "EndpointAddress": "http://isapi.mekashron.com/smartwinners/casino365.dll/soap/IPlayerclub365",
+    "EndpointAddress": "http://isapi.mekashron.com/SmartWinners/casino365.dll/soap/IPlayerclub365",
+    "Timeout": 120,
+    "MaxBufferSize": 100000
+  },
+  "BusinessApiLive": {
+    "EndpointAddress": "http://5.79.126.74:33322/soap/IBusinessAPI",
+    "Timeout": 120,
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "smart221134",
+    "BusinessId": 1,
+    "paymentId": 9,
+    "employee_entityId": 2639066,
+    "inventoryID": 95,
+    "CategoryID": 18,
+    "campaignID": 144,
+    "tzFieldName": "customfield34",
+    "ChargePayment": true,
+    "MaxBufferSize" : 100000
+  },
+  "SmartWinnersApiLive": {
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "smart221134",
+    "EndpointAddress": "http://isapi.smart-winners.com/Smartwinners.dll/soap/ISmartWinners",
+    "Password": "FreeRun86",
+    "Timeout": 120,
+    "MaxBufferSize": 1000
+  },
+  "CasinoGamesApiLive": {
+    "ol_EntityId": 27827,
+    "ol_UserName": "442033973506",
+    "ol_Password": "smart221134",
+    "EndpointAddress": "http://isapi.smart-winners.com/casino365.dll/soap/IPlayerclub365",
     "Timeout": 120,
     "MaxBufferSize": 100000
   },
@@ -98,7 +131,7 @@
     "ol_EntityId": 4,
     "ol_UserName": "441111122222",
     "ol_Password": "sdgn249t5h",
-    "EndpointAddress": "http://isapi.mekashron.com/smartwinners/bots/player1/whatsapp.dll/soap/IWhatsApp",
+    "EndpointAddress": "http://isapi.smart-winners.com/whatsapp.dll/soap/IWhatsApp",
     "Timeout": 120
   },
   "LimitedTimeOfferConfig" : {
