@@ -41,20 +41,20 @@ public static class ServiceCollectionExtensions
 			.ValidateOnStart();
 
 		services.AddOptions<Playerclub365Options>()
-			.Configure<IHttpContextAccessor, IConfiguration>((opts, accessor, cfg) =>
+			.Configure<IHttpContextAccessor>((opts, accessor) =>
 			{
+				var host = accessor.HttpContext?.Request.Host.Host ?? "";
 				var request = accessor.HttpContext?.Request;
-				var fullUrl = $"{request.Scheme}://{request.Host.Value}{request.PathBase.Value}{request.Path.Value}{request.QueryString.Value}";
-				Console.WriteLine($"test2 {fullUrl}");
+				var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
 				var section = fullUrl.Contains(prodUrl) ? "Playerclub365Live" : "Playerclub365";
 				cfg.GetSection(section).Bind(opts);
 			});
 		services.AddOptions<SmartWinnersOptions>()
 			.Configure<IHttpContextAccessor>((opts, accessor) =>
 			{
+				var host = accessor.HttpContext?.Request.Host.Host ?? "";
 				var request = accessor.HttpContext?.Request;
 				var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
-				Console.WriteLine($"test3 {fullUrl}");
 				var section = fullUrl.Contains(prodUrl) ? "SmartWinnersLive" : "SmartWinners";
 				cfg.GetSection(section).Bind(opts);
 			});
@@ -62,10 +62,10 @@ public static class ServiceCollectionExtensions
 		services.AddOptions<BusinessApiOptions>()
 			.Configure<IHttpContextAccessor>((opts, accessor) =>
 			{
+				var host = accessor.HttpContext?.Request.Host.Host ?? "";
 				var request = accessor.HttpContext?.Request;
 				var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
-				Console.WriteLine($"test4 {fullUrl}");
-				var section = fullUrl.Contains(prodUrl) ? "BusinessAPILive" : "BusinessAPI";
+				var section = fullUrl.Contains(prodUrl) ? "BusinessApiLive" : "BusinessAPI";
 				cfg.GetSection(section).Bind(opts);
 			});
 
