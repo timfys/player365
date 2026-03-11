@@ -39,7 +39,7 @@ public class GamesApiController(GamesService gamesService, StudiosService studio
 		if (!string.IsNullOrEmpty(cleaned))
 		{
 			var like = EscapeForSqlLike(cleaned);
-			filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
+			//filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
 		}
 
 		var ua = Request?.Headers?.UserAgent.ToString() ?? string.Empty;
@@ -133,7 +133,7 @@ public class GamesApiController(GamesService gamesService, StudiosService studio
 		if (!string.IsNullOrEmpty(cleaned))
 		{
 			var like = EscapeForSqlLike(cleaned);
-			filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
+			//filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
 		}
 
 		var ua = Request?.Headers?.UserAgent.ToString() ?? string.Empty;

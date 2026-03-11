@@ -19,13 +19,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using GoldCasino.ApiModule.Mapping;
+using Microsoft.AspNetCore.Http;
 using static SmartWinners.Controllers.GamesQueryHelper;
 using PuppeteerSharp;
 
 namespace SmartWinners.Controllers;
 
 [Route("")]
-public class GamesController(GamesService gamesService, IPlayerClub365ApiService client, StudiosService studiosService, IGoldslotService goldslotService, IGoldSlotApiClient goldslotApiClient, LvslotApiClient lvslotApiClient, AuthService authService, IBusinessApiService businessApiService, IPlayerClub365ApiService playerClub365ApiService) : Controller
+public class GamesController(GamesService gamesService, IPlayerClub365ApiService client, StudiosService studiosService, IGoldslotService goldslotService, IGoldSlotApiClient goldslotApiClient, LvslotApiClient lvslotApiClient, AuthService authService, IBusinessApiService businessApiService, IPlayerClub365ApiService playerClub365ApiService, IIpInfoCountryResolver ipCountryResolver, IHttpContextAccessor httpContextAccessor) : Controller
 {
 	[Route("/game/{gameId}")]
 	[Route("/game/{gameId}/{gameName}")]
@@ -41,6 +42,10 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 
 		var game = await gamesService.GetByIdCode(langIso, gameId, IdentityHelper.GetUserIp(HttpContext), HttpContext);
 		Provider? provider = null;
+		var iso = IdentityHelper.GetUserIsoFromCloudFlare(httpContextAccessor.HttpContext)?.ToLowerInvariant() ?? 
+		          await ipCountryResolver.GetCountryIsoAsync(IdentityHelper.GetUserIp(httpContextAccessor.HttpContext)) ?? 
+		          "us";
+		ViewBag.Iso = iso;
 		if (game is not null)
 		{
 			provider = await studiosService.GetById(game.StudioId).ConfigureAwait(false);
@@ -96,7 +101,7 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 		{
 			// EXAMPLE 1: CONTAINS
 			var like = EscapeForSqlLike(cleaned);
-			filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
+			//filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
 
 			// EXAMPLE 2: EXACT (uncomment if needed instead of LIKE)
 			// var eq = cleaned.Replace("'", "''");
@@ -202,7 +207,7 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 		if (!string.IsNullOrEmpty(cleaned))
 		{
 			var like = EscapeForSqlLike(cleaned);
-			filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
+			//filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
 		}
 
 		var ua = Request?.Headers?.UserAgent.ToString() ?? string.Empty;
@@ -266,7 +271,7 @@ public class GamesController(GamesService gamesService, IPlayerClub365ApiService
 		if (!string.IsNullOrEmpty(cleanedName))
 		{
 			var like = EscapeForSqlLike(cleanedName);
-			filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
+			//filters.Add(new("pg.game_name", $"LIKE '%{like}%' ESCAPE '\\\\'"));
 		}
 
 		var studioLookup = new Dictionary<int, string>();

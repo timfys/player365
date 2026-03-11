@@ -21,7 +21,6 @@ public class IdentityHelper
 		var host = httpContext?.Request.Host.Value;
 		if (host?.Contains("player", StringComparison.OrdinalIgnoreCase) ?? false)
 			return httpContext?.Request.Headers["CF-IPCountry"];
-
 		return "IL";
 	}
 

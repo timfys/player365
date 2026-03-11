@@ -1,0 +1,294 @@
+.game-container {
+    width: 100%;
+    position: relative;
+}
+
+.game-frame {
+    width: 100%;
+    aspect-ratio: 14/9;
+    border: none;
+    display: block;
+    background-color: #000;
+    position: relative;
+}
+
+.game-frame--blurred-bg {
+    overflow: hidden;
+}
+
+.game-frame--blurred-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--game-frame-background, #000) center/cover no-repeat;
+    filter: blur(18px);
+    transform: scale(1.1);
+    z-index: 0;
+}
+
+.game-frame--blurred-bg>* {
+    position: relative;
+    z-index: 1;
+}
+
+.game-frame--video {
+    position: relative;
+    overflow: hidden;
+}
+
+.game-frame--video>* {
+    position: relative;
+    z-index: 1;
+}
+
+.game-frame__bg-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.game-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: #fff;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+}
+
+.game-loading__spinner {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #38ffd7;
+    animation: game-loading-spin 1s linear infinite;
+}
+
+@@keyframes game-loading-spin {
+     to {
+         transform: rotate(360deg);
+     }
+ }
+
+/* --- New Top Toolbar Styles --- */
+.fs-top-toolbar {
+    position: absolute;
+    /* CHANGED: sits in the flow, pushes game down */
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 10;
+    width: 100%;
+    flex-shrink: 0;
+    /* Prevent toolbar from squishing */
+}
+
+.fs-top-toolbar.hidden {
+    display: none !important;
+}
+
+.fs-toolbar-title {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.fs-close-button {
+    background: #034445;
+    border: none;
+    border-radius:  6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+}
+
+/* Toolbar */
+.game-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background-color: #022d2f;
+    color: #fff;
+    font-size: 0.9rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.toolbar-title {
+    flex: 1;
+    margin: 0 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.toolbar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toolbar-toggle input {
+    accent-color: #1abc9c;
+}
+
+.toolbar-fs {}
+
+.game-container.is-fullscreen {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.game-container.is-fullscreen .game-frame {
+    width: 100%;
+    height: 100%;
+    /* full height */
+    aspect-ratio: auto;
+    /* disable fixed ratio */
+}
+
+.icon-button {
+    background: #034445;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.5rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+}
+
+.login-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.overlay-content {
+    text-align: center;
+    color: #fff;
+    padding: 2rem;
+    border-radius: 0.75rem;
+    max-width: 400px;
+}
+
+.overlay-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #1abc9c;
+    color: #fff;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.overlay-btn:hover {
+    background: #16a085;
+}
+
+/* Script error output styling */
+.script-errors {
+    white-space: pre-wrap;
+    color: #fff;
+    background: rgba(176, 0, 32, 0.9);
+    /* dark red */
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    z-index: 2;
+    max-height: 30%;
+    overflow: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+body.mobile-fullscreen-lock {
+    overflow: hidden;
+}
+
+/* --- Mobile / CSS Fullscreen Overrides --- */
+
+/* 1. iOS/Fallback Fullscreen Wrapper */
+.game-container.mobile-fullscreen {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important; /* iOS address bar fix */
+    z-index: 99999 !important;
+    background: #000;
+    padding: 0 !important;
+    margin: 0 !important;
+
+    /* Flex Layout: Stacks Toolbar + Game */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* 2. Native Fullscreen Wrapper */
+.game-container.is-fullscreen {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100%;
+    height: 100%;
+    background: #000;
+}
+
+.game-container.is-fullscreen .game-frame,
+.game-container.mobile-fullscreen .game-frame {
+    width: 100% !important;
+    height: auto !important; /* Let Flex calculate height */
+    flex: 1 !important;      /* Grow to fill space */
+    aspect-ratio: auto !important;
+}
+
+/* 4. Hide bottom toolbar in fullscreen */
+.game-toolbar.mobile-fullscreen-hidden {
+    display: none !important;
+}

@@ -54,7 +54,7 @@ public class SeoTagHelper(IUmbracoHelperAccessor umbracoHelperAccessor, IHttpCon
 		string siteName = "PlayerClub365";
 		string twitterHandle = "@playerclub365";
 
-		output.Content.AppendHtml($@"
+		output.Content.AppendHtml(!currentUrl.Contains("casino-bonus") ? $@"
 				<title>{title}</title>
 				<meta name=""description"" content=""{description}"" />
 				<meta name=""keywords"" content=""{keywords}"" />
@@ -75,6 +75,16 @@ public class SeoTagHelper(IUmbracoHelperAccessor umbracoHelperAccessor, IHttpCon
 				<meta name=""twitter:image"" content=""{twitterImage}"" />
 
 				{robots}
-			");
+			" : $@"<title>Best Online Casino Bonuses & Rewards | PlayerClub365</title>
+				<meta name=""description"" content=""Boost your bankroll at PlayerClub365. Claim exclusive welcome bonuses, daily rewards, and free spins on top slots. Sign up today and start winning bigger!"">
+				<meta name=""keywords"" content=""casino bonus, welcome bonus, free spins, online casino rewards, PlayerClub365 promotions, deposit match"">
+				<link rel=""canonical"" href=""https://www.playerclub365.com/casino-bonus"" />
+
+				<meta property=""og:title"" content=""Exclusive Casino Bonuses at PlayerClub365"">
+				<meta property=""og:description"" content=""Join PlayerClub365 today and claim your exclusive welcome bonus. Play the best slots and table games with extra rewards."">
+				<meta property=""og:url"" content=""https://www.playerclub365.com/casino-bonus"">
+				<meta property=""og:type"" content=""website"">
+				<meta property=""og:image"" content=""https://www.playerclub365.com/images/bonus-banner.jpg"">
+				");
 	}
 }

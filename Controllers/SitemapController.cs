@@ -178,7 +178,7 @@ public class SitemapController(
 
             var slugSource = string.IsNullOrWhiteSpace(category.Slug) ? category.CategoryName : category.Slug;
             var slug = SlugHelper.ToSlug(slugSource);
-            var basePath = $"{langPrefix}games/{category.CategoryID}";
+            var basePath = $"{langPrefix}games/{category.CategoryID}".ToLower();
             var relative = string.IsNullOrEmpty(slug)
                 ? basePath
                 : $"{basePath}/{slug}";

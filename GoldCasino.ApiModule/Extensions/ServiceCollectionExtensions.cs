@@ -17,7 +17,8 @@ public static class ServiceCollectionExtensions
 {
 	public static IServiceCollection AddApiModule(this IServiceCollection services, IConfiguration cfg)
 	{
-
+		services.AddHttpContextAccessor();
+		var prodUrl = "www.playerclub365.com";
 		// ---------- Options ----------
 		services.AddOptions<GoldSlotApiOptions>()
 			.BindConfiguration("GoldSlotApi")
@@ -40,13 +41,33 @@ public static class ServiceCollectionExtensions
 			.ValidateOnStart();
 
 		services.AddOptions<Playerclub365Options>()
-			.BindConfiguration("Playerclub365");
-
+			.Configure<IHttpContextAccessor, IConfiguration>((opts, accessor, cfg) =>
+			{
+				var request = accessor.HttpContext?.Request;
+				var fullUrl = $"{request.Scheme}://{request.Host.Value}{request.PathBase.Value}{request.Path.Value}{request.QueryString.Value}";
+				Console.WriteLine($"test2 {fullUrl}");
+				var section = fullUrl.Contains(prodUrl) ? "Playerclub365Live" : "Playerclub365";
+				cfg.GetSection(section).Bind(opts);
+			});
 		services.AddOptions<SmartWinnersOptions>()
-			.BindConfiguration("SmartWinners");
+			.Configure<IHttpContextAccessor>((opts, accessor) =>
+			{
+				var request = accessor.HttpContext?.Request;
+				var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
+				Console.WriteLine($"test3 {fullUrl}");
+				var section = fullUrl.Contains(prodUrl) ? "SmartWinnersLive" : "SmartWinners";
+				cfg.GetSection(section).Bind(opts);
+			});
 
 		services.AddOptions<BusinessApiOptions>()
-			.BindConfiguration("BusinessAPI");
+			.Configure<IHttpContextAccessor>((opts, accessor) =>
+			{
+				var request = accessor.HttpContext?.Request;
+				var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
+				Console.WriteLine($"test4 {fullUrl}");
+				var section = fullUrl.Contains(prodUrl) ? "BusinessAPILive" : "BusinessAPI";
+				cfg.GetSection(section).Bind(opts);
+			});
 
 
 		// ---------- SOAP clients ----------

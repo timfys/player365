@@ -2,12 +2,13 @@
 using SmartWinners.Helpers;
 using SmartWinners.Services;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Umbraco.Cms.Web.Common;
 
 namespace SmartWinners.Controllers;
 
 [Route("")]
-public class NormalSignInController(UmbracoHelper umbracoHelper, IIpInfoCountryResolver ipCountryResolver) : Controller
+public class NormalSignInController(UmbracoHelper umbracoHelper, IIpInfoCountryResolver ipCountryResolver, IHttpContextAccessor httpContextAccessor) : Controller
 {
 	[HttpGet]
 	[Route("sign-in")]
@@ -23,9 +24,9 @@ public class NormalSignInController(UmbracoHelper umbracoHelper, IIpInfoCountryR
 		}
 
 		var ipAddress = IdentityHelper.GetUserIp(HttpContext);
-		var iso = IdentityHelper.GetUserIsoFromCloudFlare(HttpContext)?.ToLowerInvariant() ?? 
-							await ipCountryResolver.GetCountryIsoAsync(ipAddress) ?? 
-							"us";
+		var iso = IdentityHelper.GetUserIsoFromCloudFlare(httpContextAccessor.HttpContext)?.ToLowerInvariant() ?? 
+		          await ipCountryResolver.GetCountryIsoAsync(IdentityHelper.GetUserIp(httpContextAccessor.HttpContext)) ?? 
+		          "us";
 		ViewBag.Iso = iso;
 
 		if (min is false || min is null)

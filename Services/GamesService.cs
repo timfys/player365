@@ -122,14 +122,15 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		var pairs = new Dictionary<string, string>
 		{
 			{ p.SortBy is not null ? "order by":"", p.SortBy is not null ? BuildOrderClause(p):"" },
+			{ p.Query is not null ? "pg.game_name" : "", p.Query is not null ? $"like ('%{p.Query}%')" : ""},
 			{ "pg.launch_enable", "1" },
 			{"countryISO", IdentityHelper.GetUserIsoFromCloudFlare(httpContextAccessor.HttpContext)?.ToLowerInvariant() ?? 
 			               await ipCountryResolver.GetCountryIsoAsync(IdentityHelper.GetUserIp(httpContextAccessor.HttpContext)) ?? 
 			               "us"},
 		};
 
-		if (!string.IsNullOrEmpty(p.FilterVal))
-			pairs.Add("pg.game_name", p.FilterVal);
+		//if (!string.IsNullOrEmpty(p.FilterVal))
+		//	pairs.Add("pg.game_name", p.FilterVal);
 
 		if (p.Filters is not null && p.Filters.Count > 0)
 			foreach (var filter in p.Filters)
@@ -168,7 +169,7 @@ public class GamesService(IMemoryCache cache, IPlayerClub365ApiService client, I
 		{
 			List = games,
 			CategoryID = p.CategoryId,
-			ViewLink = $"/games/{p.CategoryId}/{p.CategoryName}"
+			ViewLink = $"/games/{p.CategoryId}/{p.CategoryName}".ToLower()
 		};
 	}
 

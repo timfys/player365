@@ -8,6 +8,10 @@ public static class ConfigReader
 {
     public static bool ReadFromJsonConfig<T>(string fileName, out T config, bool throwError = false) where T : MyConfiguration
     {
+        var httpContextAccessor = EnvironmentHelper.HttpContextAccessor;
+        var request = httpContextAccessor.HttpContext?.Request;
+        var fullUrl = $"{request?.Scheme}://{request?.Host.Value}{request?.PathBase.Value}{request?.Path.Value}{request?.QueryString.Value}";
+        var production = fullUrl.Contains("www.playerclub365.com");
         try
         {
             var section = "";
@@ -16,12 +20,12 @@ public static class ConfigReader
             {
                 case { } businessApi when businessApi == typeof(BusinessApiConfiguration):
                 {
-                    section = "BusinessApi";
+                    section = production ? "BusinessApiLive" : "BusinessApi";
                     break;
                 }
                 case { } smartWinnersApi when smartWinnersApi == typeof(SmartWinnersApiConfiguration):
                 {
-                    section = "SmartWinnersApi";
+                    section = production ? "SmartWinnersApiLive" : "SmartWinnersApi";
                     break;
                 }
                 case { } smtpClient when smtpClient == typeof(SmtpClientConfiguration):
@@ -56,7 +60,7 @@ public static class ConfigReader
                 }
                 case { } casinoGameApiConfiguration when casinoGameApiConfiguration == typeof(CasinoGamesApiConfiguration):
                 {
-                    section = "CasinoGamesApi";
+                    section = production ? "CasinoGamesApiLive" : "CasinoGamesApi";
                     break;  
                 }
                 default:

@@ -83,7 +83,8 @@ public class TopWinnersService(UmbracoHelper umbracoHelper, IMemoryCache cache)
 				.Replace("%", "")
 				.Replace("#", "")
 				.Replace("\"", "")
-				.Replace("'", "");
+				.Replace("'", "")
+				.Replace("™","");
 			return new TopWinnersModel
 			{
 				GameUrl = $"{langPrefix}/game/{w.gameId}/{Slug}",

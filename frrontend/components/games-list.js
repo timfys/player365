@@ -154,11 +154,12 @@ export default function gamesList() {
         const href = `${lang}/game/${id}/${slugify(name)}`.replace(/\/{2,}/g, '/');
         return `
       <a data-game-item data-game-id="${id}" href="${href}"
-         class="block rounded-xl shadow-sm hover:shadow transition overflow-hidden bg-white/25">
+         class="block rounded-xl shadow-sm hover:shadow transition overflow-hidden bg-transparent">
         <div class="aspect-[3/4]">
           <img src="${img}" alt="${escapeHtml(name)}"
                class="w-full h-full object-fill" loading="lazy"
                onerror="window.gamesOnImgError?.(this, '${escapeHtml(name)}')" />
+               <p style="color: white; text-align: center;margin: 0;padding: 0;">${escapeHtml(name)}</p>
         </div>
       </a>`;
       }).join('');
